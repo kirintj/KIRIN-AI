@@ -1,0 +1,73 @@
+{
+  "header": {
+    "height": 56
+  },
+  "tags": {
+    "visible": true,
+    "height": 44
+  },
+  "naiveThemeOverrides": {
+    "common": {
+      "primaryColor": "#0A59F7",
+      "primaryColorHover": "#337BF7",
+      "primaryColorPressed": "#0047CC",
+      "primaryColorSuppl": "#0A59F7",
+
+      "infoColor": "#0A59F7",
+      "infoColorHover": "#337BF7",
+      "infoColorPressed": "#0047CC",
+      "infoColorSuppl": "#337BF7",
+
+      "successColor": "#64BB5C",
+      "successColorHover": "#7DCC75",
+      "successColorPressed": "#4DA346",
+      "successColorSuppl": "#7DCC75",
+
+      "warningColor": "#ED6F21",
+      "warningColorHover": "#F08C42",
+      "warningColorPressed": "#D15A10",
+      "warningColorSuppl": "#F08C42",
+
+      "errorColor": "#E84026",
+      "errorColorHover": "#EF6347",
+      "errorColorPressed": "#C63020",
+      "errorColorSuppl": "#EF6347",
+
+      "borderRadius": "16px",
+      "borderRadiusSmall": "12px",
+      "fontSize": "14px",
+      "fontSizeMini": "12px",
+      "fontSizeMedium": "14px",
+      "fontSizeLarge": "16px",
+      "fontSizeHuge": "18px",
+      "heightMini": "28px",
+      "heightSmall": "32px",
+      "heightMedium": "36px",
+      "heightLarge": "40px",
+      "heightHuge": "44px",
+
+      "cardColor": "#FFFFFF",
+      "modalColor": "#FFFFFF",
+      "popoverColor": "#FFFFFF",
+      "tableColor": "#FFFFFF",
+      "inputColor": "#F5F7FA",
+      "actionColor": "#F5F7FA",
+      "bodyColor": "#F1F3F5",
+
+      "textColorBase": "#000000",
+      "textColor1": "rgba(0, 0, 0, 0.9)",
+      "textColor2": "rgba(0, 0, 0, 0.6)",
+      "textColor3": "rgba(0, 0, 0, 0.38)",
+      "textColorDisabled": "rgba(0, 0, 0, 0.26)",
+
+      "dividerColor": "rgba(0, 0, 0, 0.06)",
+      "borderColor": "rgba(0, 0, 0, 0.08)",
+      "hoverColor": "rgba(10, 89, 247, 0.06)",
+      "pressedColor": "rgba(10, 89, 247, 0.1)",
+
+      "boxShadow1": "0 1px 4px rgba(0, 0, 0, 0.04)",
+      "boxShadow2": "0 2px 8px rgba(0, 0, 0, 0.06)",
+      "boxShadow3": "0 4px 16px rgba(0, 0, 0, 0.08)"
+    }
+  }
+}
