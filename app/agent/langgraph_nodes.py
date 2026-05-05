@@ -9,7 +9,7 @@ from app.tools.guide_tool import GuideTool
 from app.tools.feedback_tool import FeedbackTool
 from app.utils.chat import call_llm
 from app.memory.memory import save_memory, get_raw_history
-from app.rag.chromadb_client import search_all_collections
+from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
 
 _rag_tool = RAGTool()
 _todo_tool = TodoTool()
@@ -17,6 +17,13 @@ _interview_tool = InterviewTool()
 _salary_tool = SalaryTool()
 _guide_tool = GuideTool()
 _feedback_tool = FeedbackTool()
+
+_recommend_pipeline = AdvancedRAGPipeline(PipelineConfig(
+    enable_query_rewrite=True,
+    enable_rerank=True,
+    enable_context_compress=False,
+    top_k=3,
+))
 
 TOOL_MAP = {
     "rag_tool": _rag_tool,
@@ -202,7 +209,7 @@ async def _build_personalized_recommendation(user_id: str, current_query: str) -
     if not search_query:
         return ""
 
-    docs = await search_all_collections(search_query, top_k=3)
+    docs = await _recommend_pipeline.search(search_query)
     if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
         return ""
 

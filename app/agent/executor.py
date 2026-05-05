@@ -10,13 +10,19 @@ from app.tools.feedback_tool import FeedbackTool
 from app.tools.tracker_tool import TrackerTool
 from app.utils.chat import call_llm
 from app.memory.memory import get_memory, save_memory, get_raw_history
-from app.rag.chromadb_client import search_all_collections
+from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
 
 
 class AgentExecutor:
     def __init__(self, use_llm_router: bool = False):
         self.tools: dict[str, BaseTool] = {}
         self.use_llm_router = use_llm_router
+        self._recommend_pipeline = AdvancedRAGPipeline(PipelineConfig(
+            enable_query_rewrite=True,
+            enable_rerank=True,
+            enable_context_compress=False,
+            top_k=3,
+        ))
         self._register_default_tools()
 
     def _register_default_tools(self):
@@ -109,7 +115,7 @@ class AgentExecutor:
         if not search_query:
             return ""
 
-        docs = await search_all_collections(search_query, top_k=3)
+        docs = await self._recommend_pipeline.search(search_query)
         if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
             return ""
 

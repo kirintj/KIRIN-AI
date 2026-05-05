@@ -23,6 +23,15 @@ class Settings:
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
     TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.7"))
 
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-v3")
+    EMBEDDING_DIMENSION: int = int(os.getenv("EMBEDDING_DIMENSION", "1024"))
+    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "25"))
+
+    RAG_ENABLE_QUERY_REWRITE: bool = os.getenv("RAG_ENABLE_QUERY_REWRITE", "true").lower() == "true"
+    RAG_ENABLE_RERANK: bool = os.getenv("RAG_ENABLE_RERANK", "true").lower() == "true"
+    RAG_ENABLE_HYBRID_SEARCH: bool = os.getenv("RAG_ENABLE_HYBRID_SEARCH", "true").lower() == "true"
+    RAG_ENABLE_CONTEXT_COMPRESS: bool = os.getenv("RAG_ENABLE_CONTEXT_COMPRESS", "false").lower() == "true"
+
     DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
 
     PROJECT_ROOT: str = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))

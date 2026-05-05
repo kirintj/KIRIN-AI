@@ -10,7 +10,7 @@ from app.tools.interview_tool import InterviewTool
 from app.tools.salary_tool import SalaryTool
 from app.tools.guide_tool import GuideTool
 from app.tools.rag_tool import RAGTool
-from app.rag.chromadb_client import search_chromadb
+from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
 from app.utils.chat import call_llm
 
 RESUME_SUMMARY_PROMPT = """请将以下结构化简历数据，用 200 字以内概括核心信息（技能、经验亮点、教育背景）：
@@ -63,6 +63,12 @@ class JobAgent:
         self.salary_tool = SalaryTool()
         self.guide_tool = GuideTool()
         self.rag_tool = RAGTool()
+        self._resume_pipeline = AdvancedRAGPipeline(PipelineConfig(
+            enable_query_rewrite=True,
+            enable_rerank=True,
+            enable_context_compress=False,
+            top_k=3,
+        ))
 
     async def analyze_resume(self, resume_text: str) -> dict:
         result = await self.resume_tool.run(resume_text=resume_text)
@@ -94,7 +100,7 @@ class JobAgent:
         self, resume_text: str, jd_text: str, match_result: str
     ) -> dict:
         search_query = f"{jd_text} 优秀简历 岗位要求"
-        docs = await search_chromadb(search_query, top_k=3, collection_name="resume")
+        docs = await self._resume_pipeline.search(search_query, collection_name="resume")
 
         rag_context = "暂无相关参考文档。"
         sources = []
