@@ -30,6 +30,12 @@ class DashScopeEmbeddingFunction:
         self.dimension = dimension or settings.EMBEDDING_DIMENSION
         self.batch_size = batch_size or settings.EMBEDDING_BATCH_SIZE
 
+    def name(self) -> str:
+        return f"dashscope_{self.model}"
+
+    def embed_query(self, input: list[str]) -> list[list[float]]:
+        return self(input)
+
     def __call__(self, input: list[str]) -> list[list[float]]:
         """ChromaDB 同步调用入口，自动分批处理"""
         if not input:

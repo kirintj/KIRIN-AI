@@ -1,6 +1,7 @@
 import shutil
 
 from aerich import Command
+from tortoise import Tortoise
 from tortoise.expressions import Q
 
 from app.log import logger
@@ -26,8 +27,19 @@ async def init_db():
         logger.warning("unable to retrieve model history from database, model history will be created from scratch")
         shutil.rmtree("migrations")
         await command.init_db(safe=True)
+    except UnboundLocalError:
+        logger.warning("aerich migrate encountered known bug, skipping migration")
 
-    await command.upgrade(run_in_transaction=True)
+    try:
+        await command.upgrade(run_in_transaction=True)
+    except Exception:
+        logger.warning("aerich upgrade failed, skipping")
+
+    try:
+        await Tortoise.init(config=settings.TORTOISE_ORM, _enable_global_fallback=True)
+    except TypeError:
+        await Tortoise.init(config=settings.TORTOISE_ORM)
+    await Tortoise.generate_schemas()
 
 
 async def init_superuser():
