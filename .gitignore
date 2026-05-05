@@ -17,3 +17,14 @@ db.sqlite3-wal
 
 .env
 .env.*
+
+CLAUDE.md
+.trae
+
+data/
+app/static/avatars/
+app/static/uploads/
+node_modules/
+dist/
+*.log
+*.pyc
