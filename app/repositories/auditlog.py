@@ -1,9 +1,7 @@
-from datetime import datetime
 
 from tortoise.expressions import Q
 
 from app.models.admin import AuditLog
-from app.repositories.base import RepositoryBase
 
 
 class AuditLogRepository:

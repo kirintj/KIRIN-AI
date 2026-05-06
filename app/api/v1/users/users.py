@@ -3,7 +3,6 @@ import logging
 from fastapi import APIRouter, Body, Query
 from tortoise.expressions import Q
 
-from app.services.dept import dept_service
 from app.services.user import user_service
 from app.schemas.base import Fail, Success, SuccessExtra
 from app.schemas.users import *

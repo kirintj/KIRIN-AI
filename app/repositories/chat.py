@@ -1,5 +1,4 @@
 from app.models.chat import ChatHistory
-from app.repositories.base import RepositoryBase
 
 
 class ChatRepository:

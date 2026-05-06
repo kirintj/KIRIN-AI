@@ -35,17 +35,17 @@ const { formatMarkdown } = useMarkdown()
 const collectionOptions = [
   { label: '通用知识库', value: 'knowledge_base' },
   { label: '简历库', value: 'resume' },
-  { label: '面试题库', value: 'interview' },
+  { label: '面试题库', value: 'activity-source' },
   { label: '薪资报告', value: 'salary' },
-  { label: '求职攻略', value: 'guide' },
+  { label: '求职攻略', value: 'map-draw' },
 ]
 
 const docTypeOptions = [
   { label: '不指定', value: '' },
   { label: '简历', value: 'resume' },
-  { label: '面试题', value: 'interview' },
+  { label: '面试题', value: 'activity-source' },
   { label: '薪资报告', value: 'salary' },
-  { label: '攻略文档', value: 'guide' },
+  { label: '攻略文档', value: 'map-draw' },
   { label: '企业文化', value: 'company_culture' },
   { label: '岗位要求', value: 'job_requirement' },
 ]
@@ -168,9 +168,9 @@ const collectionCards = computed(() => {
   const icons: Record<string, string> = {
     knowledge_base: 'icon-park-outline:data',
     resume: 'icon-park-outline:clipboard',
-    interview: 'icon-park-outline:people-talk',
+    interview: 'icon-park-outline:activity-source',
     salary: 'icon-park-outline:finance',
-    guide: 'icon-park-outline:map',
+    guide: 'icon-park-outline:map-draw',
   }
   return collectionOptions.map((opt) => {
     const stat = collectionStats.value[opt.value]

@@ -92,7 +92,6 @@ async def download_export(
     filename: str,
     current_user: User = DependAuth,
 ):
-    from pathlib import Path
     from app.tools.resume_export_tool import RESUME_EXPORT_DIR
     filepath = RESUME_EXPORT_DIR / current_user.username / filename
     if not filepath.exists():

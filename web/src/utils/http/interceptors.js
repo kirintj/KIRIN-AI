@@ -1,9 +1,22 @@
-import { getToken } from '@/utils'
+import { getToken, getRefreshToken, setToken, setRefreshToken, removeToken, removeRefreshToken } from '@/utils'
 import { resolveResError } from './helpers'
 import { useUserStore } from '@/store'
+import api from '@/api'
+
+let isRefreshing = false
+let pendingRequests = []
+
+function onRefreshed(newToken) {
+  pendingRequests.forEach((cb) => cb(newToken))
+  pendingRequests = []
+}
+
+function onRefreshFailed() {
+  pendingRequests.forEach((cb) => cb(null))
+  pendingRequests = []
+}
 
 export function reqResolve(config) {
-  // 处理不需要token的请求
   if (config.noNeedToken) {
     return config
   }
@@ -24,7 +37,6 @@ export function resResolve(response) {
   const { data, status, statusText } = response
   if (data?.code !== 200) {
     const code = data?.code ?? status
-    /** 根据code处理对应的操作，并返回处理后的message */
     const message = resolveResError(code, data?.msg ?? statusText)
     window.$message?.error(message, { keepAliveOnHover: true })
     return Promise.reject({ code, message, error: data || response })
@@ -35,25 +47,70 @@ export function resResolve(response) {
 export async function resReject(error) {
   if (!error || !error.response) {
     const code = error?.code
-    /** 根据code处理对应的操作，并返回处理后的message */
     const message = resolveResError(code, error.message)
     window.$message?.error(message)
     return Promise.reject({ code, message, error })
   }
   const { data, status } = error.response
+  const originalRequest = error.config
 
-  if (data?.code === 401) {
+  if (status === 401 && !originalRequest._retry) {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) {
+      forceLogout()
+      return Promise.reject({ code: 401, message: '登录已过期', error })
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve) => {
+        pendingRequests.push((newToken) => {
+          if (newToken) {
+            originalRequest.headers.token = newToken
+            resolve(import('axios').then(({ default: axios }) => axios(originalRequest)))
+          } else {
+            forceLogout()
+            resolve(Promise.reject({ code: 401, message: '登录已过期', error }))
+          }
+        })
+      })
+    }
+
+    originalRequest._retry = true
+    isRefreshing = true
+
     try {
-      const userStore = useUserStore()
-      userStore.logout()
-    } catch (error) {
-      console.log('resReject error', error)
-      return
+      const res = await api.refreshToken({ refresh_token: refreshToken })
+      const { access_token, refresh_token: newRefreshToken } = res.data
+      setToken(access_token)
+      setRefreshToken(newRefreshToken)
+
+      onRefreshed(access_token)
+      isRefreshing = false
+
+      originalRequest.headers.token = access_token
+      const axios = (await import('axios')).default
+      return axios(originalRequest)
+    } catch (refreshError) {
+      onRefreshFailed()
+      isRefreshing = false
+      forceLogout()
+      return Promise.reject({ code: 401, message: '登录已过期', error: refreshError })
     }
   }
-  // 后端返回的response数据
+
   const code = data?.code ?? status
   const message = resolveResError(code, data?.msg ?? error.message)
   window.$message?.error(message, { keepAliveOnHover: true })
   return Promise.reject({ code, message, error: error.response?.data || error.response })
+}
+
+function forceLogout() {
+  try {
+    const userStore = useUserStore()
+    userStore.logout()
+  } catch {
+    removeToken()
+    removeRefreshToken()
+    window.location.href = '/login'
+  }
 }

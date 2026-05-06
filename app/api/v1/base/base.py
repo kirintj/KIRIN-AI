@@ -5,12 +5,12 @@ from fastapi import APIRouter
 from app.services.user import user_service
 from app.core.ctx import CTX_USER_ID
 from app.core.dependency import DependAuth
-from app.models.admin import Api, Menu, Role, User
+from app.models.admin import Api, Menu, User
 from app.schemas.base import Fail, Success
 from app.schemas.login import *
 from app.schemas.users import UpdatePassword, UserCreate
 from app.settings import settings
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import create_access_token, create_refresh_token, decode_token, get_password_hash, verify_password
 
 router = APIRouter()
 
@@ -19,20 +19,18 @@ router = APIRouter()
 async def login_access_token(credentials: CredentialsSchema):
     user: User = await user_service.authenticate(credentials)
     await user_service.update_last_login(user.id)
-    access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    expire = datetime.now(timezone.utc) + access_token_expires
 
-    data = JWTOut(
-        access_token=create_access_token(
-            data=JWTPayload(
-                user_id=user.id,
-                username=user.username,
-                is_superuser=user.is_superuser,
-                exp=expire,
-            )
-        ),
-        username=user.username,
+    access_expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data=JWTPayload(user_id=user.id, username=user.username, is_superuser=user.is_superuser, exp=access_expire)
     )
+    refresh_token = create_refresh_token(
+        data=JWTPayload(user_id=user.id, username=user.username, is_superuser=user.is_superuser, exp=refresh_expire)
+    )
+
+    data = JWTOut(access_token=access_token, refresh_token=refresh_token, username=user.username)
     return Success(data=data.model_dump())
 
 
@@ -58,7 +56,6 @@ async def get_user_menu():
                 menu_set[menu.id] = menu
         menus = list(menu_set.values())
 
-    menu_map = {menu.id: menu for menu in menus}
     parent_menus = [menu for menu in menus if menu.parent_id == 0]
 
     res = []
@@ -115,3 +112,37 @@ async def update_user_password(req_in: UpdatePassword):
     user.password = get_password_hash(req_in.new_password)
     await user.save()
     return Success(msg="修改成功")
+
+
+@router.post("/refresh_token", summary="刷新token")
+async def refresh_token(req_in: RefreshTokenIn):
+    try:
+        decode_data = decode_token(req_in.refresh_token)
+    except Exception:
+        return Fail(code=401, msg="无效的Refresh Token")
+
+    if decode_data.get("type") != "refresh":
+        return Fail(code=401, msg="请使用Refresh Token刷新")
+
+    user_id = decode_data.get("user_id")
+    if not user_id:
+        return Fail(code=401, msg="Token中缺少用户信息")
+
+    user = await User.filter(id=user_id).first()
+    if not user:
+        return Fail(code=401, msg="用户不存在")
+    if not user.is_active:
+        return Fail(code=401, msg="用户已被禁用")
+
+    access_expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES)
+
+    new_access_token = create_access_token(
+        data=JWTPayload(user_id=user.id, username=user.username, is_superuser=user.is_superuser, exp=access_expire)
+    )
+    new_refresh_token = create_refresh_token(
+        data=JWTPayload(user_id=user.id, username=user.username, is_superuser=user.is_superuser, exp=refresh_expire)
+    )
+
+    data = JWTOut(access_token=new_access_token, refresh_token=new_refresh_token, username=user.username)
+    return Success(data=data.model_dump())

@@ -12,6 +12,7 @@ from .api import api_service
 from .dept import dept_service
 from .auditlog import auditlog_service
 from .chat import chat_service
+from .config import sysconfig_service
 
 __all__ = [
     "extract_text_from_file",
@@ -26,4 +27,5 @@ __all__ = [
     "dept_service",
     "auditlog_service",
     "chat_service",
+    "sysconfig_service",
 ]

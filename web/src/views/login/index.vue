@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { lStorage, setToken } from '@/utils'
+import { lStorage, setToken, setRefreshToken } from '@/utils'
 import api from '@/api'
 import { addDynamicRoutes } from '@/router'
 import { useI18n } from 'vue-i18n'
@@ -179,6 +179,7 @@ async function handleLogin() {
     const res = await api.login({ username, password: password.toString() })
     $message.success(t('views.login.message_login_success'))
     setToken(res.data.access_token)
+    setRefreshToken(res.data.refresh_token)
     await addDynamicRoutes()
     if (query.redirect) {
       const path = query.redirect

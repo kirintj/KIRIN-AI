@@ -88,6 +88,15 @@ class AuditLog(BaseModel, TimestampMixin):
     request_args = fields.JSONField(null=True, description="请求参数")
     response_body = fields.JSONField(null=True, description="返回数据")
 
+class SysConfig(BaseModel, TimestampMixin):
+    key = fields.CharField(max_length=100, unique=True, description="配置键", index=True)
+    value = fields.TextField(description="配置值")
+    desc = fields.CharField(max_length=500, null=True, description="配置描述")
+
+    class Meta:
+        table = "sys_config"
+
+
 class Product(BaseModel, TimestampMixin):
     name = fields.CharField(max_length=20, unique=True, description="产品名称", index=True)
     desc = fields.CharField(max_length=500, null=True, description="产品描述")

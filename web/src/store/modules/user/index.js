@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { resetRouter } from '@/router'
 import { useTagsStore, usePermissionStore } from '@/store'
-import { removeToken, toLogin } from '@/utils'
+import { removeToken, removeRefreshToken, toLogin } from '@/utils'
 import api from '@/api'
 
 export const useUserStore = defineStore('user', {
@@ -52,6 +52,7 @@ export const useUserStore = defineStore('user', {
       const { resetTags } = useTagsStore()
       const { resetPermission } = usePermissionStore()
       removeToken()
+      removeRefreshToken()
       resetTags()
       resetPermission()
       resetRouter()

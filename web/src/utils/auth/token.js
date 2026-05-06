@@ -1,6 +1,7 @@
 import { lStorage } from '@/utils'
 
 const TOKEN_CODE = 'access_token'
+const REFRESH_TOKEN_CODE = 'refresh_token'
 
 export function getToken() {
   return lStorage.get(TOKEN_CODE)
@@ -14,18 +15,14 @@ export function removeToken() {
   lStorage.remove(TOKEN_CODE)
 }
 
-// export async function refreshAccessToken() {
-//   const tokenItem = lStorage.getItem(TOKEN_CODE)
-//   if (!tokenItem) {
-//     return
-//   }
-//   const { time } = tokenItem
-//   // token生成或者刷新后30分钟内不执行刷新
-//   if (new Date().getTime() - time <= 1000 * 60 * 30) return
-//   try {
-//     const res = await api.refreshToken()
-//     setToken(res.data.token)
-//   } catch (error) {
-//     console.error(error)
-//   }
-// }
+export function getRefreshToken() {
+  return lStorage.get(REFRESH_TOKEN_CODE)
+}
+
+export function setRefreshToken(token) {
+  lStorage.set(REFRESH_TOKEN_CODE, token)
+}
+
+export function removeRefreshToken() {
+  lStorage.remove(REFRESH_TOKEN_CODE)
+}

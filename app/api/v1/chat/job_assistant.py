@@ -84,7 +84,7 @@ async def parse_resume(
     try:
         result = await job_agent.analyze_resume(request.resume_text)
         return Success(data=result)
-    except Exception as e:
+    except Exception:
         _logger.exception("简历解析失败")
         return Fail(code=500, msg="简历解析失败，请稍后重试")
 
@@ -97,7 +97,7 @@ async def parse_jd(
     try:
         result = await job_agent.analyze_jd(request.jd_text)
         return Success(data=result)
-    except Exception as e:
+    except Exception:
         _logger.exception("JD 分析失败")
         return Fail(code=500, msg="JD 分析失败，请稍后重试")
 
@@ -110,7 +110,7 @@ async def calculate_match(
     try:
         result = await job_agent.calculate_match(request.resume_json, request.jd_json)
         return Success(data=result)
-    except Exception as e:
+    except Exception:
         _logger.exception("匹配分析失败")
         return Fail(code=500, msg="匹配分析失败，请稍后重试")
 
@@ -125,7 +125,7 @@ async def optimize_resume(
             request.resume_text, request.jd_text, request.match_result
         )
         return Success(data={"optimized_resume": result})
-    except Exception as e:
+    except Exception:
         _logger.exception("简历优化失败")
         return Fail(code=500, msg="简历优化失败，请稍后重试")
 
@@ -140,7 +140,7 @@ async def optimize_resume_rag(
             request.resume_text, request.jd_text, request.match_result
         )
         return Success(data=result)
-    except Exception as e:
+    except Exception:
         _logger.exception("RAG简历优化失败")
         return Fail(code=500, msg="RAG简历优化失败，请稍后重试")
 
@@ -155,7 +155,7 @@ async def generate_plan(
             request.resume_summary, request.jd_text, request.match_result
         )
         return Success(data={"plan": result})
-    except Exception as e:
+    except Exception:
         _logger.exception("计划生成失败")
         return Fail(code=500, msg="计划生成失败，请稍后重试")
 
@@ -170,7 +170,7 @@ async def generate_interview(
             request.company, request.position, request.interview_type
         )
         return Success(data={"interview": result})
-    except Exception as e:
+    except Exception:
         _logger.exception("面试问答生成失败")
         return Fail(code=500, msg="面试问答生成失败，请稍后重试")
 
@@ -186,7 +186,7 @@ async def generate_salary_advice(
             request.experience, request.expected_salary,
         )
         return Success(data={"salary_advice": result})
-    except Exception as e:
+    except Exception:
         _logger.exception("薪资建议生成失败")
         return Fail(code=500, msg="薪资建议生成失败，请稍后重试")
 
@@ -199,7 +199,7 @@ async def generate_guide(
     try:
         result = await job_agent.generate_guide(request.scenario, request.goal)
         return Success(data={"guide": result})
-    except Exception as e:
+    except Exception:
         _logger.exception("攻略生成失败")
         return Fail(code=500, msg="攻略生成失败，请稍后重试")
 
@@ -220,7 +220,7 @@ async def submit_feedback(
             user_id=current_user.username,
         )
         return Success(data={"message": result})
-    except Exception as e:
+    except Exception:
         _logger.exception("反馈提交失败")
         return Fail(code=500, msg="反馈提交失败，请稍后重试")
 
@@ -242,7 +242,7 @@ async def full_pipeline(
     except TimeoutError:
         _logger.error("LLM 调用超时")
         return Fail(code=504, msg="AI 服务响应超时，请稍后重试")
-    except Exception as e:
+    except Exception:
         _logger.exception("求职流程执行失败")
         return Fail(code=500, msg="求职流程执行失败，请稍后重试")
 

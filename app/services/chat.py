@@ -1,4 +1,3 @@
-from datetime import datetime
 
 from app.repositories.chat import chat_repository
 

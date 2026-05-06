@@ -19,18 +19,28 @@ async_client = AsyncOpenAI(
 )
 
 
+async def get_ai_config() -> dict:
+    from app.services.config import sysconfig_service
+    return await sysconfig_service.get_ai_config()
+
+
 def convert_messages_for_api(messages: List[ChatMessage]) -> List[Dict[str, str]]:
     return [{"role": msg.role, "content": msg.content} for msg in messages]
 
 
 async def call_llm(prompt: str, model: str | None = None, max_tokens: int = 2000, temperature: float = 0.7, timeout: float | None = None) -> str:
+    config = await get_ai_config()
+    effective_model = model or config.get("model_name", settings.MODEL_NAME)
+    effective_max_tokens = max_tokens if max_tokens != 2000 else int(config.get("max_tokens", 2000))
+    effective_temperature = temperature if temperature != 0.7 else float(config.get("temperature", 0.7))
+
     request_timeout = httpx.Timeout(timeout or LLM_TIMEOUT, connect=10.0)
     try:
         response = await async_client.chat.completions.create(
-            model=model or settings.MODEL_NAME,
+            model=effective_model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens,
-            temperature=temperature,
+            max_tokens=effective_max_tokens,
+            temperature=effective_temperature,
             stream=False,
             timeout=request_timeout,
         )
@@ -44,10 +54,13 @@ async def call_llm(prompt: str, model: str | None = None, max_tokens: int = 2000
 
 async def generate_stream_response(request: ChatRequest, username: str):
     try:
+        config = await get_ai_config()
+        effective_model = request.model or config.get("model_name", settings.MODEL_NAME)
+
         api_messages = convert_messages_for_api(request.messages)
 
         stream = await async_client.chat.completions.create(
-            model=request.model or settings.MODEL_NAME,
+            model=effective_model,
             messages=api_messages,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
@@ -64,7 +77,7 @@ async def generate_stream_response(request: ChatRequest, username: str):
                 response_data = StreamResponse(
                     content=chunk_content,
                     finished=False,
-                    model=request.model or settings.MODEL_NAME,
+                    model=effective_model,
                     timestamp=datetime.now().isoformat(),
                 )
                 yield f"data: {response_data.model_dump_json()}\n\n"
@@ -73,7 +86,7 @@ async def generate_stream_response(request: ChatRequest, username: str):
             final_response = StreamResponse(
                 content='',
                 finished=True,
-                model=request.model or settings.MODEL_NAME,
+                model=effective_model,
                 timestamp=datetime.now().isoformat(),
             )
 

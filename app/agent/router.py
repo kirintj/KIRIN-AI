@@ -1,6 +1,3 @@
-from app.tools.base import BaseTool
-from app.tools.rag_tool import RAGTool
-from app.tools.todo_tool import TodoTool
 from app.utils.chat import call_llm
 
 INTENT_PROMPT = """你是一个意图识别助手。根据用户输入，判断应该使用哪个工具处理。

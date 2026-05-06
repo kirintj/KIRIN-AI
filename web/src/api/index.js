@@ -7,6 +7,7 @@ import dept from './dept'
 import auditlog from './auditlog'
 import chat from './chat'
 import job from './job'
+import config from './config'
 
 const system = {
   ...user,
@@ -15,8 +16,9 @@ const system = {
   ...api,
   ...dept,
   ...auditlog,
+  ...config,
 }
 
 export default { ...auth, ...system, ...chat, ...job }
 
-export { auth, user, role, menu, api, dept, auditlog, chat, job, system }
+export { auth, user, role, menu, api, dept, auditlog, chat, job, config, system }

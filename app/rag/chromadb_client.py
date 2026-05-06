@@ -6,7 +6,6 @@ from typing import Optional
 
 from app.rag.embedding import DashScopeEmbeddingFunction
 from app.rag.chunker import semantic_chunk
-from app.settings import settings
 
 _logger = logging.getLogger(__name__)
 

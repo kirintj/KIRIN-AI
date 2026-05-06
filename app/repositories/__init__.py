@@ -5,6 +5,7 @@ from app.repositories.api import api_repository
 from app.repositories.dept import dept_repository
 from app.repositories.auditlog import auditlog_repository
 from app.repositories.chat import chat_repository
+from app.repositories.config import sysconfig_repository
 
 __all__ = [
     "user_repository",
@@ -14,4 +15,5 @@ __all__ = [
     "dept_repository",
     "auditlog_repository",
     "chat_repository",
+    "sysconfig_repository",
 ]

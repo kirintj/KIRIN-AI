@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from app.tools.base import BaseTool
 from app.utils.chat import call_llm

@@ -124,19 +124,19 @@ const goToInterviewSim = () => router.push('/interview-sim')
 const goToResumeExport = () => router.push('/job-assistant')
 
 const quickActions = [
-  { label: '面试准备', icon: 'icon-park-outline:people-talk', color: '#0A59F7', action: () => router.push('/agent-chat') },
-  { label: '投递记录', icon: 'icon-park-outline:sequence', color: '#E84026', action: goToTracker },
-  { label: '新建待办', icon: 'icon-park-outline:todo', color: '#64BB5C', action: goToTodo },
-  { label: '简历优化', icon: 'icon-park-outline:clipboard', color: '#722ED1', action: goToJobAssistant },
+  { label: '面试准备', icon: 'icon-park-outline:book-open', color: '#0A59F7', action: () => router.push('/agent-chat') },
+  { label: '投递记录', icon: 'icon-park-outline:log', color: '#E84026', action: goToTracker },
+  { label: '新建待办', icon: 'icon-park-outline:data-arrival', color: '#64BB5C', action: goToTodo },
+  { label: '简历优化', icon: 'icon-park-outline:redo', color: '#722ED1', action: goToJobAssistant },
 ]
 
 const featureGrid = [
   { label: '智能对话', desc: '意图识别 · 工具调用 · RAG', icon: 'icon-park-outline:topic', color: '#0A59F7', action: goToAIChat },
   { label: '知识库', desc: '文档管理 · 向量化 · 检索', icon: 'icon-park-outline:data', color: '#722ED1', action: goToKnowledge },
   { label: '待办任务', desc: 'AI 创建 · 任务管理', icon: 'icon-park-outline:data-arrival', color: '#64BB5C', action: goToTodo },
-  { label: '求职进度', desc: '投递追踪 · 看板管理', icon: 'icon-park-outline:sequence', color: '#E84026', action: goToTracker },
-  { label: '面试模拟', desc: 'AI 面试官 · 多轮评估', icon: 'icon-park-outline:people-talk', color: '#722ED1', action: goToInterviewSim },
-  { label: '求职助手', desc: '简历优化 · 薪资谈判', icon: 'icon-park-outline:resume', color: '#ED6F21', action: goToJobAssistant },
+  { label: '求职进度', desc: '投递追踪 · 看板管理', icon: 'icon-park-outline:log', color: '#E84026', action: goToTracker },
+  { label: '面试模拟', desc: 'AI 面试官 · 多轮评估', icon: 'icon-park-outline:form-one', color: '#722ED1', action: goToInterviewSim },
+  { label: '求职助手', desc: '简历优化 · 薪资谈判', icon: 'icon-park-outline:robot', color: '#ED6F21', action: goToJobAssistant },
   { label: '简历导出', desc: 'AI 生成 · DOCX 导出', icon: 'icon-park-outline:export', color: '#0A59F7', action: goToResumeExport },
   { label: '知识库配置', desc: '文档管理 · 向量存储', icon: 'icon-park-outline:setting-two', color: '#86909C', action: goToSettings },
 ]
@@ -218,10 +218,10 @@ onMounted(async () => {
           <h2 class="hm-wb-section-title">数据概览</h2>
           <div class="hm-wb-progress-ring-wrap">
             <svg class="hm-wb-progress-ring" width="44" height="44" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="6" />
+              <circle cx="40" cy="40" r="24" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="8" />
               <circle
-                cx="40" cy="40" r="36" fill="none"
-                stroke="var(--hm-brand)" stroke-width="6"
+                cx="40" cy="40" r="24" fill="none"
+                stroke="var(--hm-brand)" stroke-width="8"
                 stroke-linecap="round"
                 :stroke-dasharray="circumference"
                 :stroke-dashoffset="strokeDashoffset"
@@ -361,7 +361,7 @@ onMounted(async () => {
         <div class="hm-wb-history-card">
           <div v-if="recentConversations.length === 0" class="hm-empty-state">
             <div class="hm-empty-state-icon">
-              <TheIcon icon="icon-park-outline:chat" :size="32" color="var(--hm-font-fourth)" />
+              <TheIcon icon="icon-park-outline:history" :size="32" color="var(--hm-font-fourth)" />
             </div>
             <div class="hm-empty-state-title">暂无对话记录</div>
             <div class="hm-empty-state-desc">与 AI 助手对话，获取求职建议和面试指导</div>

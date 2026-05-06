@@ -6,6 +6,7 @@ from .apis import apis_router
 from .auditlog import auditlog_router
 from .base import base_router
 from .chat import chat_router
+from .config import router as config_router
 from .depts import depts_router
 from .menus import menus_router
 from .roles import roles_router
@@ -22,4 +23,5 @@ v1_router.include_router(menus_router, prefix="/menu", dependencies=[DependPermi
 v1_router.include_router(apis_router, prefix="/api", dependencies=[DependPermission])
 v1_router.include_router(depts_router, prefix="/dept", dependencies=[DependPermission])
 v1_router.include_router(auditlog_router, prefix="/auditlog", dependencies=[DependPermission])
+v1_router.include_router(config_router, prefix="/config", dependencies=[DependPermission], tags=["系统配置模块"])
 v1_router.include_router(chat_router, prefix="/chat")

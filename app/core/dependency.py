@@ -4,7 +4,7 @@ import jwt
 from fastapi import Depends, Header, HTTPException, Request
 
 from app.core.ctx import CTX_USER_ID
-from app.models import Role, User
+from app.models import User
 from app.settings import settings
 
 
@@ -13,6 +13,9 @@ class AuthControl:
     async def is_authed(cls, token: str = Header(..., description="token验证")) -> Optional["User"]:
         try:
             decode_data = jwt.decode(token, settings.SECRET_KEY, algorithms=settings.JWT_ALGORITHM)
+            token_type = decode_data.get("type", "access")
+            if token_type != "access":
+                raise HTTPException(status_code=401, detail="请使用Access Token访问")
             user_id = decode_data.get("user_id")
             if not user_id:
                 raise HTTPException(status_code=401, detail="Token 中缺少用户信息")

@@ -115,6 +115,7 @@ async def init_menus():
         ("API管理", "api", 4, "icon-park-outline:api", "/system/api"),
         ("审计日志", "auditlog", 5, "icon-park-outline:audit-log", "/system/auditlog"),
         ("对话历史", "chathistory", 6, "icon-park-outline:history", "/system/chathistory"),
+        ("AI模型配置", "ai-config", 7, "icon-park-outline:setting-config", "/system/ai-config"),
     ]
 
     for name, path, order, icon, component in sys_submenus:
@@ -161,9 +162,15 @@ async def init_roles():
         await user_role.apis.add(*basic_apis)
 
 
+async def init_config():
+    from app.services.config import sysconfig_service
+    await sysconfig_service.init_defaults()
+
+
 async def init_data():
     await init_db()
     await init_superuser()
     await init_menus()
     await init_apis()
     await init_roles()
+    await init_config()

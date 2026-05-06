@@ -7,7 +7,6 @@ from app.rag.chromadb_client import (
     search_all_collections_hybrid,
     hybrid_search,
     search_with_filter,
-    COLLECTION_NAMES,
 )
 from app.utils.chat import call_llm
 from app.settings import settings

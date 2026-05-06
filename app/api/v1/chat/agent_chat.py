@@ -98,14 +98,6 @@ async def _run_langgraph(query: str, user_id: str, use_llm_router: bool) -> str:
     return final_state.get("final_answer", "抱歉，未能生成回复。")
 
 
-@router.get("/todos")
-async def list_todos(
-    current_user: User = DependAuth,
-):
-    todos = TodoTool.get_todos_list(user_id=current_user.username)
-    return Success(data=todos)
-
-
 class TodoIndexRequest(BaseModel):
     index: int
 
