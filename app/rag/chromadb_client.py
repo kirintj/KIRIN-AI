@@ -13,7 +13,6 @@ _logger = logging.getLogger(__name__)
 CHROMA_PERSIST_DIR = str(Path(__file__).resolve().parent.parent.parent / "data" / "chroma_db")
 
 CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
 TOP_K = 5
 
 COLLECTION_NAMES = ("knowledge_base", "resume", "interview", "salary", "guide")
@@ -62,7 +61,7 @@ async def add_documents(
     all_metadatas: list[dict] = []
 
     for idx, doc in enumerate(documents):
-        chunks = semantic_chunk(doc, max_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP)
+        chunks = semantic_chunk(doc, max_size=CHUNK_SIZE)
         doc_id = doc_ids[idx] if doc_ids else f"doc_{idx}"
         for chunk_idx, chunk in enumerate(chunks):
             all_chunks.append(chunk)
@@ -208,7 +207,7 @@ async def rebuild_all_collections() -> dict:
 
             doc_groups: dict[str, dict] = {}
             for i, content in enumerate(raw_docs):
-                meta = raw_metas[i] if i < len(raw_metas) else {}
+                meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
                 doc_id = meta.get("doc_id", f"doc_{i}")
                 if doc_id not in doc_groups:
                     doc_groups[doc_id] = {
@@ -231,7 +230,7 @@ async def rebuild_all_collections() -> dict:
             count = 0
             for doc_id, group in doc_groups.items():
                 full_text = "\n\n".join(group["chunks"])
-                chunks = semantic_chunk(full_text, max_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP)
+                chunks = semantic_chunk(full_text, max_size=CHUNK_SIZE)
                 chunk_ids = [f"{doc_id}_chunk_{j}" for j in range(len(chunks))]
                 metas = [
                     {
@@ -288,7 +287,7 @@ async def list_documents(
 
     doc_groups: dict[str, dict] = {}
     for i, chunk_id in enumerate(raw_ids):
-        meta = raw_metas[i] if i < len(raw_metas) else {}
+        meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
         doc_id = meta.get("doc_id", chunk_id)
         dtype = meta.get("doc_type", "")
         source = meta.get("source", "")
@@ -340,7 +339,7 @@ async def get_document_chunks(
     raw_docs = results.get("documents", [])
     raw_metas = results.get("metadatas", [])
     for i, content in enumerate(raw_docs):
-        meta = raw_metas[i] if i < len(raw_metas) else {}
+        meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
         chunks.append({
             "chunk_index": meta.get("chunk_index", i),
             "content": content,

@@ -27,8 +27,8 @@ async def init_db():
         logger.warning("unable to retrieve model history from database, model history will be created from scratch")
         shutil.rmtree("migrations")
         await command.init_db(safe=True)
-    except UnboundLocalError:
-        logger.warning("aerich migrate encountered known bug, skipping migration")
+    except UnboundLocalError as e:
+        logger.warning("aerich migrate encountered known bug, skipping migration: %s", e)
 
     try:
         await command.upgrade(run_in_transaction=True)

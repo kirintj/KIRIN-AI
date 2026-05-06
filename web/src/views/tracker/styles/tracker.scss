@@ -1,0 +1,788 @@
+// ========== 公共 Mixin ==========
+@mixin glass-card {
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+}
+
+@mixin glass-border {
+  border: 1px solid var(--hm-border-glass);
+}
+
+@mixin glass-surface {
+  @include glass-card;
+  @include glass-border;
+}
+
+@mixin spring-transition($props: all) {
+  transition: $props 0.3s var(--hm-spring);
+}
+
+@mixin layered-shadow {
+  box-shadow: var(--hm-shadow-layered);
+}
+
+@mixin layered-shadow-hover {
+  box-shadow: var(--hm-shadow-layered-hover);
+}
+
+@mixin brand-gradient {
+  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+}
+
+@mixin thin-scrollbar($direction: vertical) {
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+
+  &::-webkit-scrollbar {
+    @if $direction == vertical {
+      width: 4px;
+    } @else {
+      height: 6px;
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--hm-brand);
+  }
+}
+
+// ========== 主容器 ==========
+.hm-tracker {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// ========== 头部区域 ==========
+.hm-tracker-header {
+  padding: 16px 20px;
+  @include glass-card;
+  border-bottom: 1px solid var(--hm-border-glass);
+  flex-shrink: 0;
+  border-radius: var(--hm-radius-xl);
+  overflow: hidden;
+}
+
+.hm-tracker-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hm-tracker-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+  letter-spacing: -0.2px;
+}
+
+.hm-tracker-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+// ========== 搜索框 ==========
+.hm-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  @include glass-card;
+  @include spring-transition;
+
+  &:focus-within {
+    border-color: var(--hm-brand);
+    box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  }
+}
+
+.hm-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-primary);
+  width: 120px;
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--hm-font-fourth);
+  }
+}
+
+// ========== 视图切换 ==========
+.hm-view-toggle {
+  display: flex;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  overflow: hidden;
+  @include glass-card;
+}
+
+.hm-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-secondary);
+  cursor: pointer;
+  @include spring-transition;
+
+  &.active {
+    background: var(--hm-brand);
+    color: #fff;
+    box-shadow: var(--hm-shadow-brand);
+  }
+}
+
+// ========== 添加按钮 ==========
+.hm-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--hm-radius-full);
+  @include brand-gradient;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: var(--hm-shadow-brand);
+  @include spring-transition;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.1s;
+  }
+}
+
+// ========== 统计条 ==========
+.hm-stats-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hm-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  @include glass-border;
+  border-radius: var(--hm-radius-full);
+  font-size: 12px;
+  @include glass-card;
+  @include spring-transition;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  &.total {
+    border-color: var(--hm-border-glass);
+    @include glass-card;
+  }
+}
+
+.hm-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.hm-stat-label {
+  color: var(--hm-font-secondary);
+}
+
+.hm-stat-count {
+  font-weight: 600;
+  color: var(--hm-font-primary);
+}
+
+// ========== 图表条 ==========
+.hm-chart-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  @include glass-surface;
+  border-radius: var(--hm-radius-lg);
+}
+
+.hm-chart-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hm-chart-label {
+  width: 56px;
+  font-size: 12px;
+  color: var(--hm-font-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.hm-chart-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.hm-chart-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s var(--hm-spring);
+}
+
+.hm-chart-val {
+  width: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+// ========== 看板视图 ==========
+.hm-kanban {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  @include thin-scrollbar(horizontal);
+}
+
+.hm-kanban-col {
+  min-width: 240px;
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  @include glass-surface;
+  border-radius: var(--hm-radius-xl);
+  @include layered-shadow;
+  @include spring-transition;
+
+  &.dragover {
+    background: var(--hm-brand-light);
+    box-shadow: 0 0 0 2px var(--hm-brand);
+  }
+}
+
+.hm-kanban-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hm-divider);
+}
+
+.hm-kanban-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.hm-kanban-col-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+  flex: 1;
+}
+
+.hm-kanban-col-count {
+  font-size: 12px;
+  color: var(--hm-font-fourth);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 1px 8px;
+  border-radius: var(--hm-radius-full);
+}
+
+.hm-kanban-col-body {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  @include thin-scrollbar(vertical);
+}
+
+// ========== 应用卡片 ==========
+.hm-app-card {
+  @include glass-surface;
+  border-radius: var(--hm-radius-lg);
+  padding: 12px;
+  @include layered-shadow;
+  @include spring-transition;
+  cursor: grab;
+
+  &.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    @include layered-shadow-hover;
+    transform: translateY(-2px);
+  }
+}
+
+.hm-app-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.hm-app-company {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+}
+
+.hm-app-card-menu {
+  display: flex;
+  gap: 2px;
+}
+
+.hm-app-card-action {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--hm-radius-sm);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--hm-font-fourth);
+  @include spring-transition;
+
+  &:hover {
+    background: rgba(232, 64, 38, 0.08);
+    color: #E84026;
+    transform: scale(1.1);
+  }
+}
+
+.hm-app-position {
+  font-size: 13px;
+  color: var(--hm-font-secondary);
+  margin-bottom: 4px;
+}
+
+.hm-app-salary {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--hm-brand);
+  margin-bottom: 6px;
+}
+
+.hm-app-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--hm-font-fourth);
+  margin-bottom: 8px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+}
+
+.hm-app-move {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.hm-move-select {
+  flex: 1;
+  padding: 3px 8px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-sm);
+  font-size: 12px;
+  color: var(--hm-font-secondary);
+  background: var(--hm-bg-primary);
+  cursor: pointer;
+  outline: none;
+  @include spring-transition(border-color);
+
+  &:focus {
+    border-color: var(--hm-brand);
+  }
+}
+
+.hm-app-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-sm);
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-tertiary);
+  cursor: pointer;
+  @include spring-transition;
+
+  &:hover {
+    border-color: var(--hm-brand);
+    color: var(--hm-brand);
+    transform: translateY(-1px);
+  }
+}
+
+.hm-kanban-empty {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 12px;
+  color: var(--hm-font-fourth);
+}
+
+// ========== 列表视图 ==========
+.hm-list-view {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.hm-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  p {
+    font-size: 14px;
+    color: var(--hm-font-tertiary);
+    margin: 12px 0 8px;
+  }
+
+  span {
+    font-size: 14px;
+    color: var(--hm-brand);
+    cursor: pointer;
+    @include spring-transition;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.hm-list-table {
+  @include glass-surface;
+  border-radius: var(--hm-radius-xl);
+  @include layered-shadow;
+  overflow: hidden;
+}
+
+.hm-list-header {
+  display: flex;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid var(--hm-divider);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--hm-font-tertiary);
+}
+
+.hm-list-row {
+  display: flex;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hm-divider);
+  align-items: center;
+  @include spring-transition;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(10, 89, 247, 0.02);
+  }
+}
+
+.hm-list-col {
+  font-size: 13px;
+  color: var(--hm-font-primary);
+
+  &.company { width: 140px; font-weight: 500; }
+  &.position { width: 140px; }
+  &.status { width: 80px; }
+  &.salary { width: 80px; }
+  &.location { width: 80px; }
+  &.source { width: 80px; }
+  &.date { width: 80px; color: var(--hm-font-fourth); }
+  &.actions { flex: 1; display: flex; gap: 8px; }
+}
+
+.hm-status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--hm-radius-full);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hm-list-action {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-brand);
+  cursor: pointer;
+  padding: 2px 4px;
+  @include spring-transition;
+
+  &.danger {
+    color: var(--hm-error);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// ========== 时间线视图 ==========
+.hm-timeline-view {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.hm-timeline-list {
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.hm-timeline-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 24px;
+
+  &:last-child .hm-timeline-line {
+    display: none;
+  }
+}
+
+.hm-timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.hm-timeline-line {
+  position: absolute;
+  left: 5px;
+  top: 18px;
+  bottom: 0;
+  width: 2px;
+  background: var(--hm-divider);
+}
+
+.hm-timeline-card {
+  flex: 1;
+  padding: 16px 20px;
+  @include glass-surface;
+  border-radius: var(--hm-radius-xl);
+  @include layered-shadow;
+  @include spring-transition;
+
+  &:hover {
+    @include layered-shadow-hover;
+    transform: translateY(-3px);
+  }
+}
+
+.hm-timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.hm-timeline-company {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+}
+
+.hm-timeline-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--hm-radius-full);
+  font-weight: 500;
+}
+
+.hm-timeline-position {
+  font-size: 13px;
+  color: var(--hm-font-secondary);
+  margin-bottom: 6px;
+}
+
+.hm-timeline-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--hm-font-fourth);
+  margin-bottom: 8px;
+}
+
+.hm-timeline-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hm-timeline-btn {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-brand);
+  cursor: pointer;
+  padding: 2px 4px;
+  @include spring-transition;
+
+  &.danger {
+    color: var(--hm-error);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// ========== 弹窗按钮 ==========
+.hm-modal-btn {
+  padding: 7px 18px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  background: var(--hm-bg-secondary);
+  font-size: 13px;
+  color: var(--hm-font-primary);
+  cursor: pointer;
+  @include spring-transition;
+
+  &.primary {
+    @include brand-gradient;
+    border-color: transparent;
+    color: #fff;
+    box-shadow: var(--hm-shadow-brand);
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.hm-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+// ========== 响应式 ==========
+@media (max-width: 768px) {
+  .hm-kanban-col {
+    min-width: 200px;
+    width: 200px;
+  }
+
+  .hm-list-col.source,
+  .hm-list-col.location {
+    display: none;
+  }
+
+  .hm-tracker-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hm-tracker-actions {
+    width: 100%;
+  }
+
+  .hm-search-input {
+    width: 80px;
+  }
+
+  .hm-timeline-card {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-tracker-header {
+    padding: 12px 14px;
+  }
+
+  .hm-view-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .hm-list-col.salary {
+    display: none;
+  }
+}
