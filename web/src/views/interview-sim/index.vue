@@ -2,6 +2,9 @@
 import { useInterviewStore } from '@/store/modules/interview-sim'
 import { onMounted, ref, watch, nextTick, computed } from 'vue'
 import TheIcon from '@/components/icon/TheIcon.vue'
+import LoadingDots from '@/components/common/LoadingDots.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import { formatShortDate } from '@/utils/common/time'
 import { NModal, NForm, NFormItem, NInput, NSelect, NPopconfirm } from 'naive-ui'
 import { useMarkdown } from '@/composables/useMarkdown'
 
@@ -90,11 +93,6 @@ const scrollToBottom = () => {
   })
 }
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
 watch(() => store.messages, () => scrollToBottom(), { deep: true })
 
 onMounted(() => {
@@ -156,27 +154,29 @@ onMounted(() => {
             </NPopconfirm>
           </div>
         </div>
-        <div v-if="store.sessions.length === 0" class="hm-is-empty">
-          <TheIcon icon="icon-park-outline:people-talk" :size="32" color="var(--hm-font-fourth)" />
-          <p>暂无面试记录</p>
-          <span @click="handleNewSession">开始模拟面试</span>
-        </div>
+        <EmptyState
+          v-if="store.sessions.length === 0"
+          icon="icon-park-outline:people-talk"
+          title="暂无面试记录"
+        >
+          <span class="hm-is-empty-action" @click="handleNewSession">开始模拟面试</span>
+        </EmptyState>
       </div>
     </div>
 
     <div class="hm-is-main">
-      <div v-if="!store.currentSession" class="hm-is-welcome">
-        <div class="hm-is-welcome-icon">
-          <TheIcon icon="icon-park-outline:people-talk" :size="48" color="var(--hm-brand)" />
-        </div>
-        <h2>AI 面试模拟</h2>
-        <p>模拟真实面试场景，AI 扮演面试官与你进行多轮对话</p>
+      <EmptyState
+        v-if="!store.currentSession"
+        icon="icon-park-outline:people-talk"
+        title="AI 面试模拟"
+        description="模拟真实面试场景，AI 扮演面试官与你进行多轮对话"
+      >
         <div class="hm-is-types">
           <div v-for="(label, key) in store.INTERVIEW_TYPES" :key="key" class="hm-is-type-card" @click="setupForm.interview_type = key; showSetupModal = true">
             <span class="hm-is-type-label">{{ label }}</span>
           </div>
         </div>
-      </div>
+      </EmptyState>
 
       <template v-else>
         <div class="hm-is-chat-header">
@@ -215,7 +215,7 @@ onMounted(() => {
               <TheIcon icon="icon-park-outline:people-talk" :size="16" color="#fff" />
             </div>
             <div class="hm-is-msg-bubble hm-is-typing">
-              <span></span><span></span><span></span>
+              <LoadingDots />
             </div>
           </div>
         </div>
@@ -475,20 +475,7 @@ onMounted(() => {
   transform: scale(1.1);
 }
 
-.hm-is-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 0;
-}
-
-.hm-is-empty p {
-  font-size: 13px;
-  color: var(--hm-font-fourth);
-  margin-top: 8px;
-}
-
-.hm-is-empty span {
+.hm-is-empty-action {
   font-size: 13px;
   color: var(--hm-brand);
   cursor: pointer;
@@ -496,7 +483,7 @@ onMounted(() => {
   transition: all 0.25s var(--hm-spring);
 }
 
-.hm-is-empty span:hover {
+.hm-is-empty-action:hover {
   transform: translateY(-1px);
 }
 
@@ -506,45 +493,6 @@ onMounted(() => {
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
-}
-
-.hm-is-welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 40px;
-}
-
-.hm-is-welcome-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--hm-radius-xl);
-  background: var(--hm-brand-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  transition: transform 0.35s var(--hm-spring);
-}
-
-.hm-is-welcome-icon:hover {
-  transform: scale(1.08) rotate(-3deg);
-}
-
-.hm-is-welcome h2 {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--hm-font-primary);
-  margin-bottom: 8px;
-  letter-spacing: -0.3px;
-}
-
-.hm-is-welcome p {
-  font-size: 14px;
-  color: var(--hm-font-tertiary);
-  margin-bottom: 28px;
 }
 
 .hm-is-types {
@@ -708,25 +656,7 @@ onMounted(() => {
 }
 
 .hm-is-typing {
-  display: flex;
-  gap: 4px;
-  padding: 14px 18px;
-}
-
-.hm-is-typing span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--hm-brand);
-  animation: hm-is-bounce 1.2s infinite ease-in-out;
-}
-
-.hm-is-typing span:nth-child(2) { animation-delay: 0.15s; }
-.hm-is-typing span:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes hm-is-bounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
+  padding: 4px 8px;
 }
 
 .hm-is-input-area {

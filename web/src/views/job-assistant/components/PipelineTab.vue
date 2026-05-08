@@ -7,8 +7,8 @@ import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
 import { useFileUpload } from '@/composables/useFileUpload'
 import { useMarkdown } from '@/composables/useMarkdown'
-import LoadingDots from './LoadingDots.vue'
-import EmptyState from './EmptyState.vue'
+import LoadingDots from '@/components/common/LoadingDots.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const emit = defineEmits<{ feedback: [query: string, answer: string] }>()
 

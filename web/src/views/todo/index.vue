@@ -6,6 +6,7 @@ import {
 } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import api from '@/api'
+import { formatDateTimeShort, formatDueDate } from '@/utils/common/time'
 
 defineOptions({ name: '待办任务' })
 
@@ -259,27 +260,9 @@ const handleEdit = async () => {
   }
 }
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN', {
-    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
-  })
-}
-
 const isOverdue = (item: TodoItem) => {
   if (!item.due_date || item.done) return false
   return new Date(item.due_date) < new Date()
-}
-
-const formatDueDate = (dateStr: string) => {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  const hasTime = dateStr.includes(':') || dateStr.includes('T')
-  if (hasTime) {
-    return d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }
-  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
 onMounted(() => {
@@ -476,7 +459,7 @@ onMounted(() => {
               </NTag>
             </div>
             <span class="hm-todo-text">{{ item.content }}</span>
-            <span class="hm-todo-time">{{ formatDate(item.created_at) }}</span>
+            <span class="hm-todo-time">{{ formatDateTimeShort(item.created_at) }}</span>
           </div>
         </div>
         <div class="hm-todo-right">
@@ -581,49 +564,6 @@ onMounted(() => {
 .hm-todo-actions {
   display: flex;
   gap: 8px;
-}
-
-.hm-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-secondary);
-  font-size: 14px;
-  color: var(--hm-font-primary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-action-btn:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
-}
-
-.hm-action-btn:active {
-  transform: translateY(0) scale(0.97);
-  transition-duration: 0.1s;
-}
-
-.hm-action-btn.primary {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: var(--hm-shadow-brand);
-}
-
-.hm-action-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
-  transform: translateY(-2px);
-}
-
-.hm-action-btn.small {
-  padding: 7px 14px;
-  font-size: 13px;
 }
 
 .hm-stats-row {

@@ -1046,44 +1046,6 @@ onMounted(async () => {
   padding: 18px;
 }
 
-.hm-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-secondary);
-  font-size: 14px;
-  color: var(--hm-font-primary);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.hm-action-btn:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
-}
-
-.hm-action-btn:active {
-  transform: translateY(0) scale(0.97);
-  transition-duration: 0.1s;
-}
-
-.hm-action-btn.primary {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.25);
-}
-
-.hm-action-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
-  transform: translateY(-2px);
-}
-
 .hm-wb-conv-list {
   display: flex;
   flex-direction: column;

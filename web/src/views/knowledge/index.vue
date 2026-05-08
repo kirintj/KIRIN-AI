@@ -605,63 +605,6 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   gap: 8px;
 }
 
-.hm-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-secondary);
-  font-size: 14px;
-  color: var(--hm-font-primary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-action-btn:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
-}
-
-.hm-action-btn:active {
-  transform: translateY(0) scale(0.97);
-  transition-duration: 0.1s;
-}
-
-.hm-action-btn.primary {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: var(--hm-shadow-brand);
-}
-
-.hm-action-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
-  transform: translateY(-2px);
-}
-
-.hm-action-btn.primary:disabled,
-.hm-action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.hm-action-btn.danger {
-  color: var(--hm-error);
-  border-color: var(--hm-error);
-}
-
-.hm-action-btn.danger:hover {
-  background: rgba(232, 64, 38, 0.06);
-  border-color: var(--hm-error);
-  color: var(--hm-error);
-}
-
 .hm-stats-row {
   display: flex;
   gap: 14px;

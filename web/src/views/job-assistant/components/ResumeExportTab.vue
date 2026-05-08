@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import api from '@/api'
+import { formatShortDate } from '@/utils/common/time'
 
 const emit = defineEmits(['feedback'])
 
@@ -121,11 +122,6 @@ const downloadFile = async (filename: string) => {
 const formatSize = (bytes: number) => {
   if (bytes < 1024) return bytes + ' B'
   return (bytes / 1024).toFixed(1) + ' KB'
-}
-
-const formatDate = (iso: string) => {
-  if (!iso) return ''
-  return new Date(iso).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 onMounted(() => {
@@ -256,7 +252,7 @@ onMounted(() => {
           <TheIcon icon="icon-park-outline:file-word" :size="20" color="#0A59F7" />
           <div class="hm-ex-file-info">
             <span class="hm-ex-file-name">{{ file.filename }}</span>
-            <span class="hm-ex-file-meta">{{ formatSize(file.size) }} · {{ formatDate(file.created_at) }}</span>
+            <span class="hm-ex-file-meta">{{ formatSize(file.size) }} · {{ formatShortDate(file.created_at) }}</span>
           </div>
           <TheIcon icon="icon-park-outline:download" :size="16" color="var(--hm-font-fourth)" />
         </div>

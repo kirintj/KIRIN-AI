@@ -4,9 +4,9 @@ import { NInput } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
 import { useJobQuery } from '../composables/useJobQuery'
-import LoadingDots from './LoadingDots.vue'
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import ResultCard from './ResultCard.vue'
-import EmptyState from './EmptyState.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 
 const emit = defineEmits<{ feedback: [query: string, answer: string] }>()
 

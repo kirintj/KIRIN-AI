@@ -3,14 +3,14 @@ defineProps<{ text?: string }>()
 </script>
 
 <template>
-  <div class="hm-loading">
+  <div class="hm-loading-dots">
     <div class="hm-dots"><span></span><span></span><span></span></div>
     <span v-if="text" class="hm-loading-text">{{ text }}</span>
   </div>
 </template>
 
 <style scoped>
-.hm-loading {
+.hm-loading-dots {
   display: flex;
   flex-direction: column;
   align-items: center;

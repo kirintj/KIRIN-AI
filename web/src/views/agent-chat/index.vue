@@ -3,6 +3,9 @@ import { useAgentChatStore } from '@/store/modules/agent-chat'
 import { onMounted, watch, ref } from 'vue'
 import { useMarkdown } from '@/composables/useMarkdown'
 import TheIcon from '@/components/icon/TheIcon.vue'
+import LoadingDots from '@/components/common/LoadingDots.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
+import { formatRelativeTime, formatMsgTime, shouldShowTimeDivider } from '@/utils/common/time'
 import { NPopconfirm, NInput } from 'naive-ui'
 
 const agentStore = useAgentChatStore()
@@ -87,40 +90,11 @@ const toggleFeedback = (index: number, type: 'like' | 'dislike') => {
   feedbackMap.value[index] = feedbackMap.value[index] === type ? undefined as any : type
 }
 
-const formatTime = (dateStr: string) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  if (diffMins < 1) return '刚刚'
-  if (diffMins < 60) return `${diffMins}分钟前`
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `${diffHours}小时前`
-  const diffDays = Math.floor(diffHours / 24)
-  if (diffDays < 7) return `${diffDays}天前`
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-}
-
-const formatMsgTime = (dateStr: string | null) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-}
-
-const shouldShowTime = (messages: any[], index: number) => {
-  if (index === 0) return true
-  const curr = messages[index].timestamp
-  const prev = messages[index - 1].timestamp
-  if (!curr || !prev) return false
-  return new Date(curr).getTime() - new Date(prev).getTime() > 5 * 60 * 1000
-}
-
 const quickCommands = [
-  { label: '面试准备', icon: 'icon-park-outline:people-talk', text: '帮我准备字节跳动前端开发的面试', color: '#0A59F7' },
-  { label: '薪资谈判', icon: 'icon-park-outline:finance', text: '北京互联网行业前端开发3年经验的薪资谈判建议', color: '#ED6F21' },
-  { label: '求职攻略', icon: 'icon-park-outline:map', text: '跨行业跳槽求职攻略', color: '#722ED1' },
-  { label: '创建待办', icon: 'icon-park-outline:todo', text: '帮我创建一个待办：明天下午3点准备面试', color: '#64BB5C' },
+  { label: '面试准备', icon: 'icon-park-outline:book-open', text: '帮我准备字节跳动前端开发的面试', color: '#0A59F7' },
+  { label: '薪资谈判', icon: 'icon-park-outline:balance-two', text: '北京互联网行业前端开发3年经验的薪资谈判建议', color: '#ED6F21' },
+  { label: '求职攻略', icon: 'icon-park-outline:map-draw', text: '跨行业跳槽求职攻略', color: '#722ED1' },
+  { label: '创建待办', icon: 'icon-park-outline:doc-add', text: '帮我创建一个待办：明天下午3点准备面试', color: '#64BB5C' },
 ]
 
 onMounted(async () => {
@@ -188,7 +162,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
             </div>
             <div v-else class="hm-conv-info">
               <div class="hm-conv-title">{{ conv.title || '新对话' }}</div>
-              <div class="hm-conv-meta">{{ conv.message_count || 0 }} 条消息 · {{ formatTime(conv.updated_at) }}</div>
+              <div class="hm-conv-meta">{{ conv.message_count || 0 }} 条消息 · {{ formatRelativeTime(conv.updated_at) }}</div>
             </div>
             <div class="hm-conv-actions" @click.stop>
               <button class="hm-conv-action" @click="startRename(conv.id, conv.title)">
@@ -230,7 +204,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
             :class="{ active: agentStore.useLangGraph }"
             @click="agentStore.useLangGraph = !agentStore.useLangGraph"
           >
-            <TheIcon icon="icon-park-outline:graph" :size="14" />
+            <TheIcon icon="icon-park-outline:mindmap-map" :size="14" />
             {{ agentStore.useLangGraph ? 'LangGraph' : '经典' }}
           </button>
           <button
@@ -250,12 +224,12 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 
       <div class="hm-chat-body">
         <div class="hm-msg-list">
-          <div v-if="agentStore.messages.length === 0" class="hm-chat-empty">
-            <div class="hm-empty-icon">
-              <TheIcon icon="icon-park-outline:robot" :size="48" color="var(--hm-brand)" />
-            </div>
-            <p class="hm-empty-title">开始与 AI Agent 对话</p>
-            <p class="hm-empty-desc">支持知识问答、面试准备、薪资谈判、求职攻略、待办创建</p>
+          <EmptyState
+            v-if="agentStore.messages.length === 0"
+            icon="icon-park-outline:robot"
+            title="开始与 AI Agent 对话"
+            description="支持知识问答、面试准备、薪资谈判、求职攻略、待办创建"
+          >
             <div class="hm-quick-cmds">
               <button
                 v-for="cmd in quickCommands"
@@ -269,10 +243,10 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
                 <span>{{ cmd.label }}</span>
               </button>
             </div>
-          </div>
+          </EmptyState>
 
           <template v-for="(item, index) in agentStore.messages" :key="index">
-            <div v-if="shouldShowTime(agentStore.messages, index)" class="hm-msg-time-divider">
+            <div v-if="shouldShowTimeDivider(agentStore.messages, index)" class="hm-msg-time-divider">
               {{ formatMsgTime(item.timestamp) }}
             </div>
             <div :class="['hm-msg-item', item.role]">
@@ -331,11 +305,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
               <TheIcon icon="icon-park-outline:robot" :size="18" color="var(--hm-brand)" />
             </div>
             <div class="hm-msg-bubble hm-msg-loading">
-              <div class="hm-dots">
-                <span></span><span></span><span></span>
-              </div>
-              <span class="hm-loading-text">思考中</span>
-              <div class="hm-loading-pulse"></div>
+              <LoadingDots text="思考中" />
             </div>
           </div>
         </div>
@@ -363,7 +333,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
               :disabled="!message.trim() || agentStore.isLoading"
               @click="sendMessage"
             >
-              <TheIcon icon="icon-park-outline:arrow-up" :size="18" color="#fff" />
+              <TheIcon icon="icon-park-outline:up-small" :size="18" color="#fff" />
             </button>
           </div>
         </div>
@@ -747,50 +717,12 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 }
 .hm-msg-list::-webkit-scrollbar { display: none; }
 
-.hm-chat-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 40px 0;
-}
-
-.hm-empty-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--hm-radius-xl);
-  background: var(--hm-brand-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  transition: transform 0.35s var(--hm-spring);
-}
-
-.hm-empty-icon:hover {
-  transform: scale(1.08) rotate(-3deg);
-}
-
-.hm-empty-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--hm-font-primary);
-  margin-bottom: 6px;
-  letter-spacing: -0.2px;
-}
-
-.hm-empty-desc {
-  font-size: 13px;
-  color: var(--hm-font-tertiary);
-  margin-bottom: 28px;
-}
-
 .hm-quick-cmds {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 20px;
 }
 
 .hm-quick-btn {
@@ -927,47 +859,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 .hm-msg-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-}
-
-.hm-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.hm-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--hm-brand);
-  animation: hm-bounce 1.2s infinite ease-in-out;
-}
-
-.hm-dots span:nth-child(2) { animation-delay: 0.15s; }
-.hm-dots span:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes hm-bounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
-}
-
-.hm-loading-text {
-  font-size: 13px;
-  color: var(--hm-font-tertiary);
-}
-
-.hm-loading-pulse {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--hm-brand);
-  animation: hm-pulse 1.5s infinite ease-in-out;
-}
-
-@keyframes hm-pulse {
-  0%, 100% { transform: scale(0.8); opacity: 0.4; }
-  50% { transform: scale(1.2); opacity: 1; }
+  padding: 0;
 }
 
 @keyframes hm-msg-in {
