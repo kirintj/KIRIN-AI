@@ -110,10 +110,10 @@ async def init_menus():
 
     sys_submenus = [
         ("用户管理", "user", 1, "icon-park-outline:user", "/system/user"),
-        ("角色管理", "role", 2, "icon-park-outline:role", "/system/role"),
-        ("菜单管理", "menu", 3, "icon-park-outline:menu", "/system/menu"),
+        ("角色管理", "role", 2, "icon-park-outline:people", "/system/role"),
+        ("菜单管理", "menu", 3, "icon-park-outline:application-menu", "/system/menu"),
         ("API管理", "api", 4, "icon-park-outline:api", "/system/api"),
-        ("审计日志", "auditlog", 5, "icon-park-outline:audit-log", "/system/auditlog"),
+        ("审计日志", "auditlog", 5, "icon-park-outline:audit", "/system/auditlog"),
         ("对话历史", "chathistory", 6, "icon-park-outline:history", "/system/chathistory"),
         ("AI模型配置", "ai-config", 7, "icon-park-outline:setting-config", "/system/ai-config"),
     ]
