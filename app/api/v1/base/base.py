@@ -10,6 +10,7 @@ from app.schemas.base import Fail, Success
 from app.schemas.login import *
 from app.schemas.users import UpdatePassword, UserCreate
 from app.settings import settings
+import jwt as pyjwt
 from app.core.security import create_access_token, create_refresh_token, decode_token, get_password_hash, verify_password
 
 router = APIRouter()
@@ -118,6 +119,8 @@ async def update_user_password(req_in: UpdatePassword):
 async def refresh_token(req_in: RefreshTokenIn):
     try:
         decode_data = decode_token(req_in.refresh_token)
+    except pyjwt.ExpiredSignatureError:
+        return Fail(code=401, msg="Refresh Token已过期")
     except Exception:
         return Fail(code=401, msg="无效的Refresh Token")
 

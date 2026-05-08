@@ -28,3 +28,5 @@ node_modules/
 dist/
 *.log
 *.pyc
+
+INTERVIEW_QA.md

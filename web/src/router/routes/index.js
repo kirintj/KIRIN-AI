@@ -89,7 +89,7 @@ export const basicRoutes = [
         name: 'TrackerDefault',
         meta: {
           title: '求职进度',
-          icon: 'icon-park-outline:sequence',
+          icon: 'icon-park-outline:torch',
         },
       },
     ],
@@ -106,7 +106,7 @@ export const basicRoutes = [
         name: 'InterviewSimDefault',
         meta: {
           title: '面试模拟',
-          icon: 'icon-park-outline:people-talk',
+          icon: 'icon-park-outline:hourglass-full',
         },
       },
     ],
