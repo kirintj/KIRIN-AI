@@ -103,8 +103,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <AppPage :show-footer="false">
-    <div class="hm-interview-sim">
+  <div class="hm-interview-sim">
     <div class="hm-is-sidebar">
       <div class="hm-is-sidebar-header">
         <span class="hm-is-sidebar-title">面试模拟</span>
@@ -292,7 +291,6 @@ onMounted(() => {
       </template>
     </NModal>
   </div>
-  </AppPage>
 </template>
 
 <style scoped>
@@ -301,6 +299,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   overflow: hidden;
+  background: var(--hm-bg-primary);
 }
 
 .hm-is-sidebar {
@@ -319,7 +318,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--hm-divider);
+  border-bottom: 1px solid var(--hm-border-glass);
 }
 
 .hm-is-sidebar-title {
@@ -352,7 +351,7 @@ onMounted(() => {
   display: flex;
   gap: 8px;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--hm-divider);
+  border-bottom: 1px solid var(--hm-border-glass);
 }
 
 .hm-is-stat {

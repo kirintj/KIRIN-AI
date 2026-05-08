@@ -400,15 +400,15 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 .hm-sidebar-header {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 14px 12px;
   gap: 8px;
-  border-bottom: 1px solid var(--hm-divider);
+  border-bottom: 1px solid var(--hm-border-glass);
   flex-shrink: 0;
 }
 
 .hm-sidebar-header.collapsed {
   justify-content: center;
-  padding: 12px 0;
+  padding: 14px 0;
 }
 
 .hm-sidebar-title {
