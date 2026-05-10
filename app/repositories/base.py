@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, List, NewType, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, NewType, Optional, Tuple, Type, TypeVar, Union
 
 from pydantic import BaseModel
 from tortoise.expressions import Q
@@ -23,14 +23,14 @@ class RepositoryBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def exists(self, **kwargs) -> bool:
         return await self.model.filter(**kwargs).exists()
 
-    async def list(self, page: int, page_size: int, search: Q = Q(), order: list | None = None) -> Tuple[Total, List[ModelType]]:
+    async def list(self, page: int, page_size: int, search: Q = Q(), order: Optional[list] = None) -> Tuple[Total, List[ModelType]]:
         order = order or []
         query = self.model.filter(search)
         total: int = await query.count()
         items: List[ModelType] = await query.offset((page - 1) * page_size).limit(page_size).order_by(*order)
         return Total(total), items
 
-    async def list_all(self, search: Q = Q(), order: list | None = None) -> List[ModelType]:
+    async def list_all(self, search: Q = Q(), order: Optional[list] = None) -> List[ModelType]:
         order = order or []
         return await self.model.filter(search).order_by(*order)
 
