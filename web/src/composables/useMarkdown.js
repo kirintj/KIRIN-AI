@@ -1,10 +1,8 @@
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import { markedHighlight } from 'marked-highlight'
+import DOMPurify from 'dompurify'
 import { nextTick } from 'vue'
-
-const copyBtnIdPrefix = 'hm-code-copy-'
-let copyBtnCounter = 0
 
 marked.use(markedHighlight({
   langPrefix: 'hljs language-',
@@ -21,16 +19,43 @@ const originalCode = renderer.code.bind(renderer)
 
 renderer.code = function (code, language, escaped) {
   const lang = language || ''
-  const id = `${copyBtnIdPrefix}${copyBtnCounter++}`
   const langLabel = lang ? `<span class="hm-code-lang">${lang}</span>` : ''
-  const copyBtn = `<button class="hm-code-copy-btn" data-code-id="${id}" onclick="(function(btn){var el=btn.parentElement.querySelector('code');if(el){navigator.clipboard.writeText(el.textContent).then(function(){btn.textContent='已复制';setTimeout(function(){btn.textContent='复制'},1500)})}})(this)">复制</button>`
+  const copyBtn = `<button class="hm-code-copy-btn" data-action="copy">复制</button>`
   const codeHtml = originalCode(code, language, escaped)
-  return `<div class="hm-code-block" id="${id}"><div class="hm-code-header">${langLabel}${copyBtn}</div>${codeHtml}</div>`
+  return `<div class="hm-code-block"><div class="hm-code-header">${langLabel}${copyBtn}</div>${codeHtml}</div>`
 }
 
 marked.setOptions({ renderer })
 
+let copyHandlerAttached = false
+
+function ensureCopyHandler() {
+  if (copyHandlerAttached) return
+  copyHandlerAttached = true
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="copy"]')
+    if (!btn) return
+    const block = btn.closest('.hm-code-block')
+    const code = block?.querySelector('code')
+    if (code) {
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = '已复制'
+        setTimeout(() => { btn.textContent = '复制' }, 1500)
+      })
+    }
+  })
+}
+
+const purifyConfig = {
+  ADD_TAGS: ['button'],
+  ADD_ATTR: ['data-action'],
+}
+
 export function useMarkdown() {
+  ensureCopyHandler()
+
+  const sanitize = (html) => DOMPurify.sanitize(html, purifyConfig)
+
   const formatMessage = (text, role) => {
     if (!text) return ''
     if (role === 'user') {
@@ -41,20 +66,20 @@ export function useMarkdown() {
         .replace(/\n/g, '<br>')
     }
     try {
-      return marked(text)
+      return sanitize(marked(text))
     } catch (e) {
       console.warn('Markdown渲染失败:', e)
-      return text.replace(/\n/g, '<br>')
+      return sanitize(text.replace(/\n/g, '<br>'))
     }
   }
 
   const formatMarkdown = (text) => {
     if (!text) return ''
     try {
-      return marked(text)
+      return sanitize(marked(text))
     } catch (e) {
       console.warn('Markdown渲染失败:', e)
-      return text.replace(/\n/g, '<br>')
+      return sanitize(text.replace(/\n/g, '<br>'))
     }
   }
 

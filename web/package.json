@@ -19,6 +19,7 @@
     "@zclzone/eslint-config": "^0.0.4",
     "axios": "^1.4.0",
     "dayjs": "^1.11.9",
+    "dompurify": "^3.4.2",
     "dotenv": "^16.3.1",
     "eslint": "^8.46.0",
     "highlight.js": "^11.11.1",

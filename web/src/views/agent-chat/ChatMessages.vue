@@ -5,9 +5,10 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import { useMarkdown } from '@/composables/useMarkdown'
 import { formatMsgTime, shouldShowTimeDivider } from '@/utils/common/time'
 import { ref } from 'vue'
+import type { AgentMessage } from '@/types/chat'
 
 const props = defineProps<{
-  messages: any[]
+  messages: AgentMessage[]
   isLoading: boolean
 }>()
 
@@ -17,8 +18,8 @@ const emit = defineEmits<{
 }>()
 
 const { formatMessage, scrollToBottom } = useMarkdown()
-const copiedIndex = ref<number | null>(null)
-const feedbackMap = ref<Record<number, 'like' | 'dislike'>>({})
+const copiedId = ref<string | null>(null)
+const feedbackMap = ref<Record<string, 'like' | 'dislike'>>({})
 
 const quickCommands = [
   { label: '面试准备', icon: 'icon-park-outline:book-open', text: '帮我准备字节跳动前端开发的面试', color: '#0A59F7' },
@@ -27,18 +28,18 @@ const quickCommands = [
   { label: '创建待办', icon: 'icon-park-outline:doc-add', text: '帮我创建一个待办：明天下午3点准备面试', color: '#64BB5C' },
 ]
 
-const copyMessage = async (content: string, index: number) => {
+const copyMessage = async (content: string, id: string) => {
   try {
     await navigator.clipboard.writeText(content)
-    copiedIndex.value = index
-    setTimeout(() => { copiedIndex.value = null }, 1500)
+    copiedId.value = id
+    setTimeout(() => { copiedId.value = null }, 1500)
   } catch {
     window.$message?.error('复制失败')
   }
 }
 
-const toggleFeedback = (index: number, type: 'like' | 'dislike') => {
-  feedbackMap.value[index] = feedbackMap.value[index] === type ? undefined as any : type
+const toggleFeedback = (id: string, type: 'like' | 'dislike') => {
+  feedbackMap.value[id] = feedbackMap.value[id] === type ? undefined as any : type
 }
 
 defineExpose({ scrollToBottom })
@@ -66,7 +67,7 @@ defineExpose({ scrollToBottom })
       </div>
     </EmptyState>
 
-    <template v-for="(item, index) in messages" :key="index">
+    <template v-for="(item, index) in messages" :key="item.id">
       <div v-if="shouldShowTimeDivider(messages, index)" class="hm-msg-time-divider">
         {{ formatMsgTime(item.timestamp) }}
       </div>
@@ -76,36 +77,36 @@ defineExpose({ scrollToBottom })
             <div v-html="formatMessage(item.content, item.role)" class="hm-msg-bubble md-bubble"></div>
           </div>
           <div v-if="item.role === 'assistant'" class="hm-msg-actions">
-            <button class="hm-msg-action" @click="copyMessage(item.content, index)">
+            <button class="hm-msg-action" @click="copyMessage(item.content, item.id)">
               <TheIcon
-                :icon="copiedIndex === index ? 'icon-park-outline:success' : 'icon-park-outline:copy'"
+                :icon="copiedId === item.id ? 'icon-park-outline:success' : 'icon-park-outline:copy'"
                 :size="12"
-                :color="copiedIndex === index ? '#64BB5C' : 'var(--hm-font-fourth)'"
+                :color="copiedId === item.id ? '#64BB5C' : 'var(--hm-font-fourth)'"
               />
-              {{ copiedIndex === index ? '已复制' : '复制' }}
+              {{ copiedId === item.id ? '已复制' : '复制' }}
             </button>
             <button class="hm-msg-action" @click="emit('regenerate', index)" :disabled="isLoading">
               <TheIcon icon="icon-park-outline:refresh" :size="12" color="var(--hm-font-fourth)" />
               重新生成
             </button>
             <button
-              :class="['hm-msg-action', { active: feedbackMap[index] === 'like' }]"
-              @click="toggleFeedback(index, 'like')"
+              :class="['hm-msg-action', { active: feedbackMap[item.id] === 'like' }]"
+              @click="toggleFeedback(item.id, 'like')"
             >
               <TheIcon
                 icon="icon-park-outline:like"
                 :size="12"
-                :color="feedbackMap[index] === 'like' ? '#0A59F7' : 'var(--hm-font-fourth)'"
+                :color="feedbackMap[item.id] === 'like' ? '#0A59F7' : 'var(--hm-font-fourth)'"
               />
             </button>
             <button
-              :class="['hm-msg-action', { active: feedbackMap[index] === 'dislike' }]"
-              @click="toggleFeedback(index, 'dislike')"
+              :class="['hm-msg-action', { active: feedbackMap[item.id] === 'dislike' }]"
+              @click="toggleFeedback(item.id, 'dislike')"
             >
               <TheIcon
                 icon="icon-park-outline:dislike"
                 :size="12"
-                :color="feedbackMap[index] === 'dislike' ? '#E84026' : 'var(--hm-font-fourth)'"
+                :color="feedbackMap[item.id] === 'dislike' ? '#E84026' : 'var(--hm-font-fourth)'"
               />
             </button>
           </div>

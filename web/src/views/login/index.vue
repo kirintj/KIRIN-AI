@@ -154,7 +154,6 @@ function initLoginInfo() {
   const localLoginInfo = lStorage.get('loginInfo')
   if (localLoginInfo) {
     loginInfo.value.username = localLoginInfo.username || ''
-    loginInfo.value.password = localLoginInfo.password || ''
   }
 }
 

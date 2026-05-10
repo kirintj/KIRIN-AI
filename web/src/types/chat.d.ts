@@ -24,3 +24,23 @@ export interface ChatHistoryItem {
   content: string
   timestamp: string
 }
+
+export interface AgentMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string | null
+}
+
+export interface Conversation {
+  id: string
+  title: string
+  message_count?: number
+  updated_at?: string
+  created_at?: string
+}
+
+export interface ConversationGroup {
+  label: string
+  items: Conversation[]
+}

@@ -1,15 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api'
+import type { AgentMessage, Conversation, ConversationGroup } from '@/types/chat'
 
 export const useAgentChatStore = defineStore('agent-chat', () => {
-  const messages = ref([])
+  const messages = ref<AgentMessage[]>([])
   const isLoading = ref(false)
   const useLlmRouter = ref(false)
   const useLangGraph = ref(true)
 
-  const conversations = ref([])
-  const currentConversationId = ref(null)
+  const conversations = ref<Conversation[]>([])
+  const currentConversationId = ref<string | null>(null)
   const searchKeyword = ref('')
 
   const filteredConversations = computed(() => {
@@ -18,13 +19,13 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     return conversations.value.filter((c) => (c.title || '').toLowerCase().includes(keyword))
   })
 
-  const groupedConversations = computed(() => {
+  const groupedConversations = computed<ConversationGroup[]>(() => {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const yesterday = new Date(today.getTime() - 86400000)
     const weekAgo = new Date(today.getTime() - 6 * 86400000)
 
-    const groups = [
+    const groups: ConversationGroup[] = [
       { label: '今天', items: [] },
       { label: '昨天', items: [] },
       { label: '最近7天', items: [] },
@@ -47,6 +48,15 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     return groups.filter((g) => g.items.length > 0)
   })
 
+  function newMessage(role: 'user' | 'assistant', content: string, timestamp?: string | null): AgentMessage {
+    return {
+      id: crypto.randomUUID(),
+      role,
+      content,
+      timestamp: timestamp ?? new Date().toISOString(),
+    }
+  }
+
   const loadConversations = async () => {
     try {
       const res = await api.getConversations()
@@ -59,7 +69,7 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   const createConversation = async (title = '新对话') => {
     try {
       const res = await api.createConversation({ title })
-      const conv = res.data
+      const conv: Conversation = res.data
       conversations.value.unshift(conv)
       currentConversationId.value = conv.id
       messages.value = []
@@ -70,23 +80,21 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     }
   }
 
-  const switchConversation = async (convId) => {
+  const switchConversation = async (convId: string) => {
     if (convId === currentConversationId.value) return
     currentConversationId.value = convId
     try {
       const res = await api.getConversationMessages(convId)
-      messages.value = (res.data || []).map((m) => ({
-        role: m.role,
-        content: m.content,
-        timestamp: m.timestamp || m.created_at || null,
-      }))
+      messages.value = (res.data || []).map((m: any) =>
+        newMessage(m.role, m.content, m.timestamp || m.created_at || null),
+      )
     } catch (error) {
       console.error('加载会话消息失败', error)
       messages.value = []
     }
   }
 
-  const renameConversation = async (convId, title) => {
+  const renameConversation = async (convId: string, title: string) => {
     try {
       await api.renameConversation({ conversation_id: convId, title })
       const conv = conversations.value.find((c) => c.id === convId)
@@ -96,7 +104,7 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     }
   }
 
-  const deleteConversation = async (convId) => {
+  const deleteConversation = async (convId: string) => {
     try {
       await api.deleteConversation({ conversation_id: convId })
       conversations.value = conversations.value.filter((c) => c.id !== convId)
@@ -116,74 +124,64 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     try {
       const res = await api.getAgentMemory()
       const history = res.data || []
-      messages.value = history.flatMap((item) => [
-        { role: 'user', content: item.user, timestamp: item.created_at || null },
-        { role: 'assistant', content: item.assistant, timestamp: item.created_at || null },
+      messages.value = history.flatMap((item: any) => [
+        newMessage('user', item.user, item.created_at || null),
+        newMessage('assistant', item.assistant, item.created_at || null),
       ])
     } catch (error) {
       console.error('加载记忆失败', error)
     }
   }
 
-  const _buildRequestParams = (query) => ({
+  const _buildRequestParams = (query: string) => ({
     query,
     use_llm_router: useLlmRouter.value,
     use_langgraph: useLangGraph.value,
     conversation_id: currentConversationId.value,
   })
 
-  const sendMessage = async (query) => {
+  const sendMessage = async (query: string) => {
     if (!query || !query.trim() || isLoading.value) return
 
-    const now = new Date().toISOString()
-    messages.value.push({ role: 'user', content: query, timestamp: now })
+    messages.value.push(newMessage('user', query))
     isLoading.value = true
 
     try {
       const res = await api.agentChat(_buildRequestParams(query))
-      messages.value.push({
-        role: 'assistant',
-        content: res.data?.answer || '无返回',
-        timestamp: new Date().toISOString(),
-      })
+      messages.value.push(newMessage('assistant', res.data?.answer || '无返回'))
       if (currentConversationId.value) {
         await loadConversations()
       }
     } catch (error) {
       console.error('Agent 请求失败：', error)
-      messages.value.push({
-        role: 'assistant',
-        content: '请求失败，请检查后端服务',
-        timestamp: new Date().toISOString(),
-      })
+      messages.value.push(newMessage('assistant', '请求失败，请检查后端服务'))
     } finally {
       isLoading.value = false
     }
   }
 
-  const regenerateMessage = async (messageIndex) => {
+  const regenerateMessage = async (messageIndex: number) => {
     if (isLoading.value) return
 
-    const userMsg = messages.value[messageIndex - 1]
-    if (!userMsg || userMsg.role !== 'user') return
+    // Find the nearest user message before this index
+    let userMsg: AgentMessage | undefined
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (messages.value[i].role === 'user') {
+        userMsg = messages.value[i]
+        break
+      }
+    }
+    if (!userMsg) return
 
     messages.value.splice(messageIndex, 1)
     isLoading.value = true
 
     try {
       const res = await api.agentChat(_buildRequestParams(userMsg.content))
-      messages.value.push({
-        role: 'assistant',
-        content: res.data?.answer || '无返回',
-        timestamp: new Date().toISOString(),
-      })
+      messages.value.push(newMessage('assistant', res.data?.answer || '无返回'))
     } catch (error) {
       console.error('重新生成失败：', error)
-      messages.value.push({
-        role: 'assistant',
-        content: '重新生成失败，请重试',
-        timestamp: new Date().toISOString(),
-      })
+      messages.value.push(newMessage('assistant', '重新生成失败，请重试'))
     } finally {
       isLoading.value = false
     }

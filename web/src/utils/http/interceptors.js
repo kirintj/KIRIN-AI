@@ -61,14 +61,14 @@ export async function resReject(error) {
     }
 
     if (isRefreshing) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         pendingRequests.push((newToken) => {
           if (newToken) {
             originalRequest.headers.token = newToken
-            resolve(import('axios').then(({ default: axios }) => axios(originalRequest)))
+            import('axios').then(({ default: axios }) => axios(originalRequest)).then(resolve, reject)
           } else {
             forceLogout()
-            resolve(Promise.reject({ code: 401, message: '登录已过期', error }))
+            reject({ code: 401, message: '登录已过期', error })
           }
         })
       })

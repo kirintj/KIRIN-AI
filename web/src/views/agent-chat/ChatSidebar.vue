@@ -3,11 +3,12 @@ import TheIcon from '@/components/icon/TheIcon.vue'
 import { NPopconfirm, NInput } from 'naive-ui'
 import { formatRelativeTime } from '@/utils/common/time'
 import { ref } from 'vue'
+import type { Conversation, ConversationGroup } from '@/types/chat'
 
 const props = defineProps<{
-  conversations: any[]
-  filteredConversations: any[]
-  groupedConversations: any[]
+  conversations: Conversation[]
+  filteredConversations: Conversation[]
+  groupedConversations: ConversationGroup[]
   currentConversationId: string | null
   searchKeyword: string
 }>()
