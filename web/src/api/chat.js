@@ -44,7 +44,8 @@ export default {
   getTrackerApplication: (appId) => request.get(`/chat/tracker/applications/${appId}`),
   updateTrackerApplication: (data = {}) => request.put('/chat/tracker/applications', data),
   moveTrackerApplication: (data = {}) => request.put('/chat/tracker/applications/move', data),
-  deleteTrackerApplication: (params = {}) => request.delete('/chat/tracker/applications', { params }),
+  deleteTrackerApplication: (params = {}) =>
+    request.delete('/chat/tracker/applications', { params }),
   getTrackerStats: () => request.get('/chat/tracker/applications/stats'),
 
   getInterviewSessions: () => request.get('/chat/interview-sim/sessions'),
@@ -52,14 +53,17 @@ export default {
   getInterviewSession: (sessionId) => request.get(`/chat/interview-sim/sessions/${sessionId}`),
   interviewChat: (data = {}) => request.post('/chat/interview-sim/sessions/chat', data),
   evaluateInterview: (data = {}) => request.post('/chat/interview-sim/sessions/evaluate', data),
-  deleteInterviewSession: (params = {}) => request.delete('/chat/interview-sim/sessions', { params }),
+  deleteInterviewSession: (params = {}) =>
+    request.delete('/chat/interview-sim/sessions', { params }),
 
   getResumeTemplates: () => request.get('/chat/resume-export/templates'),
   generateResume: (data = {}) => request.post('/chat/resume-export/generate', data),
-  exportResumeDocx: (data = {}) => request.post('/chat/resume-export/export/docx', data, { responseType: 'blob' }),
+  exportResumeDocx: (data = {}) =>
+    request.post('/chat/resume-export/export/docx', data, { responseType: 'blob' }),
   exportResumeText: (data = {}) => request.post('/chat/resume-export/export/text', data),
   getResumeExports: () => request.get('/chat/resume-export/exports'),
-  downloadResumeExport: (filename) => request.get(`/chat/resume-export/download/${filename}`, { responseType: 'blob' }),
+  downloadResumeExport: (filename) =>
+    request.get(`/chat/resume-export/download/${filename}`, { responseType: 'blob' }),
 
   getDashboardOverview: () => request.get('/chat/dashboard/overview'),
   getTrackerChart: () => request.get('/chat/dashboard/tracker-chart'),

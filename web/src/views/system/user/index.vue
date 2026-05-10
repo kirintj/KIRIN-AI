@@ -12,9 +12,6 @@ import {
   NSwitch,
   NTag,
   NPopconfirm,
-  NLayout,
-  NLayoutSider,
-  NLayoutContent,
   NTreeSelect,
 } from 'naive-ui'
 
@@ -177,18 +174,16 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 80,
+    width: 220,
     align: 'center',
     fixed: 'right',
     render(row) {
       return [
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'small',
-              type: 'primary',
-              style: 'margin-right: 8px;',
+              class: 'hm-row-btn',
               onClick: () => {
                 handleEdit(row)
                 modalForm.value.dept_id = row.dept?.id
@@ -196,10 +191,7 @@ const columns = [
                 delete modalForm.value.dept
               },
             },
-            {
-              default: () => '编辑',
-              icon: renderIcon('material-symbols:edit', { size: 16 }),
-            }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
           ),
           [[vPermission, 'post/api/v1/user/update']]
         ),
@@ -213,16 +205,9 @@ const columns = [
             trigger: () =>
               withDirectives(
                 h(
-                  NButton,
-                  {
-                    size: 'small',
-                    type: 'error',
-                    style: 'margin-right: 8px;',
-                  },
-                  {
-                    default: () => '删除',
-                    icon: renderIcon('material-symbols:delete-outline', { size: 16 }),
-                  }
+                  'button',
+                  { class: 'hm-row-btn danger' },
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
                 ),
                 [[vPermission, 'delete/api/v1/user/delete']]
               ),
@@ -247,16 +232,9 @@ const columns = [
             trigger: () =>
               withDirectives(
                 h(
-                  NButton,
-                  {
-                    size: 'small',
-                    type: 'warning',
-                    style: 'margin-right: 8px;',
-                  },
-                  {
-                    default: () => '重置密码',
-                    icon: renderIcon('material-symbols:lock-reset', { size: 16 }),
-                  }
+                  'button',
+                  { class: 'hm-row-btn' },
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), '重置密码']
                 ),
                 [[vPermission, 'post/api/v1/user/reset_password']]
               ),
@@ -377,16 +355,12 @@ const validateAddUser = {
 </script>
 
 <template>
-  <NLayout has-sider wh-full>
-    <NLayoutSider
-      bordered
-      content-style="padding: 24px;"
-      :collapsed-width="0"
-      :width="240"
-      show-trigger="arrow-circle"
-    >
-      <h1>部门列表</h1>
-      <br />
+  <div class="hm-user-layout">
+  <div class="hm-sidebar">
+    <div class="hm-sidebar-header">
+      <span class="hm-sidebar-title">部门列表</span>
+    </div>
+    <div class="hm-dept-tree-wrap">
       <NTree
         block-line
         :data="deptOption"
@@ -394,15 +368,16 @@ const validateAddUser = {
         label-field="name"
         default-expand-all
         :node-props="nodeProps"
-      >
-      </NTree>
-    </NLayoutSider>
-    <NLayoutContent>
+      />
+    </div>
+  </div>
+  <div class="hm-user-main">
       <CommonPage show-footer title="用户列表">
         <template #action>
-          <NButton v-permission="'post/api/v1/user/create'" type="primary" @click="handleAdd">
-            <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建用户
-          </NButton>
+          <button class="hm-action-btn primary" v-permission="'post/api/v1/user/create'" @click="handleAdd">
+            <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
+            新建用户
+          </button>
         </template>
         <!-- 表格 -->
         <CrudTable
@@ -530,17 +505,36 @@ const validateAddUser = {
           </NForm>
         </CrudModal>
       </CommonPage>
-    </NLayoutContent>
-  </NLayout>
+  </div>
   <!-- 头像裁剪弹窗 -->
   <AvatarCropper
     v-model:show="cropperVisible"
     :img-file="avatarFile"
     @uploaded="handleAvatarUploaded"
   />
+  </div>
 </template>
 
 <style scoped>
+.hm-user-layout {
+  height: 100%;
+  display: flex;
+  background: var(--hm-bg-primary);
+  overflow: hidden;
+}
+
+.hm-user-main {
+  flex: 1;
+  overflow: auto;
+  min-width: 0;
+}
+
+.hm-dept-tree-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
 .avatar-form-item {
   display: flex;
   align-items: center;
@@ -560,7 +554,7 @@ const validateAddUser = {
   flex-shrink: 0;
 }
 .avatar-preview-box:hover {
-  border-color: #007DFF;
+  border-color: var(--hm-brand);
 }
 .avatar-preview-img {
   width: 100%;
@@ -569,6 +563,6 @@ const validateAddUser = {
 }
 .avatar-tip {
   font-size: 12px;
-  color: #86909c;
+  color: var(--hm-font-fourth);
 }
 </style>

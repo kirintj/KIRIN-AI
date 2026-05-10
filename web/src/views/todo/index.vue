@@ -272,11 +272,11 @@ onMounted(() => {
 
 <template>
   <AppPage :show-footer="false">
-    <div class="hm-todo-page">
-    <div class="hm-todo-header">
+    <div class="hm-page-container">
+    <div class="hm-page-header">
       <div>
-        <h1 class="hm-todo-title">待办任务</h1>
-        <p class="hm-todo-subtitle">共 {{ stats.total }} 项 · 待完成 {{ stats.undone }} 项</p>
+        <h1 class="hm-page-title">待办任务</h1>
+        <p class="hm-page-subtitle">共 {{ stats.total }} 项 · 待完成 {{ stats.undone }} 项</p>
       </div>
       <div class="hm-todo-actions">
         <div class="hm-view-toggle">
@@ -528,39 +528,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.hm-todo-page {
-  width: 100%;
-  margin: 0 auto;
-  padding: 32px 28px;
-}
-
-.hm-todo-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
-  padding: 24px 28px;
-  border-radius: var(--hm-radius-xl);
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass-strong);
-  -webkit-backdrop-filter: var(--hm-blur-glass-strong);
-  border: 1px solid var(--hm-border-glass);
-  box-shadow: var(--hm-shadow-layered), 0 8px 24px rgba(10, 89, 247, 0.06);
-}
-
-.hm-todo-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--hm-font-primary);
-  margin-bottom: 6px;
-  letter-spacing: -0.3px;
-}
-
-.hm-todo-subtitle {
-  font-size: 14px;
-  color: var(--hm-font-tertiary);
-}
-
 .hm-todo-actions {
   display: flex;
   gap: 8px;
@@ -571,59 +538,6 @@ onMounted(() => {
   grid-template-columns: repeat(5, 1fr);
   gap: 14px;
   margin-bottom: 20px;
-}
-
-.hm-stat-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  -webkit-backdrop-filter: var(--hm-blur-glass);
-  border-radius: var(--hm-radius-xl);
-  border: 1px solid var(--hm-border-glass);
-  box-shadow: var(--hm-shadow-layered);
-  transition: all 0.35s var(--hm-spring);
-}
-
-.hm-stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--hm-shadow-layered-hover);
-}
-
-.hm-stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--hm-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 0.35s var(--hm-spring);
-}
-
-.hm-stat-card:hover .hm-stat-icon {
-  transform: scale(1.1) rotate(-3deg);
-}
-
-.hm-stat-info {
-  flex: 1;
-}
-
-.hm-stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--hm-font-primary);
-  line-height: 1.2;
-  letter-spacing: -0.3px;
-}
-
-.hm-stat-label {
-  font-size: 12px;
-  color: var(--hm-font-tertiary);
-  margin-top: 2px;
-  font-weight: 500;
 }
 
 .hm-progress-card {
@@ -682,34 +596,6 @@ onMounted(() => {
   color: var(--hm-font-tertiary);
   margin-top: 4px;
   font-weight: 500;
-}
-
-.hm-view-toggle {
-  display: flex;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  overflow: hidden;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-}
-
-.hm-view-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
-  border: none;
-  background: transparent;
-  font-size: 12px;
-  color: var(--hm-font-secondary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-view-btn.active {
-  background: var(--hm-brand);
-  color: #fff;
-  box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-calendar-view {
@@ -818,29 +704,6 @@ onMounted(() => {
   gap: 10px;
   margin-bottom: 16px;
   flex-wrap: wrap;
-}
-
-.hm-filter-chip {
-  padding: 5px 14px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  font-size: 12px;
-  color: var(--hm-font-secondary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-filter-chip:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  transform: translateY(-1px);
-}
-
-.hm-filter-chip.danger:hover {
-  border-color: var(--hm-error);
-  color: var(--hm-error);
 }
 
 .hm-todo-list {
@@ -967,43 +830,75 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.hm-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: var(--hm-radius-sm);
-  background: transparent;
-  cursor: pointer;
-  color: var(--hm-font-tertiary);
-  transition: all 0.25s var(--hm-spring);
-}
-
-.hm-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--hm-font-primary);
-  transform: scale(1.1);
-}
-
-.hm-icon-btn.danger:hover {
-  background: rgba(232, 64, 38, 0.06);
-  color: #E84026;
-}
-
 @media (max-width: 768px) {
-  .hm-todo-page {
-    padding: 20px 16px;
+  .hm-page-container {
+    padding: 16px 12px;
   }
-  .hm-todo-header {
-    padding: 18px 20px;
+  .hm-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
+  }
+  .hm-todo-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .hm-page-title {
+    font-size: 22px;
   }
   .hm-stats-row {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
-  .hm-todo-title {
-    font-size: 22px;
+  .hm-stat-card {
+    padding: 12px;
+  }
+  .hm-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .hm-stat-value {
+    font-size: 20px;
+  }
+  .hm-progress-card {
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+  }
+  .hm-filter-row {
+    gap: 6px;
+  }
+  .hm-todo-item {
+    padding: 12px 14px;
+  }
+  .hm-calendar-day {
+    min-height: 56px;
+    padding: 4px;
+  }
+  .hm-day-todo {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-stats-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .hm-progress-card {
+    grid-column: span 2;
+  }
+  .hm-todo-right {
+    gap: 2px;
+  }
+  .hm-icon-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .hm-todo-tags {
+    gap: 2px;
   }
 }
 </style>

@@ -21,5 +21,4 @@ class Loggin:
         return loguru_logger
 
 
-loggin = Loggin()
-logger = loggin.setup_logger()
+logger = Loggin().setup_logger()

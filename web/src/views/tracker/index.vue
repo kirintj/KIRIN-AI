@@ -49,10 +49,10 @@ onMounted(async () => {
 
 <template>
   <div class="hm-tracker-layout">
-    <div class="hm-tracker-sidebar">
-      <div class="hm-tracker-sidebar-header">
-        <span class="hm-tracker-sidebar-title">求职进度</span>
-        <button class="hm-tracker-add-btn" @click="showAddModal = true">
+    <div class="hm-sidebar">
+      <div class="hm-sidebar-header">
+        <span class="hm-sidebar-title">求职进度</span>
+        <button class="hm-sidebar-new-btn" @click="showAddModal = true">
           <TheIcon icon="icon-park-outline:plus" :size="14" />
           添加
         </button>
@@ -94,23 +94,23 @@ onMounted(async () => {
     </div>
 
     <div class="hm-tracker-main">
-      <div class="hm-tracker-toolbar">
-        <div class="hm-tracker-toolbar-left">
-          <div class="hm-tracker-search-box">
+      <div class="hm-toolbar">
+        <div class="hm-toolbar-left">
+          <div class="hm-search-box">
             <TheIcon icon="icon-park-outline:search" :size="14" color="var(--hm-font-fourth)" />
             <input
               v-model="store.searchKeyword"
-              class="hm-tracker-search-input"
+              class="hm-search-input"
               placeholder="搜索公司/职位..."
             />
           </div>
         </div>
-        <div class="hm-tracker-toolbar-right">
-          <div class="hm-tracker-view-toggle">
+        <div class="hm-toolbar-right">
+          <div class="hm-view-toggle">
             <button
               v-for="mode in viewModes"
               :key="mode.key"
-              :class="['hm-tracker-view-btn', { active: store.viewMode === mode.key }]"
+              :class="['hm-view-btn', { active: store.viewMode === mode.key }]"
               @click="store.viewMode = mode.key"
             >
               <TheIcon :icon="mode.icon" :size="14" />

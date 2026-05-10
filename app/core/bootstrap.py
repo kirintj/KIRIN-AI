@@ -44,11 +44,11 @@ def make_middlewares():
 
 
 def register_exceptions(app: FastAPI):
-    app.add_exception_handler(DoesNotExist, lambda req, exc: DoesNotExistHandle(req, exc))
-    app.add_exception_handler(HTTPException, lambda req, exc: HttpExcHandle(req, exc))
-    app.add_exception_handler(IntegrityError, lambda req, exc: IntegrityHandle(req, exc))
-    app.add_exception_handler(RequestValidationError, lambda req, exc: RequestValidationHandle(req, exc))
-    app.add_exception_handler(ResponseValidationError, lambda req, exc: ResponseValidationHandle(req, exc))
+    app.add_exception_handler(DoesNotExist, DoesNotExistHandle)
+    app.add_exception_handler(HTTPException, HttpExcHandle)
+    app.add_exception_handler(IntegrityError, IntegrityHandle)
+    app.add_exception_handler(RequestValidationError, RequestValidationHandle)
+    app.add_exception_handler(ResponseValidationError, ResponseValidationHandle)
 
 
 def register_routers(app: FastAPI, prefix: str = "/api"):

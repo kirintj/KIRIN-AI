@@ -10,10 +10,13 @@
   >
     <slot />
     <template v-if="showFooter" #footer>
-      <footer flex justify-end>
+      <footer class="hm-modal-footer">
         <slot name="footer">
-          <n-button @click="show = false">取消</n-button>
-          <n-button :loading="loading" ml-20 type="primary" @click="emit('save')">保存</n-button>
+          <button class="hm-modal-btn" @click="show = false">取消</button>
+          <button class="hm-modal-btn primary" :disabled="loading" @click="emit('save')">
+            <span v-if="loading" class="hm-modal-loading"></span>
+            保存
+          </button>
         </slot>
       </footer>
     </template>
@@ -54,3 +57,62 @@ const show = computed({
   },
 })
 </script>
+
+<style scoped>
+.hm-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hm-modal-btn {
+  padding: 7px 18px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  background: var(--hm-bg-secondary);
+  font-size: 13px;
+  color: var(--hm-font-primary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-modal-btn:hover {
+  border-color: var(--hm-brand);
+  color: var(--hm-brand);
+  transform: translateY(-1px);
+}
+
+.hm-modal-btn.primary {
+  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--hm-shadow-brand);
+}
+
+.hm-modal-btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  transform: translateY(-1px);
+}
+
+.hm-modal-btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hm-modal-loading {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: hm-spin 0.6s linear infinite;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+@keyframes hm-spin {
+  to { transform: rotate(360deg); }
+}
+</style>

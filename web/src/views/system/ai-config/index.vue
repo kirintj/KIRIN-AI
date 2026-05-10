@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { NButton, NCard, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NSpace, NTooltip } from 'naive-ui'
+import { NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NSpace, NTooltip } from 'naive-ui'
 import CommonPage from '@/components/page/CommonPage.vue'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import api from '@/api'
@@ -88,14 +88,16 @@ onMounted(() => {
 <template>
   <CommonPage show-footer title="AI 模型配置">
     <template #action>
-      <NButton type="primary" :loading="saving" @click="handleSave">
-        <TheIcon icon="material-symbols:save" :size="18" class="mr-5" />保存配置
-      </NButton>
+      <button class="hm-action-btn primary" :disabled="saving" @click="handleSave">
+        <TheIcon icon="material-symbols:save" :size="16" color="#fff" />
+        {{ saving ? '保存中...' : '保存配置' }}
+      </button>
     </template>
 
     <NSpin :show="loading">
-      <NSpace vertical :size="24">
-        <NCard title="LLM 模型配置" embedded :bordered="false" segment>
+      <div class="hm-config-sections">
+        <div class="hm-config-card">
+          <h3 class="hm-section-title">LLM 模型配置</h3>
           <NForm label-placement="left" label-align="left" :label-width="120">
             <NFormItem label="模型名称">
               <NSelect
@@ -126,9 +128,10 @@ onMounted(() => {
               />
             </NFormItem>
           </NForm>
-        </NCard>
+        </div>
 
-        <NCard title="Embedding 配置" embedded :bordered="false" segment>
+        <div class="hm-config-card">
+          <h3 class="hm-section-title">Embedding 配置</h3>
           <NForm label-placement="left" label-align="left" :label-width="120">
             <NFormItem label="Embedding 模型">
               <NSelect
@@ -149,37 +152,61 @@ onMounted(() => {
               />
             </NFormItem>
           </NForm>
-        </NCard>
+        </div>
 
-        <NCard title="RAG 配置" embedded :bordered="false" segment>
+        <div class="hm-config-card">
+          <h3 class="hm-section-title">RAG 配置</h3>
           <NForm label-placement="left" label-align="left" :label-width="120">
             <NFormItem label="查询改写">
               <NSpace align="center">
                 <NSwitch v-model:value="formData.rag_enable_query_rewrite" />
-                <span class="text-gray-400 text-xs">将用户查询改写为更适合检索的形式</span>
+                <span class="hm-config-hint">将用户查询改写为更适合检索的形式</span>
               </NSpace>
             </NFormItem>
             <NFormItem label="重排序">
               <NSpace align="center">
                 <NSwitch v-model:value="formData.rag_enable_rerank" />
-                <span class="text-gray-400 text-xs">对检索结果进行重排序提升相关性</span>
+                <span class="hm-config-hint">对检索结果进行重排序提升相关性</span>
               </NSpace>
             </NFormItem>
             <NFormItem label="混合检索">
               <NSpace align="center">
                 <NSwitch v-model:value="formData.rag_enable_hybrid_search" />
-                <span class="text-gray-400 text-xs">同时使用向量检索和关键词检索</span>
+                <span class="hm-config-hint">同时使用向量检索和关键词检索</span>
               </NSpace>
             </NFormItem>
             <NFormItem label="上下文压缩">
               <NSpace align="center">
                 <NSwitch v-model:value="formData.rag_enable_context_compress" />
-                <span class="text-gray-400 text-xs">压缩检索上下文减少 Token 消耗</span>
+                <span class="hm-config-hint">压缩检索上下文减少 Token 消耗</span>
               </NSpace>
             </NFormItem>
           </NForm>
-        </NCard>
-      </NSpace>
+        </div>
+      </div>
     </NSpin>
   </CommonPage>
 </template>
+
+<style scoped>
+.hm-config-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hm-config-card {
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border: 1px solid var(--hm-border-glass);
+  border-radius: var(--hm-radius-xl);
+  box-shadow: var(--hm-shadow-layered);
+  padding: 20px 24px;
+}
+
+.hm-config-hint {
+  font-size: 12px;
+  color: var(--hm-font-fourth);
+}
+</style>

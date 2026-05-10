@@ -1,36 +1,32 @@
 <template>
-  <div v-bind="$attrs">
-    <QueryBar v-if="$slots.queryBar" mb-30  @search="handleSearch" @reset="handleReset">
+  <div class="hm-crud-table">
+    <QueryBar v-if="$slots.queryBar" @search="handleSearch" @reset="handleReset">
       <slot name="queryBar" />
     </QueryBar>
 
-    <n-data-table
-      :remote="remote"
-      :loading="loading"
-      :columns="columns"
-      :data="tableData"
-      :scroll-x="scrollX"
-      :row-key="(row) => row[rowKey]"
-      :pagination="isPagination ? pagination : false"
-      @update:checked-row-keys="onChecked"
-      @update:page="onPageChange"
-      :theme-overrides="{ borderRadius: '12px' }"
-    />
+    <div class="hm-table-card">
+      <n-data-table
+        :remote="remote"
+        :loading="loading"
+        :columns="columns"
+        :data="tableData"
+        :scroll-x="scrollX"
+        :row-key="(row) => row[rowKey]"
+        :pagination="isPagination ? pagination : false"
+        @update:checked-row-keys="onChecked"
+        @update:page="onPageChange"
+        :theme-overrides="tableThemeOverrides"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
 const props = defineProps({
-  /**
-   * @remote true: 后端分页  false： 前端分页
-   */
   remote: {
     type: Boolean,
     default: true,
   },
-  /**
-   * @remote 是否分页
-   */
   isPagination: {
     type: Boolean,
     default: true,
@@ -47,31 +43,33 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  /** queryBar中的参数 */
   queryItems: {
     type: Object,
     default() {
       return {}
     },
   },
-  /** 补充参数（可选） */
   extraParams: {
     type: Object,
     default() {
       return {}
     },
   },
-  /**
-   * ! 约定接口入参出参
-   * * 分页模式需约定分页接口入参
-   *    @page_size 分页参数：一页展示多少条，默认10
-   *    @page   分页参数：页码，默认1
-   */
   getData: {
     type: Function,
     required: true,
   },
 })
+
+const tableThemeOverrides = {
+  borderRadius: '12px',
+  thColor: 'rgba(0, 0, 0, 0.02)',
+  thTextColor: 'var(--hm-font-tertiary)',
+  tdColor: 'transparent',
+  tdTextColor: 'var(--hm-font-primary)',
+  borderColor: 'var(--hm-divider)',
+  thFontWeight: '500',
+}
 
 const emit = defineEmits(['update:queryItems', 'onChecked', 'onDataChange'])
 const loading = ref(false)
@@ -99,7 +97,6 @@ async function handleQuery() {
   try {
     loading.value = true
     let paginationParams = {}
-    // 如果非分页模式或者使用前端分页,则无需传分页参数
     if (props.isPagination && props.remote) {
       paginationParams = { page: pagination.page, page_size: pagination.page_size }
     }
@@ -150,3 +147,21 @@ defineExpose({
   tableData,
 })
 </script>
+
+<style scoped>
+.hm-crud-table {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hm-table-card {
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border: 1px solid var(--hm-border-glass);
+  border-radius: var(--hm-radius-xl);
+  box-shadow: var(--hm-shadow-layered);
+  overflow: hidden;
+}
+</style>

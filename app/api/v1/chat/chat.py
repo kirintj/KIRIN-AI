@@ -1,10 +1,9 @@
 from fastapi import APIRouter
-from fastapi.responses import StreamingResponse
 from datetime import datetime
 import logging
 
 from app.settings import settings
-from app.utils.chat import async_client, generate_stream_response, convert_messages_for_api
+from app.utils.chat import async_client, convert_messages_for_api
 from app.schemas.chat import ChatResponse, ChatRequest, ChatMessage
 from app.schemas.base import Success, Fail
 from app.core.dependency import DependAuth
@@ -29,16 +28,6 @@ async def chat(
             content=request.messages[-1].content,
             timestamp=datetime.now(),
         )
-
-        if request.stream:
-            return StreamingResponse(
-                generate_stream_response(request, username),
-                media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                },
-            )
 
         api_message = convert_messages_for_api(request.messages)
         response = await async_client.chat.completions.create(

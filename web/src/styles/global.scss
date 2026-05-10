@@ -216,6 +216,11 @@ body {
   }
 }
 
+.hm-action-group {
+  display: flex;
+  gap: 8px;
+}
+
 .hm-action-btn {
   display: inline-flex;
   align-items: center;
@@ -276,4 +281,576 @@ body {
 .hm-action-btn.small {
   padding: 7px 14px;
   font-size: 13px;
+}
+
+/* ── 页面容器 ── */
+.hm-page-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 28px;
+}
+
+/* ── 页面头部（毛玻璃卡片） ── */
+.hm-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding: 24px 28px;
+  border-radius: var(--hm-radius-xl);
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass-strong);
+  -webkit-backdrop-filter: var(--hm-blur-glass-strong);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered), 0 8px 24px rgba(10, 89, 247, 0.06);
+}
+
+.hm-page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--hm-font-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.hm-page-subtitle {
+  font-size: 14px;
+  color: var(--hm-font-tertiary);
+}
+
+/* ── 区块 ── */
+.hm-section {
+  margin-bottom: 28px;
+}
+
+.hm-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.hm-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+  margin-bottom: 16px;
+  letter-spacing: -0.2px;
+}
+
+.hm-section-header .hm-section-title {
+  margin-bottom: 0;
+}
+
+/* ── 统计卡片行 ── */
+.hm-stats-row {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.hm-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border-radius: var(--hm-radius-xl);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered);
+  transition: all 0.35s var(--hm-spring);
+}
+
+.hm-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--hm-shadow-layered-hover);
+}
+
+.hm-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--hm-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.35s var(--hm-spring);
+}
+
+.hm-stat-card:hover .hm-stat-icon {
+  transform: scale(1.1) rotate(-3deg);
+}
+
+.hm-stat-info {
+  flex: 1;
+}
+
+.hm-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--hm-font-primary);
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.hm-stat-label {
+  font-size: 12px;
+  color: var(--hm-font-tertiary);
+}
+
+/* ── 标签栏 ── */
+.hm-tab-bar {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border-radius: var(--hm-radius-xl);
+  border: 1px solid var(--hm-border-glass);
+  margin-bottom: 24px;
+}
+
+.hm-tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--hm-radius-lg);
+  background: transparent;
+  font-size: 14px;
+  color: var(--hm-font-secondary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-tab-item:hover {
+  color: var(--hm-font-primary);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.hm-tab-item.active {
+  background: var(--hm-bg-secondary);
+  color: var(--hm-brand);
+  font-weight: 500;
+  box-shadow: var(--hm-shadow-layered);
+}
+
+/* ── 侧边栏布局 ── */
+.hm-sidebar-layout {
+  height: 100%;
+  display: flex;
+  background: var(--hm-bg-primary);
+  overflow: hidden;
+}
+
+.hm-sidebar {
+  width: 260px;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border-right: 1px solid var(--hm-border-glass);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.3s var(--hm-spring);
+  overflow: hidden;
+}
+
+.hm-sidebar.collapsed {
+  width: 48px;
+}
+
+.hm-sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 12px;
+  gap: 8px;
+  border-bottom: 1px solid var(--hm-border-glass);
+  flex-shrink: 0;
+}
+
+.hm-sidebar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+  flex: 1;
+}
+
+.hm-sidebar-new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--hm-brand);
+  border-radius: var(--hm-radius-full);
+  background: transparent;
+  color: var(--hm-brand);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-sidebar-new-btn:hover {
+  background: var(--hm-brand-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+}
+
+/* ── 表格行内操作按钮 ── */
+.hm-row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  border: 1px solid var(--hm-brand);
+  border-radius: var(--hm-radius-full);
+  background: transparent;
+  color: var(--hm-brand);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+  margin-right: 6px;
+  line-height: 1.4;
+}
+
+.hm-row-btn:hover {
+  background: var(--hm-brand-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+}
+
+.hm-row-btn.danger {
+  border-color: var(--hm-error);
+  color: var(--hm-error);
+}
+
+.hm-row-btn.danger:hover {
+  background: rgba(232, 64, 38, 0.06);
+  box-shadow: 0 4px 12px rgba(232, 64, 38, 0.12);
+}
+
+/* ── 工具栏 ── */
+.hm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border-bottom: 1px solid var(--hm-border-glass);
+  flex-shrink: 0;
+}
+
+.hm-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hm-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 搜索框 ── */
+.hm-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-search-box:focus-within {
+  border-color: var(--hm-brand);
+  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+}
+
+.hm-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-primary);
+  font-family: inherit;
+}
+
+.hm-search-input::placeholder {
+  color: var(--hm-font-fourth);
+}
+
+/* ── 视图切换 ── */
+.hm-view-toggle {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  border-radius: var(--hm-radius-full);
+  border: 1px solid var(--hm-border-glass);
+}
+
+.hm-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--hm-radius-lg);
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-secondary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-view-btn.active {
+  background: var(--hm-bg-secondary);
+  color: var(--hm-brand);
+  font-weight: 500;
+  box-shadow: var(--hm-shadow-layered);
+}
+
+/* ── 输入区域 ── */
+.hm-input-area {
+  padding: 16px 20px;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  -webkit-backdrop-filter: var(--hm-blur-glass);
+  border-top: 1px solid var(--hm-border-glass);
+}
+
+.hm-input-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--hm-bg-secondary);
+  border-radius: var(--hm-radius-xl);
+  border: 1px solid var(--hm-border);
+  box-shadow: var(--hm-shadow-sm);
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-input-box:focus-within {
+  border-color: var(--hm-brand);
+  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+}
+
+.hm-textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--hm-font-primary);
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.hm-textarea::placeholder {
+  color: var(--hm-font-fourth);
+}
+
+.hm-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--hm-radius-full);
+  border: none;
+  background: var(--hm-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+  flex-shrink: 0;
+}
+
+.hm-send-btn.active {
+  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  box-shadow: var(--hm-shadow-brand);
+}
+
+.hm-send-btn.active:hover {
+  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  transform: translateY(-2px);
+}
+
+/* ── 弹窗按钮 ── */
+.hm-modal-btn {
+  padding: 7px 18px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  background: var(--hm-bg-secondary);
+  font-size: 13px;
+  color: var(--hm-font-primary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-modal-btn.primary {
+  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--hm-shadow-brand);
+}
+
+.hm-modal-btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ── 图标按钮 ── */
+.hm-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--hm-radius-sm);
+  background: transparent;
+  cursor: pointer;
+  color: var(--hm-font-tertiary);
+  transition: all 0.25s var(--hm-spring);
+}
+
+.hm-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--hm-font-primary);
+  transform: scale(1.1);
+}
+
+.hm-icon-btn.danger:hover {
+  background: rgba(232, 64, 38, 0.06);
+  color: #E84026;
+}
+
+/* ── 过滤标签 ── */
+.hm-filter-chip {
+  padding: 5px 14px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
+  font-size: 12px;
+  color: var(--hm-font-secondary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-filter-chip:hover {
+  border-color: var(--hm-brand);
+  color: var(--hm-brand);
+  transform: translateY(-1px);
+}
+
+.hm-filter-chip.danger:hover {
+  border-color: var(--hm-error);
+  color: var(--hm-error);
+}
+
+/* ── 工具栏芯片 ── */
+.hm-toolbar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-full);
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-secondary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-toolbar-chip:hover {
+  border-color: var(--hm-brand);
+  color: var(--hm-brand);
+}
+
+.hm-toolbar-chip.active {
+  background: var(--hm-brand-light);
+  border-color: var(--hm-brand);
+  color: var(--hm-brand);
+}
+
+.hm-toolbar-chip.danger:hover {
+  border-color: var(--hm-error);
+  color: var(--hm-error);
+}
+
+/* ── 查看全部链接 ── */
+.hm-view-all {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--hm-brand);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--hm-radius-full);
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-view-all:hover {
+  background: rgba(10, 89, 247, 0.08);
+  transform: translateX(2px);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --hm-sidebar-width: 0px;
+    --hm-sidebar-collapsed: 0px;
+    --hm-header-height: 48px;
+    --hm-radius-sm: 6px;
+    --hm-radius-md: 10px;
+    --hm-radius-lg: 14px;
+    --hm-radius-xl: 16px;
+  }
+
+  body {
+    font-size: 13px;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  .hm-empty-state {
+    padding: 40px 16px;
+  }
+
+  .hm-empty-state-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .hm-action-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .hm-action-btn.small {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --hm-header-height: 44px;
+  }
 }

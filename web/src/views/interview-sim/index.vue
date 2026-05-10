@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { useInterviewStore } from '@/store/modules/interview-sim'
-import { onMounted, ref, watch, nextTick, computed } from 'vue'
+import { onMounted, ref, watch, nextTick, computed, reactive } from 'vue'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { formatShortDate } from '@/utils/common/time'
-import { NModal, NForm, NFormItem, NInput, NSelect, NPopconfirm } from 'naive-ui'
+import { NModal, NForm, NFormItem, NInput, NSelect, NPopconfirm, NDrawer, NDrawerContent } from 'naive-ui'
 import { useMarkdown } from '@/composables/useMarkdown'
+import { useBreakpoints } from '@vueuse/core'
+
+const breakpoints = reactive(useBreakpoints({ sm: 768 }))
+const isMobile = breakpoints.smaller('sm')
+const mobileDrawerVisible = ref(false)
 
 const store = useInterviewStore()
 const { formatMarkdown } = useMarkdown()
@@ -101,11 +106,72 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="hm-interview-sim">
-    <div class="hm-is-sidebar">
-      <div class="hm-is-sidebar-header">
-        <span class="hm-is-sidebar-title">面试模拟</span>
-        <button class="hm-is-new-btn" @click="handleNewSession">
+  <div class="hm-sidebar-layout">
+    <template v-if="isMobile">
+      <n-drawer v-model:show="mobileDrawerVisible" :width="280" placement="left" :auto-focus="false">
+        <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" title="面试模拟">
+          <div class="hm-is-sidebar-drawer">
+            <div class="hm-is-stats-row">
+              <div class="hm-is-stat">
+                <span class="hm-is-stat-val">{{ sessionStats.total }}</span>
+                <span class="hm-is-stat-label">总场次</span>
+              </div>
+              <div class="hm-is-stat">
+                <span class="hm-is-stat-val" style="color: #64BB5C">{{ sessionStats.completed }}</span>
+                <span class="hm-is-stat-label">已完成</span>
+              </div>
+              <div class="hm-is-stat">
+                <span class="hm-is-stat-val" style="color: var(--hm-brand)">{{ sessionStats.avgScore }}</span>
+                <span class="hm-is-stat-label">平均分</span>
+              </div>
+            </div>
+            <div class="hm-is-session-list">
+              <div
+                v-for="session in store.sessions"
+                :key="session.id"
+                :class="['hm-is-session-item', { active: session.id === store.currentSession?.id }]"
+                @click="handleSelectSession(session.id); mobileDrawerVisible = false"
+              >
+                <div class="hm-is-session-info">
+                  <div class="hm-is-session-title">
+                    {{ session.company || '未指定公司' }} - {{ session.position || '未指定岗位' }}
+                  </div>
+                  <div class="hm-is-session-meta">
+                    <span :class="['hm-is-status', session.status]">
+                      {{ session.status === 'completed' ? '已完成' : '进行中' }}
+                    </span>
+                    <span v-if="session.score" class="hm-is-score">{{ session.score }}分</span>
+                    <span class="hm-is-type">{{ store.INTERVIEW_TYPES[session.interview_type] || session.interview_type }}</span>
+                  </div>
+                </div>
+                <div class="hm-is-session-actions" @click.stop>
+                  <NPopconfirm @positive-click="handleDeleteSession(session.id)">
+                    <template #trigger>
+                      <button class="hm-is-session-action">
+                        <TheIcon icon="icon-park-outline:delete" :size="12" />
+                      </button>
+                    </template>
+                    确定删除该面试记录？
+                  </NPopconfirm>
+                </div>
+              </div>
+              <EmptyState
+                v-if="store.sessions.length === 0"
+                icon="icon-park-outline:people-talk"
+                title="暂无面试记录"
+              >
+                <span class="hm-is-empty-action" @click="handleNewSession">开始模拟面试</span>
+              </EmptyState>
+            </div>
+          </div>
+        </n-drawer-content>
+      </n-drawer>
+    </template>
+    <template v-else>
+    <div class="hm-sidebar">
+      <div class="hm-sidebar-header">
+        <span class="hm-sidebar-title">面试模拟</span>
+        <button class="hm-sidebar-new-btn" @click="handleNewSession">
           <TheIcon icon="icon-park-outline:plus" :size="14" />
           新面试
         </button>
@@ -163,6 +229,7 @@ onMounted(() => {
         </EmptyState>
       </div>
     </div>
+    </template>
 
     <div class="hm-is-main">
       <EmptyState
@@ -179,14 +246,17 @@ onMounted(() => {
       </EmptyState>
 
       <template v-else>
-        <div class="hm-is-chat-header">
-          <div class="hm-is-chat-info">
+        <div class="hm-toolbar">
+          <div class="hm-toolbar-left">
+            <button v-if="isMobile" class="hm-is-mobile-btn" @click="mobileDrawerVisible = true">
+              <TheIcon icon="icon-park-outline:people-talk" :size="16" />
+            </button>
             <span class="hm-is-chat-company">{{ store.currentSession.company || '未指定公司' }}</span>
             <span class="hm-is-chat-divider">·</span>
             <span class="hm-is-chat-position">{{ store.currentSession.position || '未指定岗位' }}</span>
             <span class="hm-is-chat-type-tag">{{ store.INTERVIEW_TYPES[store.currentSession.interview_type] }}</span>
           </div>
-          <div class="hm-is-chat-actions">
+          <div class="hm-toolbar-right">
             <button
               v-if="store.currentSession.status === 'active'"
               class="hm-is-evaluate-btn"
@@ -220,17 +290,17 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="store.currentSession.status === 'active'" class="hm-is-input-area">
+        <div v-if="store.currentSession.status === 'active'" class="hm-input-area">
           <div class="hm-is-input-box">
             <textarea
               v-model="message"
-              class="hm-is-textarea"
+              class="hm-textarea"
               placeholder="输入你的回答..."
               rows="2"
               @keydown.enter.exact.prevent="sendMessage"
             />
             <button
-              class="hm-is-send-btn"
+              class="hm-send-btn"
               :class="{ active: message.trim() && !store.isLoading }"
               :disabled="!message.trim() || store.isLoading"
               @click="sendMessage"
@@ -294,57 +364,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.hm-interview-sim {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-  background: var(--hm-bg-primary);
-}
-
-.hm-is-sidebar {
-  width: 260px;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  -webkit-backdrop-filter: var(--hm-blur-glass);
-  border-right: 1px solid var(--hm-border-glass);
+.hm-is-sidebar-drawer {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-}
-
-.hm-is-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--hm-border-glass);
-}
-
-.hm-is-sidebar-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--hm-font-primary);
-}
-
-.hm-is-new-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border: 1px solid var(--hm-brand);
-  border-radius: var(--hm-radius-full);
-  background: transparent;
-  color: var(--hm-brand);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-is-new-btn:hover {
-  background: var(--hm-brand-light);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+  height: 100%;
 }
 
 .hm-is-stats-row {
@@ -524,24 +547,6 @@ onMounted(() => {
   color: var(--hm-font-primary);
 }
 
-.hm-is-chat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 20px;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  -webkit-backdrop-filter: var(--hm-blur-glass);
-  border-bottom: 1px solid var(--hm-border-glass);
-  flex-shrink: 0;
-}
-
-.hm-is-chat-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .hm-is-chat-company {
   font-size: 15px;
   font-weight: 600;
@@ -659,11 +664,6 @@ onMounted(() => {
   padding: 4px 8px;
 }
 
-.hm-is-input-area {
-  padding: 12px 20px 20px;
-  flex-shrink: 0;
-}
-
 .hm-is-input-box {
   display: flex;
   gap: 8px;
@@ -679,47 +679,6 @@ onMounted(() => {
 .hm-is-input-box:focus-within {
   border-color: var(--hm-brand);
   box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
-}
-
-.hm-is-textarea {
-  flex: 1;
-  border: none;
-  outline: none;
-  resize: none;
-  font-size: 14px;
-  line-height: 1.5;
-  background: transparent;
-  font-family: inherit;
-  color: var(--hm-font-primary);
-}
-
-.hm-is-textarea::placeholder {
-  color: var(--hm-font-fourth);
-}
-
-.hm-is-send-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--hm-radius-full);
-  border: none;
-  background: var(--hm-font-fourth);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: not-allowed;
-  transition: all 0.3s var(--hm-spring);
-  flex-shrink: 0;
-}
-
-.hm-is-send-btn.active {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  cursor: pointer;
-  box-shadow: var(--hm-shadow-brand);
-}
-
-.hm-is-send-btn.active:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
 }
 
 .hm-is-completed-bar {
@@ -842,33 +801,66 @@ onMounted(() => {
   font-size: 13px;
 }
 
-.hm-modal-btn {
-  padding: 7px 18px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-secondary);
-  font-size: 13px;
-  color: var(--hm-font-primary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-modal-btn.primary {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: var(--hm-shadow-brand);
-}
-
-.hm-modal-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
-  transform: translateY(-1px);
-}
-
 @media (max-width: 768px) {
-  .hm-is-sidebar {
-    width: 0;
+  .hm-is-mobile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--hm-border);
+    border-radius: var(--hm-radius-sm);
+    background: transparent;
+    color: var(--hm-font-secondary);
+    cursor: pointer;
+    transition: all 0.25s var(--hm-spring);
+    flex-shrink: 0;
+  }
+  .hm-is-mobile-btn:hover {
+    border-color: var(--hm-brand);
+    color: var(--hm-brand);
+  }
+  .hm-toolbar {
+    padding: 10px 12px;
+  }
+  .hm-toolbar-left {
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+  .hm-is-chat-company,
+  .hm-is-chat-position {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hm-is-chat-divider {
     display: none;
+  }
+  .hm-is-chat-type-tag {
+    display: none;
+  }
+  .hm-is-types {
+    gap: 8px;
+  }
+  .hm-is-type-card {
+    padding: 10px 16px;
+  }
+  .hm-input-area {
+    padding: 8px 12px;
+  }
+  .hm-is-evaluate-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-is-type-card {
+    padding: 8px 12px;
+  }
+  .hm-is-type-label {
+    font-size: 13px;
   }
 }
 </style>

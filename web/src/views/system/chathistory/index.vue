@@ -105,17 +105,12 @@ const columns = [
     render(row) {
       return [
         h(
-          NButton,
+          'button',
           {
-            size: 'small',
-            type: 'primary',
-            style: 'margin-right: 8px;',
+            class: 'hm-row-btn',
             onClick: () => editHandle(row),
           },
-          {
-            default: () => '编辑',
-            icon: renderIcon('material-symbols:edit', { size: 16 }),
-          }
+          [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
         ),
         h(
           NPopconfirm,
@@ -125,12 +120,9 @@ const columns = [
           {
             trigger: () =>
               h(
-                NButton,
-                { size: 'small', type: 'error' },
-                {
-                  default: () => '删除',
-                  icon: renderIcon('material-symbols:delete-outline', { size: 16 }),
-                }
+                'button',
+                { class: 'hm-row-btn danger' },
+                [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
               ),
             default: () => '确定删除该记录？',
           }
@@ -144,9 +136,10 @@ const columns = [
 <template>
   <CommonPage show-footer title="对话记录列表">
     <template #action>
-      <NButton type="primary" @click="handleAdd">
-        <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建记录
-      </NButton>
+      <button class="hm-action-btn primary" @click="handleAdd">
+        <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
+        新建记录
+      </button>
     </template>
 
     <CrudTable

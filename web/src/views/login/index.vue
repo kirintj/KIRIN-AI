@@ -337,4 +337,39 @@ async function handleRegister() {
   text-decoration: underline;
   transform: translateY(-1px);
 }
+
+@media (max-width: 768px) {
+  .hm-login-card {
+    width: calc(100% - 32px);
+    max-width: 400px;
+    padding: 36px 24px 28px;
+  }
+  .brand-title {
+    font-size: 24px;
+  }
+  .brand-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .hm-login-page::before {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-login-card {
+    padding: 28px 18px 22px;
+  }
+  .brand-title {
+    font-size: 22px;
+  }
+  .hm-input {
+    height: 40px;
+  }
+  .hm-btn-primary {
+    height: 40px;
+    font-size: 15px;
+  }
+}
 </style>

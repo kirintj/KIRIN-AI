@@ -9,6 +9,7 @@ from app.tools.guide_tool import GuideTool
 from app.tools.feedback_tool import FeedbackTool
 from app.tools.tracker_tool import TrackerTool
 from app.utils.chat import call_llm
+from app.settings import settings
 from app.memory.memory import get_memory, save_memory, get_raw_history
 from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
 

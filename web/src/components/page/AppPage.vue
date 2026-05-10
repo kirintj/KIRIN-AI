@@ -16,3 +16,12 @@ defineProps({
   },
 })
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  section {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}
+</style>

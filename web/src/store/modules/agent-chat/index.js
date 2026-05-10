@@ -15,9 +15,7 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   const filteredConversations = computed(() => {
     const keyword = searchKeyword.value.trim().toLowerCase()
     if (!keyword) return conversations.value
-    return conversations.value.filter((c) =>
-      (c.title || '').toLowerCase().includes(keyword)
-    )
+    return conversations.value.filter((c) => (c.title || '').toLowerCase().includes(keyword))
   })
 
   const groupedConversations = computed(() => {
@@ -127,6 +125,13 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     }
   }
 
+  const _buildRequestParams = (query) => ({
+    query,
+    use_llm_router: useLlmRouter.value,
+    use_langgraph: useLangGraph.value,
+    conversation_id: currentConversationId.value,
+  })
+
   const sendMessage = async (query) => {
     if (!query || !query.trim() || isLoading.value) return
 
@@ -135,12 +140,7 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     isLoading.value = true
 
     try {
-      const res = await api.agentChat({
-        query,
-        use_llm_router: useLlmRouter.value,
-        use_langgraph: useLangGraph.value,
-        conversation_id: currentConversationId.value,
-      })
+      const res = await api.agentChat(_buildRequestParams(query))
       messages.value.push({
         role: 'assistant',
         content: res.data?.answer || '无返回',
@@ -163,6 +163,7 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
 
   const regenerateMessage = async (messageIndex) => {
     if (isLoading.value) return
+
     const userMsg = messages.value[messageIndex - 1]
     if (!userMsg || userMsg.role !== 'user') return
 
@@ -170,12 +171,7 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     isLoading.value = true
 
     try {
-      const res = await api.agentChat({
-        query: userMsg.content,
-        use_llm_router: useLlmRouter.value,
-        use_langgraph: useLangGraph.value,
-        conversation_id: currentConversationId.value,
-      })
+      const res = await api.agentChat(_buildRequestParams(userMsg.content))
       messages.value.push({
         role: 'assistant',
         content: res.data?.answer || '无返回',

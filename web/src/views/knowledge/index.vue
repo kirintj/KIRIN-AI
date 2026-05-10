@@ -301,11 +301,11 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 
 <template>
   <AppPage :show-footer="false">
-    <div class="hm-knowledge-page">
-    <div class="hm-kn-header">
+    <div class="hm-page-container">
+    <div class="hm-page-header">
       <div>
-        <h1 class="hm-kn-title">知识库管理</h1>
-        <p class="hm-kn-subtitle">文档管理 · 向量化 · RAG 检索</p>
+        <h1 class="hm-page-title">知识库管理</h1>
+        <p class="hm-page-subtitle">文档管理 · 向量化 · RAG 检索</p>
       </div>
       <div class="hm-kn-actions">
         <button class="hm-action-btn" @click="loadStats" :disabled="statsLoading">
@@ -329,7 +329,9 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
         :key="stat.key"
         class="hm-stat-card"
       >
-        <div class="hm-stat-dot" :style="{ background: stat.color }"></div>
+        <div class="hm-stat-icon" :style="{ background: stat.color + '14' }">
+          <TheIcon icon="icon-park-outline:data" :size="20" :color="stat.color" />
+        </div>
         <div class="hm-stat-info">
           <div class="hm-stat-value" :style="{ color: stat.color }">{{ stat.count }}</div>
           <div class="hm-stat-label">{{ stat.label }}</div>
@@ -340,11 +342,12 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
     <div class="hm-section">
       <h2 class="hm-section-title">文档搜索</h2>
       <div class="hm-search-bar">
-        <div class="hm-search-input-box">
+        <div class="hm-search-box" style="flex: 1; padding: 10px 16px;">
           <TheIcon icon="icon-park-outline:search" :size="16" color="var(--hm-font-fourth)" />
           <input
             v-model="searchKeyword"
-            class="hm-search-field"
+            class="hm-search-input"
+            style="font-size: 14px;"
             placeholder="输入关键词搜索文档..."
             @keydown.enter="handleSearch"
           />
@@ -384,11 +387,11 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 
     <div class="hm-section">
       <div class="hm-tab-bar">
-        <button :class="['hm-tab-btn', { active: browseTab === 'upload' }]" @click="browseTab = 'upload'">
+        <button :class="['hm-tab-item', { active: browseTab === 'upload' }]" @click="browseTab = 'upload'">
           <TheIcon icon="icon-park-outline:upload" :size="16" />
           上传管理
         </button>
-        <button :class="['hm-tab-btn', { active: browseTab === 'browse' }]" @click="browseTab = 'browse'">
+        <button :class="['hm-tab-item', { active: browseTab === 'browse' }]" @click="browseTab = 'browse'">
           <TheIcon icon="icon-park-outline:preview-open" :size="16" />
           浏览文档
         </button>
@@ -1243,16 +1246,73 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 
 @media (max-width: 768px) {
   .hm-knowledge-page {
-    padding: 20px 16px;
+    padding: 16px 12px;
+  }
+  .hm-kn-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
+  }
+  .hm-kn-header-right {
+    width: 100%;
+    justify-content: space-between;
   }
   .hm-kn-title {
     font-size: 22px;
   }
   .hm-stats-row {
     flex-wrap: wrap;
+    gap: 8px;
   }
   .hm-stat-card {
-    min-width: 100px;
+    min-width: 0;
+    flex: 1 1 calc(50% - 4px);
+    padding: 12px;
+  }
+  .hm-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .hm-stat-value {
+    font-size: 20px;
+  }
+  .hm-selector-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .hm-doc-item {
+    padding: 10px 12px;
+  }
+  .hm-doc-item-icon {
+    width: 34px;
+    height: 34px;
+  }
+  .hm-doc-item-meta {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hm-guide-item {
+    padding: 12px 14px;
+  }
+  .hm-guide-icon {
+    width: 34px;
+    height: 34px;
+  }
+  .hm-browse-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-stat-card {
+    flex: 1 1 100%;
+  }
+  .hm-doc-item-preview {
+    display: none;
   }
 }
 </style>

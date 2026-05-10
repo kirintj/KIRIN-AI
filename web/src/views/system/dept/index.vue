@@ -79,20 +79,17 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 'auto',
+    width: 140,
     align: 'center',
     fixed: 'right',
     render(row) {
       return [
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'small',
-              type: 'primary',
-              style: 'margin-left: 8px;',
+              class: 'hm-row-btn',
               onClick: () => {
-                console.log('row', row.parent_id)
                 if (row.parent_id === 0) {
                   isDisabled.value = true
                 } else {
@@ -101,10 +98,7 @@ const columns = [
                 handleEdit(row)
               },
             },
-            {
-              default: () => '编辑',
-              icon: renderIcon('material-symbols:edit', { size: 16 }),
-            }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
           ),
           [[vPermission, 'post/api/v1/dept/update']]
         ),
@@ -118,16 +112,9 @@ const columns = [
             trigger: () =>
               withDirectives(
                 h(
-                  NButton,
-                  {
-                    size: 'small',
-                    type: 'error',
-                    style: 'margin-left: 8px;',
-                  },
-                  {
-                    default: () => '删除',
-                    icon: renderIcon('material-symbols:delete-outline', { size: 16 }),
-                  }
+                  'button',
+                  { class: 'hm-row-btn danger' },
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
                 ),
                 [[vPermission, 'delete/api/v1/dept/delete']]
               ),
@@ -145,14 +132,10 @@ const columns = [
   <CommonPage show-footer title="部门列表">
     <template #action>
       <div>
-        <NButton
-          v-permission="'post/api/v1/dept/create'"
-          class="float-right mr-15"
-          type="primary"
-          @click="addDepts"
-        >
-          <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建部门
-        </NButton>
+        <button class="hm-action-btn primary" v-permission="'post/api/v1/dept/create'" @click="addDepts">
+          <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
+          新建部门
+        </button>
       </div>
     </template>
     <!-- 表格 -->

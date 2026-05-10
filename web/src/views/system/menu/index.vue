@@ -143,18 +143,16 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 120,
+    width: 200,
     align: 'center',
     fixed: 'right',
     render(row) {
       return [
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'tiny',
-              quaternary: true,
-              type: 'primary',
+              class: 'hm-row-btn',
               style: `display: ${row.children && row.menu_type !== 'menu' ? '' : 'none'};`,
               onClick: () => {
                 initForm.parent_id = row.id
@@ -163,26 +161,21 @@ const columns = [
                 handleAdd()
               },
             },
-            { default: () => '子菜单', icon: renderIcon('material-symbols:add', { size: 16 }) }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'add'), '子菜单']
           ),
           [[vPermission, 'post/api/v1/menu/create']]
         ),
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'tiny',
-              quaternary: true,
-              type: 'info',
+              class: 'hm-row-btn',
               onClick: () => {
                 showMenuType.value = false
                 handleEdit(row)
               },
             },
-            {
-              default: () => '编辑',
-              icon: renderIcon('material-symbols:edit-outline', { size: 16 }),
-            }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
           ),
           [[vPermission, 'post/api/v1/menu/update']]
         ),
@@ -195,17 +188,12 @@ const columns = [
             trigger: () =>
               withDirectives(
                 h(
-                  NButton,
+                  'button',
                   {
-                    size: 'tiny',
-                    quaternary: true,
-                    type: 'error',
-                    style: `display: ${row.children && row.children.length > 0 ? 'none' : ''};`, //有子菜单不允许删除
+                    class: 'hm-row-btn danger',
+                    style: `display: ${row.children && row.children.length > 0 ? 'none' : ''};`,
                   },
-                  {
-                    default: () => '删除',
-                    icon: renderIcon('material-symbols:delete-outline', { size: 16 }),
-                  }
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
                 ),
                 [[vPermission, 'delete/api/v1/menu/delete']]
               ),
@@ -259,9 +247,10 @@ async function getTreeSelect() {
   <!-- 业务页面 -->
   <CommonPage show-footer title="菜单列表">
     <template #action>
-      <NButton v-permission="'post/api/v1/menu/create'" type="primary" @click="handleClickAdd">
-        <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建根菜单
-      </NButton>
+      <button class="hm-action-btn primary" v-permission="'post/api/v1/menu/create'" @click="handleClickAdd">
+        <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
+        新建根菜单
+      </button>
     </template>
 
     <!-- 表格 -->

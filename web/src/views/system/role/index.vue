@@ -120,26 +120,19 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 80,
+    width: 200,
     align: 'center',
     fixed: 'right',
     render(row) {
       return [
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'small',
-              type: 'primary',
-              style: 'margin-right: 8px;',
-              onClick: () => {
-                handleEdit(row)
-              },
+              class: 'hm-row-btn',
+              onClick: () => handleEdit(row),
             },
-            {
-              default: () => '编辑',
-              icon: renderIcon('material-symbols:edit-outline', { size: 16 }),
-            }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
           ),
           [[vPermission, 'post/api/v1/role/update']]
         ),
@@ -153,16 +146,9 @@ const columns = [
             trigger: () =>
               withDirectives(
                 h(
-                  NButton,
-                  {
-                    size: 'small',
-                    type: 'error',
-                    style: 'margin-right: 8px;',
-                  },
-                  {
-                    default: () => '删除',
-                    icon: renderIcon('material-symbols:delete-outline', { size: 16 }),
-                  }
+                  'button',
+                  { class: 'hm-row-btn danger' },
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
                 ),
                 [[vPermission, 'delete/api/v1/role/delete']]
               ),
@@ -171,39 +157,30 @@ const columns = [
         ),
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'small',
-              type: 'primary',
+              class: 'hm-row-btn',
               onClick: async () => {
                 try {
-                  // 使用 Promise.all 来同时发送所有请求
                   const [menusResponse, apisResponse, roleAuthorizedResponse] = await Promise.all([
                     api.getMenus({ page: 1, page_size: 9999 }),
                     api.getApis({ page: 1, page_size: 9999 }),
                     api.getRoleAuthorized({ id: row.id }),
                   ])
-
-                  // 处理每个请求的响应
                   menuOption.value = menusResponse.data
                   apiOption.value = buildApiTree(apisResponse.data)
                   menu_ids.value = roleAuthorizedResponse.data.menus.map((v) => v.id)
                   api_ids.value = roleAuthorizedResponse.data.apis.map(
                     (v) => v.method.toLowerCase() + v.path
                   )
-
                   active.value = true
                   role_id.value = row.id
                 } catch (error) {
-                  // 错误处理
                   console.error('Error loading data:', error)
                 }
               },
             },
-            {
-              default: () => '设置权限',
-              icon: renderIcon('material-symbols:edit-outline', { size: 16 }),
-            }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), '设置权限']
           ),
           [[vPermission, 'get/api/v1/role/authorized']]
         ),
@@ -245,9 +222,10 @@ async function updateRoleAuthorized() {
 <template>
   <CommonPage show-footer title="角色列表">
     <template #action>
-      <NButton v-permission="'post/api/v1/role/create'" type="primary" @click="handleAdd">
-        <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建角色
-      </NButton>
+      <button class="hm-action-btn primary" v-permission="'post/api/v1/role/create'" @click="handleAdd">
+        <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
+        新建角色
+      </button>
     </template>
 
     <CrudTable
@@ -259,10 +237,12 @@ async function updateRoleAuthorized() {
       <template #queryBar>
         <QueryBarItem label="角色名" :label-width="50">
           <NInput
+            id="query-role-name"
             v-model:value="queryItems.role_name"
             clearable
             type="text"
             placeholder="请输入角色名"
+            aria-label="角色名"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
@@ -286,16 +266,17 @@ async function updateRoleAuthorized() {
         <NFormItem
           label="角色名"
           path="name"
+          for="modal-role-name"
           :rule="{
             required: true,
             message: '请输入角色名称',
             trigger: ['input', 'blur'],
           }"
         >
-          <NInput v-model:value="modalForm.name" placeholder="请输入角色名称" />
+          <NInput id="modal-role-name" v-model:value="modalForm.name" placeholder="请输入角色名称" />
         </NFormItem>
-        <NFormItem label="角色描述" path="desc">
-          <NInput v-model:value="modalForm.desc" placeholder="请输入角色描述" />
+        <NFormItem label="角色描述" path="desc" for="modal-role-desc">
+          <NInput id="modal-role-desc" v-model:value="modalForm.desc" placeholder="请输入角色描述" />
         </NFormItem>
       </NForm>
     </CrudModal>
@@ -305,9 +286,11 @@ async function updateRoleAuthorized() {
         <NGrid x-gap="24" cols="12">
           <NGi span="8">
             <NInput
+              id="drawer-pattern"
               v-model:value="pattern"
               type="text"
               placeholder="筛选"
+              aria-label="筛选"
               style="flex-grow: 1"
             ></NInput>
           </NGi>

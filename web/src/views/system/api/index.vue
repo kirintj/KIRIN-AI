@@ -118,27 +118,22 @@ const columns = [
   {
     title: '操作',
     key: 'actions',
-    width: 'auto',
+    width: 140,
     align: 'center',
     fixed: 'right',
     render(row) {
       return [
         withDirectives(
           h(
-            NButton,
+            'button',
             {
-              size: 'small',
-              type: 'primary',
-              style: 'margin-right: 8px;',
+              class: 'hm-row-btn',
               onClick: () => {
                 handleEdit(row)
                 modalForm.value.roles = row.roles.map((e) => (e = e.id))
               },
             },
-            {
-              default: () => '编辑',
-              icon: renderIcon('material-symbols:edit', { size: 16 }),
-            }
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
           ),
           [[vPermission, 'post/api/v1/api/update']]
         ),
@@ -152,16 +147,9 @@ const columns = [
             trigger: () =>
               withDirectives(
                 h(
-                  NButton,
-                  {
-                    size: 'small',
-                    type: 'error',
-                    style: 'margin-right: 8px;',
-                  },
-                  {
-                    default: () => '删除',
-                    icon: renderIcon('material-symbols:delete-outline', { size: 16 }),
-                  }
+                  'button',
+                  { class: 'hm-row-btn danger' },
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
                 ),
                 [[vPermission, 'delete/api/v1/api/delete']]
               ),
@@ -178,23 +166,15 @@ const columns = [
   <!-- 业务页面 -->
   <CommonPage show-footer title="API列表">
     <template #action>
-      <div>
-        <NButton
-          v-permission="'post/api/v1/api/create'"
-          class="float-right mr-15"
-          type="primary"
-          @click="handleAdd"
-        >
-          <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建API
-        </NButton>
-        <NButton
-          v-permission="'post/api/v1/api/refresh'"
-          class="float-right mr-15"
-          type="warning"
-          @click="handleRefreshApi"
-        >
-          <TheIcon icon="material-symbols:refresh" :size="18" class="mr-5" />刷新API
-        </NButton>
+      <div class="hm-action-group">
+        <button class="hm-action-btn" v-permission="'post/api/v1/api/refresh'" @click="handleRefreshApi">
+          <TheIcon icon="material-symbols:refresh" :size="16" />
+          刷新API
+        </button>
+        <button class="hm-action-btn primary" v-permission="'post/api/v1/api/create'" @click="handleAdd">
+          <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
+          新建API
+        </button>
       </div>
     </template>
     <!-- 表格 -->

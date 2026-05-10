@@ -220,10 +220,13 @@ const tabs = [
 
 @media (max-width: 768px) {
   .hm-job-page {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
   .hm-job-header {
-    padding: 18px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
   }
   .hm-job-title {
     font-size: 22px;
@@ -234,6 +237,12 @@ const tabs = [
   }
   .hm-tab-item span {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-job-header {
+    padding: 12px;
   }
 }
 </style>

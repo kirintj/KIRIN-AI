@@ -739,6 +739,17 @@ onMounted(async () => {
   gap: 16px;
 }
 
+.hm-wb-two-col .hm-wb-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.hm-wb-two-col .hm-wb-section .hm-wb-chart-card,
+.hm-wb-two-col .hm-wb-section .hm-wb-timeline-card {
+  flex: 1;
+}
+
 /* ── 图表卡片 ── */
 .hm-wb-chart-card {
   background: rgba(255, 255, 255, 0.72);
@@ -1188,10 +1199,17 @@ onMounted(async () => {
 /* ── 响应式 ── */
 @media (max-width: 768px) {
   .hm-workbench {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
   .hm-wb-header {
-    padding: 18px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px 16px;
+    gap: 16px;
+  }
+  .hm-wb-header-right {
+    width: 100%;
+    justify-content: space-between;
   }
   .hm-wb-title {
     font-size: 22px;
@@ -1204,6 +1222,14 @@ onMounted(async () => {
   }
   .hm-wb-feature-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .hm-wb-feature-card {
+    padding: 16px 10px 14px;
+  }
+  .hm-wb-feature-icon {
+    width: 40px;
+    height: 40px;
   }
   .hm-wb-quick-actions {
     display: none;
@@ -1211,6 +1237,45 @@ onMounted(async () => {
   .hm-wb-header-glow {
     width: 120px;
     height: 120px;
+  }
+  .hm-wb-stat-card {
+    padding: 14px;
+  }
+  .hm-wb-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .hm-wb-stat-value {
+    font-size: 20px;
+  }
+  .hm-wb-conv-item {
+    padding: 10px 12px;
+  }
+  .hm-wb-conv-icon {
+    width: 34px;
+    height: 34px;
+  }
+  .hm-wb-chart-card,
+  .hm-wb-timeline-card {
+    padding: 16px;
+  }
+  .hm-wb-timeline-text {
+    white-space: normal;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .hm-wb-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .hm-wb-feature-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .hm-wb-feature-desc {
+    display: none;
   }
 }
 </style>

@@ -1,22 +1,30 @@
 <script setup lang="ts">
 import { useAgentChatStore } from '@/store/modules/agent-chat'
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, watch, ref, computed, nextTick } from 'vue'
 import { useMarkdown } from '@/composables/useMarkdown'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import { formatRelativeTime, formatMsgTime, shouldShowTimeDivider } from '@/utils/common/time'
-import { NPopconfirm, NInput } from 'naive-ui'
+import { NPopconfirm, NInput, NDrawer, NDrawerContent } from 'naive-ui'
+import { useBreakpoints } from '@vueuse/core'
 
 const agentStore = useAgentChatStore()
 const message = ref('')
 const { formatMessage, scrollToBottom } = useMarkdown()
 
+const breakpoints = reactive(useBreakpoints({ sm: 768 }))
+const isMobile = breakpoints.smaller('sm')
+
 const sidebarCollapsed = ref(false)
+const mobileDrawerVisible = ref(false)
 const renamingId = ref<string | null>(null)
 const renameValue = ref('')
 const copiedIndex = ref<number | null>(null)
 const feedbackMap = ref<Record<number, 'like' | 'dislike'>>({})
+
+const msgListRef = ref(null)
+let scrollTimeout = null
 
 const sendMessage = () => {
   if (!message.value.trim() || agentStore.isLoading) return
@@ -97,23 +105,99 @@ const quickCommands = [
   { label: '创建待办', icon: 'icon-park-outline:doc-add', text: '帮我创建一个待办：明天下午3点准备面试', color: '#64BB5C' },
 ]
 
+const safeScrollToBottom = () => {
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout)
+  }
+  scrollTimeout = setTimeout(() => {
+    scrollToBottom('.hm-msg-list')
+  }, 30)
+}
+
 onMounted(async () => {
   await agentStore.loadConversations()
   if (agentStore.conversations.length > 0) {
     await agentStore.switchConversation(agentStore.conversations[0].id)
   }
-  scrollToBottom('.hm-msg-list')
+  safeScrollToBottom()
 })
 
-watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: true })
+watch(() => agentStore.messages, () => {
+  scrollToBottom('.hm-msg-list')
+}, { deep: true })
 </script>
 
 <template>
-  <div class="hm-chat-layout">
+  <div class="hm-sidebar-layout">
+    <template v-if="isMobile">
+      <n-drawer v-model:show="mobileDrawerVisible" :width="280" placement="left" :auto-focus="false">
+        <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" title="对话">
+          <template #header>
+            <div class="hm-sidebar-header">
+              <span class="hm-sidebar-title">对话</span>
+              <button class="hm-sidebar-new-btn" @click="handleNewConversation">
+                <TheIcon icon="icon-park-outline:plus" :size="16" />
+              </button>
+            </div>
+          </template>
+          <div class="hm-sidebar-search">
+            <div class="hm-search-box">
+              <TheIcon icon="icon-park-outline:search" :size="14" color="var(--hm-font-fourth)" />
+              <input v-model="agentStore.searchKeyword" class="hm-search-input" placeholder="搜索对话..." />
+              <button v-if="agentStore.searchKeyword" class="hm-search-clear" @click="agentStore.searchKeyword = ''">
+                <TheIcon icon="icon-park-outline:close" :size="12" />
+              </button>
+            </div>
+          </div>
+          <div class="hm-sidebar-list">
+            <template v-for="group in agentStore.groupedConversations" :key="group.label">
+              <div class="hm-sidebar-group-label">{{ group.label }}</div>
+              <div
+                v-for="conv in group.items"
+                :key="conv.id"
+                :class="['hm-sidebar-item', { active: conv.id === agentStore.currentConversationId }]"
+                @click="handleSwitchConversation(conv.id); mobileDrawerVisible = false"
+              >
+                <TheIcon icon="icon-park-outline:chat" :size="16" class="hm-conv-icon" />
+                <div v-if="renamingId === conv.id" class="hm-conv-rename" @click.stop>
+                  <NInput v-model:value="renameValue" size="tiny" placeholder="输入新名称" @keyup.enter="confirmRename" @keyup.escape="cancelRename" @blur="confirmRename" autofocus />
+                </div>
+                <div v-else class="hm-conv-info">
+                  <div class="hm-conv-title">{{ conv.title || '新对话' }}</div>
+                  <div class="hm-conv-meta">{{ conv.message_count || 0 }} 条消息 · {{ formatRelativeTime(conv.updated_at) }}</div>
+                </div>
+                <div class="hm-conv-actions hm-conv-actions-mobile" @click.stop>
+                  <button class="hm-conv-action" @click="startRename(conv.id, conv.title)">
+                    <TheIcon icon="icon-park-outline:edit" :size="12" />
+                  </button>
+                  <NPopconfirm @positive-click="handleDeleteConversation(conv.id)">
+                    <template #trigger>
+                      <button class="hm-conv-action danger">
+                        <TheIcon icon="icon-park-outline:delete" :size="12" />
+                      </button>
+                    </template>
+                    确定删除该对话？
+                  </NPopconfirm>
+                </div>
+              </div>
+            </template>
+            <div v-if="agentStore.conversations.length === 0" class="hm-sidebar-empty">
+              <TheIcon icon="icon-park-outline:chat" :size="32" color="var(--hm-font-fourth)" />
+              <p>暂无对话</p>
+            </div>
+            <div v-if="agentStore.conversations.length > 0 && agentStore.filteredConversations.length === 0" class="hm-sidebar-empty">
+              <TheIcon icon="icon-park-outline:search" :size="32" color="var(--hm-font-fourth)" />
+              <p>未找到匹配的对话</p>
+            </div>
+          </div>
+        </n-drawer-content>
+      </n-drawer>
+    </template>
+    <template v-else>
     <div :class="['hm-sidebar', { collapsed: sidebarCollapsed }]">
       <div :class="['hm-sidebar-header', { collapsed: sidebarCollapsed }]">
         <span v-if="!sidebarCollapsed" class="hm-sidebar-title">对话</span>
-        <button v-if="!sidebarCollapsed" class="hm-sidebar-new" @click="handleNewConversation">
+        <button v-if="!sidebarCollapsed" class="hm-sidebar-new-btn" @click="handleNewConversation">
           <TheIcon icon="icon-park-outline:plus" :size="16" />
         </button>
         <button class="hm-sidebar-toggle" @click="sidebarCollapsed = !sidebarCollapsed">
@@ -191,15 +275,20 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
         </div>
       </div>
     </div>
+    </template>
 
     <div class="hm-chat-page">
-      <div class="hm-chat-toolbar">
-        <div class="hm-chat-toolbar-left">
+      <div class="hm-toolbar">
+        <div class="hm-toolbar-left">
+          <button v-if="isMobile" class="hm-mobile-conv-btn" @click="mobileDrawerVisible = true">
+            <TheIcon icon="icon-park-outline:chat" :size="16" />
+          </button>
           <span class="hm-chat-title">AI Agent</span>
-          <span class="hm-chat-badge">智能对话</span>
+          <span v-if="!isMobile" class="hm-chat-badge">智能对话</span>
         </div>
-        <div class="hm-chat-toolbar-right">
+        <div class="hm-toolbar-right">
           <button
+            v-if="!isMobile"
             class="hm-toolbar-chip"
             :class="{ active: agentStore.useLangGraph }"
             @click="agentStore.useLangGraph = !agentStore.useLangGraph"
@@ -208,6 +297,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
             {{ agentStore.useLangGraph ? 'LangGraph' : '经典' }}
           </button>
           <button
+            v-if="!isMobile"
             class="hm-toolbar-chip"
             :class="{ active: agentStore.useLlmRouter }"
             @click="agentStore.useLlmRouter = !agentStore.useLlmRouter"
@@ -217,7 +307,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
           </button>
           <button class="hm-toolbar-chip danger" @click="handleClearMemory">
             <TheIcon icon="icon-park-outline:delete" :size="14" />
-            清空
+            <span v-if="!isMobile">清空</span>
           </button>
         </div>
       </div>
@@ -228,7 +318,6 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
             v-if="agentStore.messages.length === 0"
             icon="icon-park-outline:robot"
             title="开始与 AI Agent 对话"
-            description="支持知识问答、面试准备、薪资谈判、求职攻略、待办创建"
           >
             <div class="hm-quick-cmds">
               <button
@@ -250,12 +339,11 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
               {{ formatMsgTime(item.timestamp) }}
             </div>
             <div :class="['hm-msg-item', item.role]">
-              <div v-if="item.role === 'assistant'" class="hm-msg-avatar">
-                <TheIcon icon="icon-park-outline:robot" :size="18" color="var(--hm-brand)" />
-              </div>
               <div class="hm-msg-content">
-                <div v-html="formatMessage(item.content, item.role)" class="hm-msg-bubble md-bubble"></div>
-                <div v-if="item.role === 'assistant'" class="hm-msg-actions">
+                <div class="hm-msg-bubble-wrap">
+                  <div v-html="formatMessage(item.content, item.role)" class="hm-msg-bubble md-bubble"></div>
+                </div>
+                <div v-if="item.role === 'assistant'" :class="['hm-msg-actions', { 'hm-msg-actions-mobile': isMobile }]">
                   <button
                     class="hm-msg-action"
                     @click="copyMessage(item.content, index)"
@@ -301,9 +389,6 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
           </template>
 
           <div v-if="agentStore.isLoading" class="hm-msg-item assistant">
-            <div class="hm-msg-avatar">
-              <TheIcon icon="icon-park-outline:robot" :size="18" color="var(--hm-brand)" />
-            </div>
             <div class="hm-msg-bubble hm-msg-loading">
               <LoadingDots text="思考中" />
             </div>
@@ -343,71 +428,14 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 </template>
 
 <style scoped>
-.hm-chat-layout {
+.hm-sidebar-layout {
   height: 100%;
-  display: flex;
-  background: var(--hm-bg-primary);
-  overflow: hidden;
 }
 
-.hm-sidebar {
-  width: 260px;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  -webkit-backdrop-filter: var(--hm-blur-glass);
-  border-right: 1px solid var(--hm-border-glass);
+.hm-sidebar-drawer-content {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  transition: width 0.3s var(--hm-spring);
-  overflow: hidden;
-}
-
-.hm-sidebar.collapsed {
-  width: 48px;
-}
-
-.hm-sidebar-header {
-  display: flex;
-  align-items: center;
-  padding: 14px 12px;
-  gap: 8px;
-  border-bottom: 1px solid var(--hm-border-glass);
-  flex-shrink: 0;
-}
-
-.hm-sidebar-header.collapsed {
-  justify-content: center;
-  padding: 14px 0;
-}
-
-.hm-sidebar-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--hm-font-primary);
-  flex: 1;
-}
-
-.hm-sidebar-new {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--hm-radius-sm);
-  border: 1px solid var(--hm-border);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--hm-font-secondary);
-  transition: all 0.3s var(--hm-spring);
-  flex-shrink: 0;
-}
-
-.hm-sidebar-new:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  background: var(--hm-brand-light);
-  transform: scale(1.08);
+  height: 100%;
 }
 
 .hm-sidebar-toggle {
@@ -428,43 +456,11 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 .hm-sidebar-toggle:hover {
   color: var(--hm-font-secondary);
   background: rgba(0, 0, 0, 0.04);
-  transform: scale(1.08);
 }
 
 .hm-sidebar-search {
   padding: 8px 12px;
   flex-shrink: 0;
-}
-
-.hm-search-box {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-search-box:focus-within {
-  border-color: var(--hm-brand);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
-}
-
-.hm-search-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 12px;
-  color: var(--hm-font-primary);
-  font-family: inherit;
-}
-
-.hm-search-input::placeholder {
-  color: var(--hm-font-fourth);
 }
 
 .hm-search-clear {
@@ -626,24 +622,6 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
   min-width: 0;
 }
 
-.hm-chat-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 20px;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  -webkit-backdrop-filter: var(--hm-blur-glass);
-  border-bottom: 1px solid var(--hm-border-glass);
-  flex-shrink: 0;
-}
-
-.hm-chat-toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .hm-chat-title {
   font-size: 16px;
   font-weight: 600;
@@ -658,43 +636,6 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
   background: var(--hm-brand-light);
   color: var(--hm-brand);
   font-weight: 500;
-}
-
-.hm-chat-toolbar-right {
-  display: flex;
-  gap: 6px;
-}
-
-.hm-toolbar-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  border: 1px solid var(--hm-border-glass);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  font-size: 12px;
-  color: var(--hm-font-secondary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-toolbar-chip:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  transform: translateY(-1px);
-}
-
-.hm-toolbar-chip.active {
-  background: var(--hm-brand-light);
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-}
-
-.hm-toolbar-chip.danger:hover {
-  border-color: var(--hm-error);
-  color: var(--hm-error);
 }
 
 .hm-chat-body {
@@ -800,18 +741,23 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
   word-break: break-word;
 }
 
+.hm-msg-bubble-wrap {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0;
+}
+
 .assistant .hm-msg-bubble {
-  background: var(--hm-bg-glass);
   backdrop-filter: var(--hm-blur-glass);
   border: 1px solid var(--hm-border-glass);
   color: var(--hm-font-primary);
-  max-width: 85%;
+  max-width: 100%;
 }
 
 .user .hm-msg-bubble {
   background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
   color: var(--hm-font-on-brand);
-  max-width: 70%;
+  max-width: 100%;
   box-shadow: var(--hm-shadow-brand);
 }
 
@@ -875,33 +821,6 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
 .hm-input-box {
   max-width: 720px;
   margin: 0 auto;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  border: 1px solid var(--hm-border-glass);
-  border-radius: var(--hm-radius-xl);
-  padding: 10px 14px;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-input-box:focus-within {
-  border-color: var(--hm-brand);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
-}
-
-.hm-textarea {
-  width: 100%;
-  border: none;
-  outline: none;
-  resize: none;
-  font-size: 14px;
-  line-height: 1.5;
-  background: transparent;
-  font-family: inherit;
-  color: var(--hm-font-primary);
-}
-
-.hm-textarea::placeholder {
-  color: var(--hm-font-fourth);
 }
 
 .hm-input-actions {
@@ -935,28 +854,7 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
   transform: translateY(-1px);
 }
 
-.hm-send-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--hm-radius-full);
-  border: none;
-  background: var(--hm-font-fourth);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: not-allowed;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-send-btn.active {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  cursor: pointer;
-  box-shadow: var(--hm-shadow-brand);
-}
-
-.hm-send-btn.active:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+.hm-send-btn-wrap {
 }
 
 @media (max-width: 768px) {
@@ -970,5 +868,72 @@ watch(() => agentStore.messages, () => scrollToBottom('.hm-msg-list'), { deep: t
     width: 0;
     border: none;
   }
+
+  .hm-toolbar {
+    padding: 10px 12px;
+  }
+
+  .hm-msg-list {
+    padding: 12px 8px;
+    gap: 12px;
+  }
+
+  .hm-quick-cmds {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .hm-quick-btn {
+    justify-content: center;
+  }
+
+  .hm-msg-actions-mobile {
+    opacity: 1 !important;
+  }
+
+  .hm-conv-actions-mobile {
+    display: flex !important;
+  }
+
+  .hm-chat-input-area {
+    padding: 8px 8px 12px;
+  }
+
+  .hm-input-box {
+    padding: 8px 10px;
+  }
+
+  .hm-input-chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hm-input-chips::-webkit-scrollbar { display: none; }
+
+  .hm-textarea {
+    font-size: 16px;
+  }
+}
+
+.hm-mobile-conv-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-sm);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--hm-font-secondary);
+  transition: all 0.25s var(--hm-spring);
+}
+
+.hm-mobile-conv-btn:active {
+  background: var(--hm-brand-light);
+  color: var(--hm-brand);
+  transform: scale(0.92);
 }
 </style>

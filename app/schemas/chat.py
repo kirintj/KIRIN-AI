@@ -11,18 +11,11 @@ class ChatRequest(BaseModel):
     model: Optional[str] = None
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 4096
-    stream: Optional[bool] = False
 
 class ChatResponse(BaseModel):
     message: ChatMessage
     model: str
     usage: Optional[Dict[str, Any]] = None
-
-class StreamResponse(BaseModel):
-    content: str
-    finished: bool
-    model: str
-    timestamp: str
 
 class ChatHistoryResponse(BaseModel):
     id: int

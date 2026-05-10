@@ -2,7 +2,7 @@
   <n-dropdown :options="options" @select="handleSelect">
     <div flex cursor-pointer items-center>
       <img :src="userStore.avatar" mr10 h-35 w-35 rounded-full />
-      <span>{{ userStore.name }}</span>
+      <span v-if="!isMobile" class="hm-user-name">{{ userStore.name }}</span>
     </div>
   </n-dropdown>
 </template>
@@ -12,12 +12,14 @@ import { useUserStore } from '@/store'
 import { renderIcon } from '@/utils'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useBreakpoints } from '@vueuse/core'
 
 const { t } = useI18n()
-
 const router = useRouter()
-
 const userStore = useUserStore()
+
+const breakpoints = reactive(useBreakpoints({ sm: 666 }))
+const isMobile = breakpoints.smaller('sm')
 
 const options = [
   {
@@ -48,3 +50,11 @@ function handleSelect(key) {
   }
 }
 </script>
+
+<style scoped>
+@media (max-width: 768px) {
+  .hm-user-name {
+    display: none;
+  }
+}
+</style>

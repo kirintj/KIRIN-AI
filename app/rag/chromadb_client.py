@@ -38,11 +38,24 @@ def _get_client() -> chromadb.ClientAPI:
 def _get_collection(name: str = "knowledge_base") -> chromadb.Collection:
     if name not in _collections:
         client = _get_client()
-        _collections[name] = client.get_or_create_collection(
-            name=name,
-            metadata={"hnsw:space": "cosine"},
-            embedding_function=_get_embedding_function(),
-        )
+        embed_fn = _get_embedding_function()
+        try:
+            _collections[name] = client.get_or_create_collection(
+                name=name,
+                metadata={"hnsw:space": "cosine"},
+                embedding_function=embed_fn,
+            )
+        except ValueError as e:
+            if "Embedding function conflict" in str(e):
+                _logger.warning("集合 [%s] embedding 函数冲突，删除旧集合并重建: %s", name, e)
+                client.delete_collection(name)
+                _collections[name] = client.get_or_create_collection(
+                    name=name,
+                    metadata={"hnsw:space": "cosine"},
+                    embedding_function=embed_fn,
+                )
+            else:
+                raise
     return _collections[name]
 
 

@@ -40,20 +40,46 @@ export function useMarkdown() {
         .replace(/>/g, '&gt;')
         .replace(/\n/g, '<br>')
     }
-    return marked(text)
+    try {
+      return marked(text)
+    } catch (e) {
+      console.warn('Markdown渲染失败:', e)
+      return text.replace(/\n/g, '<br>')
+    }
   }
 
   const formatMarkdown = (text) => {
     if (!text) return ''
-    return marked(text)
+    try {
+      return marked(text)
+    } catch (e) {
+      console.warn('Markdown渲染失败:', e)
+      return text.replace(/\n/g, '<br>')
+    }
   }
 
   const scrollToBottom = (selector) => {
     nextTick(() => {
       const container = document.querySelector(selector)
-      if (container) container.scrollTop = container.scrollHeight
+      if (container) {
+        container.scrollTop = container.scrollHeight
+      }
     })
   }
 
-  return { formatMessage, formatMarkdown, scrollToBottom }
+  const safeFormatMessage = (text, role) => {
+    if (!text) return ''
+    if (role === 'user') {
+      return escapeHtml(text).replace(/\n/g, '<br>')
+    }
+    return formatMessage(text, role)
+  }
+
+  const escapeHtml = (str) => {
+    const div = document.createElement('div')
+    div.textContent = str
+    return div.innerHTML
+  }
+
+  return { formatMessage, formatMarkdown, scrollToBottom, safeFormatMessage }
 }
