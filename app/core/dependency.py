@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 import jwt
@@ -6,6 +7,8 @@ from fastapi import Depends, Header, HTTPException, Request
 from app.core.ctx import CTX_USER_ID
 from app.models import User
 from app.settings import settings
+
+_logger = logging.getLogger(__name__)
 
 
 class AuthControl:
@@ -33,7 +36,8 @@ class AuthControl:
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"认证异常: {repr(e)}")
+            _logger.exception("认证异常")
+            raise HTTPException(status_code=500, detail="认证服务异常，请稍后重试")
 
 
 class PermissionControl:

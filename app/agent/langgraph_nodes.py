@@ -70,7 +70,7 @@ async def intent_router_node(state: JobAssistantState) -> dict:
             tool_args = {}
             need_more = False
     else:
-        intent = route_intent(query, use_llm=False)
+        intent = await route_intent(query, use_llm=False)
         tool_args = _extract_simple_args(intent, query)
         need_more = intent == "workflow"
 

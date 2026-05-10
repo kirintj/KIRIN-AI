@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from app.settings import settings
@@ -26,7 +26,7 @@ async def chat(
             username=username,
             role="user",
             content=request.messages[-1].content,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
         )
 
         api_message = convert_messages_for_api(request.messages)
@@ -50,7 +50,7 @@ async def chat(
                 username=username,
                 role="assistant",
                 content=content,
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
             )
 
             chat_response = ChatResponse(
@@ -113,7 +113,7 @@ async def clear_user_history(
         "message": "历史已清空",
         "user": current_user.username,
         "deleted": count,
-        "time": datetime.now().isoformat(),
+        "time": datetime.now(timezone.utc).isoformat(),
     }
     return Success(data=data)
 
@@ -122,7 +122,7 @@ async def clear_user_history(
 async def health_check():
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "2.0",
         "database": "tortoise-orm",
     }

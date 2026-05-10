@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter
 
@@ -61,24 +61,26 @@ async def get_tracker_chart(current_user: User = DependAuth):
 
 @router.get("/weekly-activity")
 async def get_weekly_activity(current_user: User = DependAuth):
-    apps = await TrackerApplication.filter(user_id=current_user.username).order_by("-created_at")
-    convs = await Conversation.filter(user_id=current_user.username).order_by("-created_at")
-
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = today - timedelta(days=6)
+
+    apps = await TrackerApplication.filter(
+        user_id=current_user.username, created_at__gte=week_ago
+    ).values_list("created_at", flat=True)
+    convs = await Conversation.filter(
+        user_id=current_user.username, created_at__gte=week_ago
+    ).values_list("created_at", flat=True)
+
     days = []
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
         day_str = day.strftime("%m-%d")
+        day_start = day
+        day_end = day + timedelta(days=1)
 
-        app_count = sum(
-            1 for a in apps
-            if a.created_at and a.created_at.strftime("%Y-%m-%d") == day.strftime("%Y-%m-%d")
-        )
-        conv_count = sum(
-            1 for c in convs
-            if c.created_at and c.created_at.strftime("%Y-%m-%d") == day.strftime("%Y-%m-%d")
-        )
+        app_count = sum(1 for a in apps if a and day_start <= a.replace(tzinfo=timezone.utc) < day_end)
+        conv_count = sum(1 for c in convs if c and day_start <= c.replace(tzinfo=timezone.utc) < day_end)
         days.append({
             "date": day_str,
             "count": app_count + conv_count,

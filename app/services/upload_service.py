@@ -2,8 +2,6 @@ import uuid
 from pathlib import Path
 from dataclasses import dataclass
 
-from app.schemas.base import Fail
-
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 AVATAR_DIR = STATIC_DIR / "avatars"
 UPLOAD_DIR = STATIC_DIR / "uploads"
@@ -29,26 +27,32 @@ class FileParseResult:
     total_pages: int
 
 
-def validate_file_extension(filename: str, allowed: set[str] | None = None) -> Fail | None:
+@dataclass
+class ValidationError:
+    code: int
+    msg: str
+
+
+def validate_file_extension(filename: str, allowed: set[str] | None = None) -> ValidationError | None:
     ext = Path(filename).suffix.lower()
     target = allowed or DOCUMENT_EXTENSIONS
     if ext not in target:
-        return Fail(code=400, msg=f"不支持的文件格式: {ext}，支持: {', '.join(sorted(target))}")
+        return ValidationError(code=400, msg=f"不支持的文件格式: {ext}，支持: {', '.join(sorted(target))}")
     return None
 
 
-def validate_file_size(size: int | None, max_size: int = DEFAULT_MAX_SIZE) -> Fail | None:
+def validate_file_size(size: int | None, max_size: int = DEFAULT_MAX_SIZE) -> ValidationError | None:
     if size and size > max_size:
         mb = max_size // (1024 * 1024)
-        return Fail(code=400, msg=f"文件大小不能超过 {mb}MB")
+        return ValidationError(code=400, msg=f"文件大小不能超过 {mb}MB")
     return None
 
 
-def validate_image_type(content_type: str | None) -> Fail | None:
+def validate_image_type(content_type: str | None) -> ValidationError | None:
     if not content_type or not content_type.startswith("image/"):
-        return Fail(code=400, msg="仅支持上传图片文件")
+        return ValidationError(code=400, msg="仅支持上传图片文件")
     if content_type not in IMAGE_CONTENT_TYPES:
-        return Fail(code=400, msg="仅支持 JPG/PNG/GIF/WebP 格式")
+        return ValidationError(code=400, msg="仅支持 JPG/PNG/GIF/WebP 格式")
     return None
 
 

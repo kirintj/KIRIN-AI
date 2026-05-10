@@ -60,8 +60,7 @@ async def agent_chat(
         if request.use_langgraph:
             result = await _run_langgraph(request.query, user_id, request.use_llm_router)
         else:
-            executor.use_llm_router = request.use_llm_router or False
-            result = await executor.run(request.query, user_id=user_id)
+            result = await executor.run(request.query, user_id=user_id, use_llm_router=request.use_llm_router)
 
         if request.conversation_id:
             await conversation_service.add_message(request.conversation_id, "user", request.query)
@@ -346,7 +345,9 @@ async def get_conversation_messages(
     conversation_id: int,
     current_user: User = DependAuth,
 ):
-    messages = await conversation_service.get_messages(conversation_id)
+    messages = await conversation_service.get_messages_if_owner(conversation_id, current_user.username)
+    if messages is None:
+        return Fail(code=404, msg="会话不存在")
     return Success(data=messages)
 
 

@@ -125,6 +125,12 @@ class ConversationService:
         msgs = await self.repo.get_messages(conv_id)
         return [await m.to_dict() for m in msgs]
 
+    async def get_messages_if_owner(self, conv_id: int, user_id: str) -> list[dict] | None:
+        conv = await self.repo.get_by_id(conv_id, user_id)
+        if not conv:
+            return None
+        return await self.get_messages(conv_id)
+
     async def add_message(self, conv_id: int, role: str, content: str) -> dict | None:
         msg = await self.repo.add_message(conv_id, role, content)
         return await msg.to_dict() if msg else None

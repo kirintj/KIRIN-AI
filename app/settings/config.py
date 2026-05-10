@@ -12,7 +12,7 @@ class Settings:
     PROJECT_NAME: str = "lightmo"
     APP_DESCRIPTION: str = "lightmo project"
 
-    CORS_ORIGINS: typing.List = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+    CORS_ORIGINS: typing.List = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: typing.List = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
     CORS_ALLOW_HEADERS: typing.List = ["*"]
@@ -39,7 +39,7 @@ class Settings:
     LOGS_ROOT: str = os.path.join(BASE_DIR, "app/logs")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_ACCESS_EXPIRE_MINUTES", str(30)))
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", os.getenv("JWT_ACCESS_EXPIRE_MINUTES", str(30))))
     JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7)))
 
     def __init__(self):

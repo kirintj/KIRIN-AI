@@ -23,13 +23,15 @@ class RepositoryBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def exists(self, **kwargs) -> bool:
         return await self.model.filter(**kwargs).exists()
 
-    async def list(self, page: int, page_size: int, search: Q = Q(), order: list = []) -> Tuple[Total, List[ModelType]]:
+    async def list(self, page: int, page_size: int, search: Q = Q(), order: list | None = None) -> Tuple[Total, List[ModelType]]:
+        order = order or []
         query = self.model.filter(search)
         total: int = await query.count()
         items: List[ModelType] = await query.offset((page - 1) * page_size).limit(page_size).order_by(*order)
         return Total(total), items
 
-    async def list_all(self, search: Q = Q(), order: list = []) -> List[ModelType]:
+    async def list_all(self, search: Q = Q(), order: list | None = None) -> List[ModelType]:
+        order = order or []
         return await self.model.filter(search).order_by(*order)
 
     async def create(self, obj_in: CreateSchemaType | Dict) -> ModelType:
@@ -43,7 +45,7 @@ class RepositoryBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     async def update(self, id: int, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         if isinstance(obj_in, Dict):
-            obj_dict = obj_in
+            obj_dict = {k: v for k, v in obj_in.items() if k != "id"}
         else:
             obj_dict = obj_in.model_dump(exclude_unset=True, exclude={"id"})
         obj = await self.get(id=id)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from fastapi.exceptions import HTTPException
@@ -41,7 +41,7 @@ class UserService:
 
     async def update_last_login(self, id: int) -> None:
         user = await self.repo.get(id=id)
-        user.last_login = datetime.now()
+        user.last_login = datetime.now(timezone.utc)
         await user.save()
 
     async def authenticate(self, credentials: CredentialsSchema):
@@ -61,12 +61,17 @@ class UserService:
             role_obj = await role_repository.get(id=role_id)
             await user.roles.add(role_obj)
 
-    async def reset_password(self, user_id: int):
+    async def reset_password(self, user_id: int) -> str:
+        import secrets
+        import string
         user_obj = await self.repo.get(id=user_id)
         if user_obj.is_superuser:
             raise HTTPException(status_code=403, detail="不允许重置超级管理员密码")
-        user_obj.password = get_password_hash(password="123456")
+        alphabet = string.ascii_letters + string.digits
+        new_password = ''.join(secrets.choice(alphabet) for _ in range(12))
+        user_obj.password = get_password_hash(password=new_password)
         await user_obj.save()
+        return new_password
 
 
 user_service = UserService()

@@ -29,8 +29,9 @@ class AgentExecutor:
     def register_tool(self, tool: BaseTool):
         self.tools[tool.name] = tool
 
-    async def run(self, query: str, user_id: str = "default") -> str:
-        tool_name = await route_intent(query, use_llm=self.use_llm_router)
+    async def run(self, query: str, user_id: str = "default", use_llm_router: bool | None = None) -> str:
+        use_llm = use_llm_router if use_llm_router is not None else self.use_llm_router
+        tool_name = await route_intent(query, use_llm=use_llm)
 
         if tool_name == "workflow":
             result = await self._run_workflow(query, user_id)

@@ -92,8 +92,22 @@ async def download_export(
     filename: str,
     current_user: User = DependAuth,
 ):
+    from pathlib import PurePosixPath
     from app.tools.resume_export_tool import RESUME_EXPORT_DIR
+
+    # Prevent path traversal
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return Fail(code=400, msg="无效的文件名")
+
     filepath = RESUME_EXPORT_DIR / current_user.username / filename
+    try:
+        filepath = filepath.resolve()
+        base = (RESUME_EXPORT_DIR / current_user.username).resolve()
+        if not str(filepath).startswith(str(base)):
+            return Fail(code=400, msg="无效的文件名")
+    except (ValueError, OSError):
+        return Fail(code=400, msg="无效的文件名")
+
     if not filepath.exists():
         return Fail(code=404, msg="文件不存在")
     return FileResponse(

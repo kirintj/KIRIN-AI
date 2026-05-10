@@ -10,7 +10,7 @@ async def list_conversations(user_id: str) -> list[dict]:
 
 
 async def get_conversation(conv_id: int, user_id: str) -> dict | None:
-    return await conversation_service.get_messages(conv_id) or None
+    return await conversation_service.get_messages_if_owner(conv_id, user_id)
 
 
 async def rename_conversation(conv_id: int, user_id: str, title: str) -> bool:

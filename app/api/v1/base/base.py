@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter
@@ -8,12 +9,13 @@ from app.core.dependency import DependAuth
 from app.models.admin import Api, Menu, User
 from app.schemas.base import Fail, Success
 from app.schemas.login import *
-from app.schemas.users import UpdatePassword, UserCreate
+from app.schemas.users import UpdatePassword, UserCreate, UserRegister
 from app.settings import settings
 import jwt as pyjwt
 from app.core.security import create_access_token, create_refresh_token, decode_token, get_password_hash, verify_password
 
 router = APIRouter()
+_logger = logging.getLogger(__name__)
 
 
 @router.post("/access_token", summary="获取token")
@@ -89,7 +91,7 @@ async def get_user_api():
 
 
 @router.post("/register", summary="用户注册")
-async def register(req_in: UserCreate):
+async def register(req_in: UserRegister):
     try:
         existing = await user_service.get_by_username(req_in.username)
         if existing:
@@ -97,9 +99,16 @@ async def register(req_in: UserCreate):
         existing_email = await user_service.get_by_email(req_in.email)
         if existing_email:
             return Fail(code=400, msg="邮箱已被注册")
-        await user_service.create_user(obj_in=req_in)
+        user_data = UserCreate(
+            email=req_in.email,
+            username=req_in.username,
+            password=req_in.password,
+            avatar=req_in.avatar,
+        )
+        await user_service.create_user(obj_in=user_data)
         return Success(msg="注册成功")
     except Exception:
+        _logger.exception("注册失败")
         return Fail(code=500, msg="注册失败，请稍后重试")
 
 

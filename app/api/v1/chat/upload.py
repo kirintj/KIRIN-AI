@@ -94,12 +94,12 @@ async def upload_documents(
             "count": valid_count,
             "collection": collection_name,
         })
-    except OpenAIBadRequestError as e:
+    except OpenAIBadRequestError:
         _logger.exception("文件上传失败: 向量模型参数错误")
-        return Fail(code=400, msg=f"向量模型参数错误: {e}")
-    except OpenAIAPIError as e:
+        return Fail(code=400, msg="向量模型参数错误，请检查文件内容")
+    except OpenAIAPIError:
         _logger.exception("文件上传失败: 向量模型调用异常")
-        return Fail(code=502, msg=f"向量模型服务异常，请稍后重试: {e}")
-    except Exception as e:
+        return Fail(code=502, msg="向量模型服务异常，请稍后重试")
+    except Exception:
         _logger.exception("文件上传失败")
-        return Fail(code=500, msg=f"文件上传失败: {e}")
+        return Fail(code=500, msg="文件上传失败，请稍后重试")

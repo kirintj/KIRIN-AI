@@ -68,11 +68,14 @@ class TrackerRepository:
         return count > 0
 
     async def count_by_status(self, user_id: str) -> dict:
-        rows = await self.model.filter(user_id=user_id).values_list("status", flat=True)
-        stats = {}
-        for status in rows:
-            stats[status] = stats.get(status, 0) + 1
-        return stats
+        from tortoise.aggregation import Count
+        rows = (
+            await self.model.filter(user_id=user_id)
+            .group_by("status")
+            .annotate(count=Count("id"))
+            .values("status", "count")
+        )
+        return {row["status"]: row["count"] for row in rows}
 
     async def total(self, user_id: str) -> int:
         return await self.model.filter(user_id=user_id).count()
@@ -89,8 +92,15 @@ class FeedbackRepository:
         return await self.model.create(**kwargs)
 
     async def get_low_rating(self, user_id: str, threshold: int = 3) -> list[FeedbackItem]:
-        items = await self.model.filter(user_id=user_id).order_by("-created_at")
-        return [i for i in items if i.rating.isdigit() and int(i.rating) <= threshold]
+        all_items = await self.model.filter(user_id=user_id).order_by("-created_at")
+        result = []
+        for i in all_items:
+            try:
+                if int(i.rating) <= threshold:
+                    result.append(i)
+            except (ValueError, TypeError):
+                continue
+        return result
 
 
 class ConversationRepository:
@@ -151,10 +161,13 @@ class MemoryRepository:
         item = await self.model.create(user_id=user_id, user_msg=user_msg, assistant_msg=assistant_msg)
         count = await self.model.filter(user_id=user_id).count()
         if count > self.MAX_HISTORY:
-            oldest = await self.model.filter(user_id=user_id).order_by("created_at")
-            to_delete = oldest[: count - self.MAX_HISTORY]
-            for old in to_delete:
-                await old.delete()
+            ids_to_keep = await (
+                self.model.filter(user_id=user_id)
+                .order_by("-created_at")
+                .limit(self.MAX_HISTORY)
+                .values_list("id", flat=True)
+            )
+            await self.model.filter(user_id=user_id).exclude(id__in=ids_to_keep).delete()
         return item
 
     async def clear(self, user_id: str) -> int:
