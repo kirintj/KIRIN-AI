@@ -5,10 +5,9 @@ from fastapi import APIRouter
 
 from app.core.dependency import DependAuth
 from app.models.admin import User
+from app.models.business import TrackerApplication, TodoItem, Conversation
 from app.schemas.base import Success
-from app.tools.tracker_tool import get_tracker_stats
-from app.tools.todo_tool import _get_user_todos
-from app.tools.conversation_tool import list_conversations
+from app.services.business import tracker_service, todo_service, conversation_service
 from app.tools.interview_sim_tool import list_sessions
 
 router = APIRouter()
@@ -17,9 +16,9 @@ _logger = logging.getLogger(__name__)
 
 @router.get("/overview")
 async def get_dashboard_overview(current_user: User = DependAuth):
-    tracker_stats = get_tracker_stats(current_user.username)
-    todos = _get_user_todos(current_user.username)
-    conversations = list_conversations(current_user.username)
+    tracker_stats = await tracker_service.get_stats(current_user.username)
+    todos = await todo_service.list_todos(current_user.username)
+    conversations = await conversation_service.list_conversations(current_user.username)
     interview_sessions = list_sessions(current_user.username)
 
     todo_done = sum(1 for t in todos if t.get("done"))
@@ -52,7 +51,7 @@ async def get_dashboard_overview(current_user: User = DependAuth):
 
 @router.get("/tracker-chart")
 async def get_tracker_chart(current_user: User = DependAuth):
-    stats = get_tracker_stats(current_user.username)
+    stats = await tracker_service.get_stats(current_user.username)
     return Success(data={
         "labels": list(stats.get("status_labels", {}).values()),
         "values": list(stats.get("by_status", {}).values()),
@@ -62,11 +61,8 @@ async def get_tracker_chart(current_user: User = DependAuth):
 
 @router.get("/weekly-activity")
 async def get_weekly_activity(current_user: User = DependAuth):
-    from app.tools.tracker_tool import _load_applications
-    from app.tools.conversation_tool import _load_meta
-
-    apps = _load_applications(current_user.username)
-    convs = _load_meta(current_user.username)
+    apps = await TrackerApplication.filter(user_id=current_user.username).order_by("-created_at")
+    convs = await Conversation.filter(user_id=current_user.username).order_by("-created_at")
 
     now = datetime.now()
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -77,11 +73,11 @@ async def get_weekly_activity(current_user: User = DependAuth):
 
         app_count = sum(
             1 for a in apps
-            if a.get("created_at", "").startswith(day.strftime("%Y-%m-%d"))
+            if a.created_at and a.created_at.strftime("%Y-%m-%d") == day.strftime("%Y-%m-%d")
         )
         conv_count = sum(
             1 for c in convs
-            if c.get("created_at", "").startswith(day.strftime("%Y-%m-%d"))
+            if c.created_at and c.created_at.strftime("%Y-%m-%d") == day.strftime("%Y-%m-%d")
         )
         days.append({
             "date": day_str,

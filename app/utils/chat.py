@@ -26,11 +26,21 @@ def convert_messages_for_api(messages: List[ChatMessage]) -> List[Dict[str, str]
     return [{"role": msg.role, "content": msg.content} for msg in messages]
 
 
-async def call_llm(prompt: str, model: str | None = None, max_tokens: int = 2000, temperature: float = 0.7, timeout: float | None = None) -> str:
+_DEFAULT_MAX_TOKENS = -1
+_DEFAULT_TEMPERATURE = -1.0
+
+
+async def call_llm(
+    prompt: str,
+    model: str | None = None,
+    max_tokens: int = _DEFAULT_MAX_TOKENS,
+    temperature: float = _DEFAULT_TEMPERATURE,
+    timeout: float | None = None,
+) -> str:
     config = await get_ai_config()
     effective_model = model or config.get("model_name", settings.MODEL_NAME)
-    effective_max_tokens = max_tokens if max_tokens != 2000 else int(config.get("max_tokens", 2000))
-    effective_temperature = temperature if temperature != 0.7 else float(config.get("temperature", 0.7))
+    effective_max_tokens = max_tokens if max_tokens != _DEFAULT_MAX_TOKENS else int(config.get("max_tokens", 2000))
+    effective_temperature = temperature if temperature != _DEFAULT_TEMPERATURE else float(config.get("temperature", 0.7))
 
     request_timeout = httpx.Timeout(timeout or LLM_TIMEOUT, connect=10.0)
     try:

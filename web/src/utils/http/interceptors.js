@@ -1,7 +1,6 @@
 import { getToken, getRefreshToken, setToken, setRefreshToken, removeToken, removeRefreshToken } from '@/utils'
 import { resolveResError } from './helpers'
-import { useUserStore } from '@/store'
-import api from '@/api'
+ import { useUserStore } from '@/store'
 
 let isRefreshing = false
 let pendingRequests = []
@@ -79,16 +78,20 @@ export async function resReject(error) {
     isRefreshing = true
 
     try {
-      const res = await api.refreshToken({ refresh_token: refreshToken })
-      const { access_token, refresh_token: newRefreshToken } = res.data
+      const axios = (await import('axios')).default
+      const baseURL = originalRequest.baseURL || import.meta.env.VITE_BASE_API
+      const res = await axios.post(`${baseURL}/base/refresh_token`, { refresh_token: refreshToken })
+      const { access_token, refresh_token: newRefreshToken } = res.data?.data || {}
+      if (!access_token) {
+        throw new Error('刷新令牌返回为空')
+      }
       setToken(access_token)
-      setRefreshToken(newRefreshToken)
+      setRefreshToken(newRefreshToken || refreshToken)
 
       onRefreshed(access_token)
       isRefreshing = false
 
       originalRequest.headers.token = access_token
-      const axios = (await import('axios')).default
       return axios(originalRequest)
     } catch (refreshError) {
       onRefreshFailed()

@@ -1,47 +1,13 @@
 import json
-from datetime import datetime
-from pathlib import Path
 
 from app.tools.base import BaseTool
 from app.utils.chat import call_llm
-
-TODO_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "todos.json"
+from app.services.business import todo_service
 
 PRIORITY_MAP = {"高": "high", "中": "medium", "低": "low"}
 PRIORITY_LABELS = {"high": "高", "medium": "中", "low": "低"}
 CATEGORY_MAP = {"工作": "work", "学习": "study", "生活": "life", "求职": "job", "其他": "other"}
 CATEGORY_LABELS = {"work": "工作", "study": "学习", "life": "生活", "job": "求职", "other": "其他"}
-
-
-def _ensure_file():
-    TODO_FILE.parent.mkdir(parents=True, exist_ok=True)
-    if not TODO_FILE.exists():
-        TODO_FILE.write_text("{}", encoding="utf-8")
-
-
-def _load_all_todos() -> dict:
-    _ensure_file()
-    data = json.loads(TODO_FILE.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        TODO_FILE.write_text("{}", encoding="utf-8")
-        return {}
-    return data
-
-
-def _save_all_todos(all_todos: dict):
-    _ensure_file()
-    TODO_FILE.write_text(json.dumps(all_todos, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
-def _get_user_todos(user_id: str) -> list:
-    all_todos = _load_all_todos()
-    return all_todos.get(user_id, [])
-
-
-def _set_user_todos(user_id: str, todos: list):
-    all_todos = _load_all_todos()
-    all_todos[user_id] = todos
-    _save_all_todos(all_todos)
 
 
 async def _extract_todo_fields(query: str) -> dict:
@@ -105,25 +71,25 @@ class TodoTool(BaseTool):
         user_id = kwargs.get("user_id", "default")
         fields = await _extract_todo_fields(query)
 
+        await todo_service.create_todo(
+            user_id=user_id,
+            content=fields.get("content") or query,
+            priority=fields.get("priority", "medium"),
+            category=fields.get("category", "other"),
+            due_date=fields.get("due_date", ""),
+        )
+
         todo_item = {
             "content": fields.get("content") or query,
             "priority": fields.get("priority", "medium"),
             "category": fields.get("category", "other"),
             "due_date": fields.get("due_date", ""),
-            "created_at": datetime.now().isoformat(),
-            "done": False,
         }
-
-        todos = _get_user_todos(user_id)
-        todos.append(todo_item)
-        _set_user_todos(user_id, todos)
-
-        response = await _generate_response(query, todo_item)
-        return response
+        return await _generate_response(query, todo_item)
 
     @staticmethod
     async def list_todos(user_id: str = "default") -> str:
-        todos = _get_user_todos(user_id)
+        todos = await todo_service.list_todos(user_id)
         if not todos:
             return "当前没有任何待办任务。"
         lines = []
@@ -136,42 +102,23 @@ class TodoTool(BaseTool):
         return "\n".join(lines)
 
     @staticmethod
-    def get_todos_list(user_id: str = "default") -> list[dict]:
-        return _get_user_todos(user_id)
+    async def get_todos_list(user_id: str = "default") -> list[dict]:
+        return await todo_service.list_todos(user_id)
 
     @staticmethod
-    def toggle_todo(index: int, user_id: str = "default") -> bool:
-        todos = _get_user_todos(user_id)
-        if 0 <= index < len(todos):
-            todos[index]["done"] = not todos[index].get("done", False)
-            _set_user_todos(user_id, todos)
-            return True
-        return False
+    async def toggle_todo(item_id: int, user_id: str = "default") -> bool:
+        result = await todo_service.toggle_todo(item_id, user_id)
+        return result is not None
 
     @staticmethod
-    def update_todo(index: int, user_id: str = "default", **updates) -> bool:
-        todos = _get_user_todos(user_id)
-        if 0 <= index < len(todos):
-            allowed = {"content", "priority", "category", "due_date"}
-            for key in allowed & updates.keys():
-                todos[index][key] = updates[key]
-            _set_user_todos(user_id, todos)
-            return True
-        return False
+    async def update_todo(item_id: int, user_id: str = "default", **updates) -> bool:
+        result = await todo_service.update_todo(item_id, user_id, **updates)
+        return result is not None
 
     @staticmethod
-    def delete_todo(index: int, user_id: str = "default") -> bool:
-        todos = _get_user_todos(user_id)
-        if 0 <= index < len(todos):
-            todos.pop(index)
-            _set_user_todos(user_id, todos)
-            return True
-        return False
+    async def delete_todo(item_id: int, user_id: str = "default") -> bool:
+        return await todo_service.delete_todo(item_id, user_id)
 
     @staticmethod
-    def clear_completed(user_id: str = "default") -> int:
-        todos = _get_user_todos(user_id)
-        remaining = [t for t in todos if not t.get("done")]
-        removed = len(todos) - len(remaining)
-        _set_user_todos(user_id, remaining)
-        return removed
+    async def clear_completed(user_id: str = "default") -> int:
+        return await todo_service.clear_completed(user_id)

@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -11,12 +10,8 @@ from app.agent.executor import AgentExecutor
 from app.agent.langgraph_graph import get_graph
 from app.rag.chromadb_client import add_documents, delete_all_documents, get_collection_stats, list_documents, get_document_chunks
 from app.memory.memory import get_memory, clear_memory
-from app.tools.todo_tool import TodoTool
-from app.tools.feedback_tool import FeedbackTool
-from app.tools.conversation_tool import (
-    create_conversation, list_conversations, rename_conversation,
-    delete_conversation, get_messages as get_conv_messages,
-    add_message as add_conv_message, get_recent_conversations,
+from app.services.business import (
+    todo_service, feedback_service, conversation_service,
 )
 
 router = APIRouter()
@@ -30,7 +25,7 @@ class AgentChatRequest(BaseModel):
     user_id: Optional[str] = "default"
     use_llm_router: Optional[bool] = False
     use_langgraph: Optional[bool] = False
-    conversation_id: Optional[str] = None
+    conversation_id: Optional[int] = None
 
 
 class CreateConversationRequest(BaseModel):
@@ -38,12 +33,12 @@ class CreateConversationRequest(BaseModel):
 
 
 class RenameConversationRequest(BaseModel):
-    conversation_id: str
+    conversation_id: int
     title: str
 
 
 class ConversationIdRequest(BaseModel):
-    conversation_id: str
+    conversation_id: int
 
 
 class AddDocumentRequest(BaseModel):
@@ -69,8 +64,8 @@ async def agent_chat(
             result = await executor.run(request.query, user_id=user_id)
 
         if request.conversation_id:
-            add_conv_message(user_id, request.conversation_id, "user", request.query)
-            add_conv_message(user_id, request.conversation_id, "assistant", result)
+            await conversation_service.add_message(request.conversation_id, "user", request.query)
+            await conversation_service.add_message(request.conversation_id, "assistant", result)
 
         return Success(data={"answer": result, "user": current_user.username})
     except Exception:
@@ -98,12 +93,12 @@ async def _run_langgraph(query: str, user_id: str, use_llm_router: bool) -> str:
     return final_state.get("final_answer", "抱歉，未能生成回复。")
 
 
-class TodoIndexRequest(BaseModel):
-    index: int
+class TodoIdRequest(BaseModel):
+    id: int
 
 
 class TodoUpdateRequest(BaseModel):
-    index: int
+    id: int
     content: Optional[str] = None
     priority: Optional[str] = None
     category: Optional[str] = None
@@ -124,9 +119,7 @@ async def list_todos(
     done: Optional[bool] = None,
     current_user: User = DependAuth,
 ):
-    todos = TodoTool.get_todos_list(user_id=current_user.username)
-    for i, t in enumerate(todos):
-        t["_index"] = i
+    todos = await todo_service.list_todos(current_user.username)
     if category:
         todos = [t for t in todos if t.get("category") == category]
     if priority:
@@ -141,30 +134,25 @@ async def create_todo(
     request: TodoCreateRequest,
     current_user: User = DependAuth,
 ):
-    todos = TodoTool.get_todos_list(user_id=current_user.username)
-    todo_item = {
-        "content": request.content,
-        "priority": request.priority,
-        "category": request.category,
-        "due_date": request.due_date,
-        "created_at": datetime.now().isoformat(),
-        "done": False,
-    }
-    todos.append(todo_item)
-    from app.tools.todo_tool import _set_user_todos
-    _set_user_todos(current_user.username, todos)
+    todo_item = await todo_service.create_todo(
+        user_id=current_user.username,
+        content=request.content,
+        priority=request.priority,
+        category=request.category,
+        due_date=request.due_date,
+    )
     return Success(data=todo_item)
 
 
 @router.put("/todos/toggle")
 async def toggle_todo(
-    request: TodoIndexRequest,
+    request: TodoIdRequest,
     current_user: User = DependAuth,
 ):
-    success = TodoTool.toggle_todo(request.index, user_id=current_user.username)
-    if success:
+    result = await todo_service.toggle_todo(request.id, current_user.username)
+    if result:
         return Success(data={"message": "状态已切换"})
-    return Fail(code=400, msg="索引无效")
+    return Fail(code=400, msg="待办不存在")
 
 
 @router.put("/todos")
@@ -172,29 +160,29 @@ async def update_todo(
     request: TodoUpdateRequest,
     current_user: User = DependAuth,
 ):
-    updates = {k: v for k, v in request.model_dump().items() if k != "index" and v is not None}
-    success = TodoTool.update_todo(request.index, user_id=current_user.username, **updates)
-    if success:
+    updates = {k: v for k, v in request.model_dump().items() if k != "id" and v is not None}
+    result = await todo_service.update_todo(request.id, current_user.username, **updates)
+    if result:
         return Success(data={"message": "待办已更新"})
-    return Fail(code=400, msg="索引无效")
+    return Fail(code=400, msg="待办不存在")
 
 
 @router.delete("/todos")
 async def delete_todo(
-    index: int,
+    id: int,
     current_user: User = DependAuth,
 ):
-    success = TodoTool.delete_todo(index, user_id=current_user.username)
+    success = await todo_service.delete_todo(id, current_user.username)
     if success:
         return Success(data={"message": "待办已删除"})
-    return Fail(code=400, msg="索引无效")
+    return Fail(code=400, msg="待办不存在")
 
 
 @router.delete("/todos/completed")
 async def clear_completed_todos(
     current_user: User = DependAuth,
 ):
-    removed = TodoTool.clear_completed(user_id=current_user.username)
+    removed = await todo_service.clear_completed(current_user.username)
     return Success(data={"message": f"已清除 {removed} 条已完成待办", "removed": removed})
 
 
@@ -284,7 +272,7 @@ async def get_document_detail(
 async def list_feedback(
     current_user: User = DependAuth,
 ):
-    feedback = FeedbackTool.get_feedback_list(user_id=current_user.username)
+    feedback = await feedback_service.list_feedback(current_user.username)
     return Success(data=feedback)
 
 
@@ -293,7 +281,7 @@ async def get_low_rating_feedback(
     threshold: int = 3,
     current_user: User = DependAuth,
 ):
-    feedback = FeedbackTool.get_low_rating_feedback(threshold, user_id=current_user.username)
+    feedback = await feedback_service.get_low_rating(current_user.username, threshold)
     return Success(data=feedback)
 
 
@@ -301,7 +289,7 @@ async def get_low_rating_feedback(
 async def get_user_memory(
     current_user: User = DependAuth,
 ):
-    history = get_memory(current_user.username)
+    history = await get_memory(current_user.username)
     data = [{"user": u, "assistant": a} for u, a in history]
     return Success(data=data)
 
@@ -310,7 +298,7 @@ async def get_user_memory(
 async def clear_user_memory(
     current_user: User = DependAuth,
 ):
-    clear_memory(current_user.username)
+    await clear_memory(current_user.username)
     return Success(data={"message": "对话记忆已清空"})
 
 
@@ -318,7 +306,7 @@ async def clear_user_memory(
 async def get_conversations(
     current_user: User = DependAuth,
 ):
-    convs = list_conversations(current_user.username)
+    convs = await conversation_service.list_conversations(current_user.username)
     return Success(data=convs)
 
 
@@ -327,7 +315,7 @@ async def create_new_conversation(
     request: CreateConversationRequest,
     current_user: User = DependAuth,
 ):
-    conv = create_conversation(current_user.username, request.title or "新对话")
+    conv = await conversation_service.create_conversation(current_user.username, request.title or "新对话")
     return Success(data=conv)
 
 
@@ -336,18 +324,18 @@ async def rename_existing_conversation(
     request: RenameConversationRequest,
     current_user: User = DependAuth,
 ):
-    success = rename_conversation(current_user.username, request.conversation_id, request.title)
-    if success:
+    result = await conversation_service.rename_conversation(request.conversation_id, current_user.username, request.title)
+    if result:
         return Success(data={"message": "重命名成功"})
     return Fail(code=404, msg="会话不存在")
 
 
 @router.delete("/conversations/delete")
 async def delete_existing_conversation(
-    conversation_id: str,
+    conversation_id: int,
     current_user: User = DependAuth,
 ):
-    success = delete_conversation(current_user.username, conversation_id)
+    success = await conversation_service.delete_conversation(conversation_id, current_user.username)
     if success:
         return Success(data={"message": "会话已删除"})
     return Fail(code=404, msg="会话不存在")
@@ -355,10 +343,10 @@ async def delete_existing_conversation(
 
 @router.get("/conversations/{conversation_id}/messages")
 async def get_conversation_messages(
-    conversation_id: str,
+    conversation_id: int,
     current_user: User = DependAuth,
 ):
-    messages = get_conv_messages(current_user.username, conversation_id)
+    messages = await conversation_service.get_messages(conversation_id)
     return Success(data=messages)
 
 
@@ -367,5 +355,5 @@ async def get_recent(
     limit: int = 5,
     current_user: User = DependAuth,
 ):
-    convs = get_recent_conversations(current_user.username, limit)
+    convs = await conversation_service.get_recent(current_user.username, limit)
     return Success(data=convs)

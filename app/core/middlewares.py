@@ -46,6 +46,8 @@ class BackGroundTaskMiddleware(SimpleBaseMiddleware):
 class HttpAuditLogMiddleware:
     """纯 ASGI 审计日志中间件，避免 BaseHTTPMiddleware 消费 multipart 请求体"""
 
+    SENSITIVE_FIELDS = frozenset({"password", "old_password", "new_password", "token", "secret", "api_key"})
+
     def __init__(self, app, methods: list[str], exclude_paths: list[str]):
         self.app = app
         self.methods = methods
@@ -132,11 +134,20 @@ class HttpAuditLogMiddleware:
                         args["_content_length"] = content_length
                 else:
                     body = await request.json()
-                    args.update(body)
+                    args.update(self._mask_sensitive_fields(body))
             except Exception:
                 pass
 
         return args
+
+    @classmethod
+    def _mask_sensitive_fields(cls, data: dict) -> dict:
+        if not isinstance(data, dict):
+            return data
+        return {
+            k: "******" if k in cls.SENSITIVE_FIELDS else v
+            for k, v in data.items()
+        }
 
     def _parse_response_body(self, request: Request, headers: list, body_chunks: list) -> Any:
         for name, value in headers:

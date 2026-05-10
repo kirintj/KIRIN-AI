@@ -16,8 +16,8 @@ router = APIRouter()
 
 @router.get("/list", summary="获取对话历史列表（管理员）")
 async def get_chat_history_list(
-    page: int = Query(1, description="页码"),
-    page_size: int = Query(10, description="每页数量"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(10, ge=1, le=100, description="每页数量"),
     username: str = Query("", description="用户名称"),
     role: str = Query("", description="角色"),
     current_user: User = DependAuth,

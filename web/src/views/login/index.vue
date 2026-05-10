@@ -260,7 +260,6 @@ async function handleRegister() {
   width: 64px;
   height: 64px;
   border-radius: var(--hm-radius-lg);
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
   display: flex;
   align-items: center;
   justify-content: center;

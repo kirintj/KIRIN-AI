@@ -1,5 +1,6 @@
 import os
 import typing
+import warnings
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,9 +12,9 @@ class Settings:
     PROJECT_NAME: str = "lightmo"
     APP_DESCRIPTION: str = "lightmo project"
 
-    CORS_ORIGINS: typing.List = os.getenv("CORS_ORIGINS", "*").split(",")
+    CORS_ORIGINS: typing.List = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: typing.List = ["*"]
+    CORS_ALLOW_METHODS: typing.List = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
     CORS_ALLOW_HEADERS: typing.List = ["*"]
 
     API_KEY: typing.Optional[str] = os.getenv("DASHSCOPE_API_KEY")
@@ -36,10 +37,16 @@ class Settings:
     PROJECT_ROOT: str = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     BASE_DIR: str = os.path.abspath(os.path.join(PROJECT_ROOT, os.pardir))
     LOGS_ROOT: str = os.path.join(BASE_DIR, "app/logs")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me-in-production")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_ACCESS_EXPIRE_MINUTES", str(30)))
-    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_REFRESH_EXPIRE_MINUTES", str(60 * 24 * 7)))
+    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7)))
+
+    def __init__(self):
+        if not self.SECRET_KEY:
+            raise RuntimeError("SECRET_KEY 环境变量未设置，禁止使用空密钥启动服务")
+        if self.SECRET_KEY == "change-me-in-production":
+            warnings.warn("SECRET_KEY 使用了默认值，请立即更换为安全的随机密钥", stacklevel=2)
 
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: int = int(os.getenv("DB_PORT", "5432"))

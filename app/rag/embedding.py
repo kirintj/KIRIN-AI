@@ -1,10 +1,12 @@
 import logging
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
+import httpx
 from app.settings import settings
 
 _logger = logging.getLogger(__name__)
 
 _sync_client: OpenAI | None = None
+_async_client: AsyncOpenAI | None = None
 
 
 def _get_sync_client() -> OpenAI:
@@ -15,6 +17,17 @@ def _get_sync_client() -> OpenAI:
             base_url=settings.BASE_URL,
         )
     return _sync_client
+
+
+def _get_async_client() -> AsyncOpenAI:
+    global _async_client
+    if _async_client is None:
+        _async_client = AsyncOpenAI(
+            api_key=settings.API_KEY,
+            base_url=settings.BASE_URL,
+            timeout=httpx.Timeout(60.0, connect=10.0),
+        )
+    return _async_client
 
 
 class DashScopeEmbeddingFunction:
@@ -66,25 +79,18 @@ async def async_get_embeddings(
     model: str | None = None,
     dimension: int | None = None,
 ) -> list[list[float]]:
-    """异步获取向量，供 pipeline 使用"""
-    from openai import AsyncOpenAI
-    import httpx
-
+    """异步获取向量，复用全局 AsyncOpenAI 客户端"""
     _model = model or settings.EMBEDDING_MODEL
     _dimension = dimension or settings.EMBEDDING_DIMENSION
     batch_size = settings.EMBEDDING_BATCH_SIZE
 
-    async_client = AsyncOpenAI(
-        api_key=settings.API_KEY,
-        base_url=settings.BASE_URL,
-        timeout=httpx.Timeout(60.0, connect=10.0),
-    )
+    client = _get_async_client()
 
     all_embeddings: list[list[float]] = []
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
         try:
-            response = await async_client.embeddings.create(
+            response = await client.embeddings.create(
                 model=_model,
                 input=batch,
                 dimensions=_dimension,
