@@ -32,16 +32,19 @@ defineOptions({ name: 'LoadingEmptyWrapper' })
 
 const NETWORK_ERROR_MSG = '网络似乎开了小差~'
 
-const props = {
-  loading: false,
-  empty: false,
-  loadingSize: 'medium',
-  placeholderClass: 'bg-white dark:bg-dark transition-background-color duration-300 ease-in-out',
-  emptyDesc: '暂无数据',
-  iconClass: 'text-320px text-primary',
-  descClass: 'text-16px text-#666',
-  showNetworkReload: false,
-}
+const props = defineProps({
+  loading: { type: Boolean, default: false },
+  empty: { type: Boolean, default: false },
+  loadingSize: { type: String, default: 'medium' },
+  placeholderClass: {
+    type: String,
+    default: 'bg-white dark:bg-dark transition-background-color duration-300 ease-in-out',
+  },
+  emptyDesc: { type: String, default: '暂无数据' },
+  iconClass: { type: String, default: 'text-320px text-primary' },
+  descClass: { type: String, default: 'text-16px text-#666' },
+  showNetworkReload: { type: Boolean, default: false },
+})
 
 // 网络状态
 const network = ref(window.navigator.onLine)
@@ -53,7 +56,7 @@ const isEmpty = computed(() => props.empty && !props.loading && network.value)
 const showPlaceholder = computed(() => props.loading || isEmpty.value || !network.value)
 
 const networkErrorDesc = computed(() =>
-  props.showNetworkReload ? `${NETWORK_ERROR_MSG}, 点击重试` : NETWORK_ERROR_MSG,
+  props.showNetworkReload ? `${NETWORK_ERROR_MSG}, 点击重试` : NETWORK_ERROR_MSG
 )
 
 function handleReload() {
@@ -71,7 +74,7 @@ const stopHandle = watch(
     if (!newValue) {
       network.value = window.navigator.onLine
     }
-  },
+  }
 )
 
 onUnmounted(() => {

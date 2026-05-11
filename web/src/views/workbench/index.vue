@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import api from '@/api'
+import { formatRelativeTime } from '@/utils/common/time'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -61,7 +62,7 @@ const activityTimeline = computed(() => {
         icon: 'icon-park-outline:sequence',
         color: '#E84026',
         text: `投递了 ${app.company} - ${app.position}`,
-        time: formatConvTime(app.created_at),
+        time: formatRelativeTime(app.created_at),
       })
     }
   }
@@ -71,7 +72,7 @@ const activityTimeline = computed(() => {
         icon: 'icon-park-outline:data-arrival',
         color: '#64BB5C',
         text: todo.done ? `完成待办：${todo.content}` : `新增待办：${todo.content}`,
-        time: formatConvTime(todo.created_at),
+        time: formatRelativeTime(todo.created_at),
       })
     }
   }
@@ -147,19 +148,6 @@ const statCards = ref([
   { label: '已录用', key: 'offer', icon: 'icon-park-outline:check-one', color: '#64BB5C', getValue: (d: any) => d?.tracker?.by_status?.offer || 0 },
   { label: '待办完成', key: 'todos', icon: 'icon-park-outline:data-arrival', color: '#722ED1', getValue: (d: any) => d?.todos?.done || 0 },
 ])
-
-const formatConvTime = (dateStr: string) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  if (diffMins < 1) return '刚刚'
-  if (diffMins < 60) return `${diffMins}分钟前`
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `${diffHours}小时前`
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-}
 
 onMounted(async () => {
   loading.value = true
@@ -386,7 +374,7 @@ onMounted(async () => {
                 <div class="hm-wb-conv-title">{{ conv.title || '新对话' }}</div>
                 <div class="hm-wb-conv-meta">{{ conv.message_count || 0 }} 条消息</div>
               </div>
-              <div class="hm-wb-conv-time">{{ formatConvTime(conv.updated_at) }}</div>
+              <div class="hm-wb-conv-time">{{ formatRelativeTime(conv.updated_at) }}</div>
             </div>
           </div>
         </div>

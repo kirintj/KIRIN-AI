@@ -61,9 +61,9 @@ onMounted(async () => {
   safeScrollToBottom()
 })
 
-watch(() => agentStore.messages, () => {
+watch(() => agentStore.messages.length, () => {
   scrollToBottom('.hm-msg-list')
-}, { deep: true })
+})
 </script>
 
 <template>

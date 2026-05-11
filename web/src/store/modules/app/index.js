@@ -6,7 +6,6 @@ import i18n from '~/i18n'
 const currentLocale = lStorage.get('locale')
 const { locale } = i18n.global
 
-const isDark = useDark()
 export const useAppStore = defineStore('app', {
   state() {
     return {
@@ -15,7 +14,7 @@ export const useAppStore = defineStore('app', {
       fullScreen: true,
       /** keepAlive路由的key，重新赋值可重置keepAlive */
       aliveKeys: {},
-      isDark,
+      isDark: useDark(),
       locale: currentLocale || 'en',
     }
   },

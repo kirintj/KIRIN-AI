@@ -4,15 +4,21 @@ import { markedHighlight } from 'marked-highlight'
 import DOMPurify from 'dompurify'
 import { nextTick } from 'vue'
 
-marked.use(markedHighlight({
-  langPrefix: 'hljs language-',
-  highlight(code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try { return hljs.highlight(code, { language: lang }).value } catch {}
-    }
-    return hljs.highlightAuto(code).value
-  },
-}))
+marked.use(
+  markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return hljs.highlight(code, { language: lang }).value
+        } catch {
+          // fall through to highlightAuto
+        }
+      }
+      return hljs.highlightAuto(code).value
+    },
+  })
+)
 
 const renderer = new marked.Renderer()
 const originalCode = renderer.code.bind(renderer)
@@ -28,11 +34,12 @@ renderer.code = function (code, language, escaped) {
 marked.setOptions({ renderer })
 
 let copyHandlerAttached = false
+let copyHandler = null
 
 function ensureCopyHandler() {
   if (copyHandlerAttached) return
   copyHandlerAttached = true
-  document.addEventListener('click', (e) => {
+  copyHandler = (e) => {
     const btn = e.target.closest('[data-action="copy"]')
     if (!btn) return
     const block = btn.closest('.hm-code-block')
@@ -40,10 +47,21 @@ function ensureCopyHandler() {
     if (code) {
       navigator.clipboard.writeText(code.textContent).then(() => {
         btn.textContent = '已复制'
-        setTimeout(() => { btn.textContent = '复制' }, 1500)
+        setTimeout(() => {
+          btn.textContent = '复制'
+        }, 1500)
       })
     }
-  })
+  }
+  document.addEventListener('click', copyHandler)
+}
+
+export function cleanupCopyHandler() {
+  if (copyHandler) {
+    document.removeEventListener('click', copyHandler)
+    copyHandler = null
+    copyHandlerAttached = false
+  }
 }
 
 const purifyConfig = {

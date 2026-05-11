@@ -13,7 +13,9 @@ export function setupMessage(NMessage) {
       setTimeout(() => {
         if (message) {
           message.destroy()
-          message = null
+          if (message === loadingMessage) {
+            loadingMessage = null
+          }
         }
       }, duration)
     }

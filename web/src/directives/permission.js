@@ -17,7 +17,9 @@ export default function setupPermissionDirective(app) {
       throw new Error(`need roles: like v-permission="get/api/v1/user/list"`)
     }
     if (!hasPermission(permission)) {
-      el.parentElement?.removeChild(el)
+      el.style.display = 'none'
+    } else {
+      el.style.display = ''
     }
   }
 

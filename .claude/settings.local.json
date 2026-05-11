@@ -5,7 +5,8 @@
       "Bash(pnpm add *)",
       "Bash(npx vite *)",
       "Bash(grep -A5 '\"eslintConfig\"' package.json)",
-      "Bash(ls -la .eslint*)"
+      "Bash(ls -la .eslint*)",
+      "Bash(npx eslint *)"
     ]
   }
 }

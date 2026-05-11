@@ -1,6 +1,13 @@
-import { getToken, getRefreshToken, setToken, setRefreshToken, removeToken, removeRefreshToken } from '@/utils'
+import {
+  getToken,
+  getRefreshToken,
+  setToken,
+  setRefreshToken,
+  removeToken,
+  removeRefreshToken,
+} from '@/utils'
 import { resolveResError } from './helpers'
- import { useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 
 let isRefreshing = false
 let pendingRequests = []
@@ -65,7 +72,9 @@ export async function resReject(error) {
         pendingRequests.push((newToken) => {
           if (newToken) {
             originalRequest.headers.token = newToken
-            import('axios').then(({ default: axios }) => axios(originalRequest)).then(resolve, reject)
+            import('axios')
+              .then(({ default: axios }) => axios(originalRequest))
+              .then(resolve, reject)
           } else {
             forceLogout()
             reject({ code: 401, message: '登录已过期', error })
