@@ -12,8 +12,13 @@ from tortoise.exceptions import DoesNotExist, IntegrityError
 _logger = logging.getLogger(__name__)
 
 
-class SettingNotFound(Exception):
-    pass
+class AppError(Exception):
+    """统一业务异常，携带 HTTP 状态码和用户提示信息。"""
+
+    def __init__(self, code: int = 400, msg: str = ""):
+        self.code = code
+        self.msg = msg
+        super().__init__(msg)
 
 
 async def DoesNotExistHandle(req: Request, exc: DoesNotExist) -> JSONResponse:
@@ -48,3 +53,9 @@ async def ResponseValidationHandle(_: Request, exc: ResponseValidationError) -> 
     _logger.error("ResponseValidationError: %s", exc)
     content = dict(code=500, msg="服务端响应异常")
     return JSONResponse(content=content, status_code=500)
+
+
+async def AppErrorHandle(_: Request, exc: AppError) -> JSONResponse:
+    _logger.warning("AppError: code=%s msg=%s", exc.code, exc.msg)
+    content = dict(code=exc.code, msg=exc.msg, data=None)
+    return JSONResponse(content=content, status_code=exc.code)

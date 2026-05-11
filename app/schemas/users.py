@@ -1,26 +1,12 @@
-from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
-
-
-class BaseUser(BaseModel):
-    id: int
-    email: Optional[EmailStr] = None
-    username: Optional[str] = None
-    avatar: Optional[str] = None
-    is_active: Optional[bool] = True
-    is_superuser: Optional[bool] = False
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
-    last_login: Optional[datetime]
-    roles: Optional[list] = []
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
     email: EmailStr = Field(example="admin@qq.com")
     username: str = Field(example="admin")
-    password: str = Field(example="123456")
+    password: str = Field(example="123456", min_length=6, max_length=128)
     avatar: Optional[str] = Field(default=None, description="用户头像URL/文件存储路径")
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False

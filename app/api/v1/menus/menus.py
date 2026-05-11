@@ -33,7 +33,7 @@ async def create_menu(
     menu_in: MenuCreate,
 ):
     await menu_service.create(obj_in=menu_in)
-    return Success(msg="Created Success")
+    return Success(msg="创建成功")
 
 
 @router.post("/update", summary="更新菜单")
@@ -41,7 +41,7 @@ async def update_menu(
     menu_in: MenuUpdate,
 ):
     await menu_service.update(id=menu_in.id, obj_in=menu_in)
-    return Success(msg="Updated Success")
+    return Success(msg="更新成功")
 
 
 @router.delete("/delete", summary="删除菜单")
@@ -50,6 +50,6 @@ async def delete_menu(
 ):
     child_menu_count = await menu_service.count_children(parent_id=id)
     if child_menu_count > 0:
-        return Fail(msg="Cannot delete a menu with child menus")
+        return Fail(msg="存在子菜单，无法删除")
     await menu_service.remove(id=id)
-    return Success(msg="Deleted Success")
+    return Success(msg="删除成功")

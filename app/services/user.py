@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi.exceptions import HTTPException
-
+from app.core.exceptions import AppError
 from app.repositories.user import user_repository
 from app.repositories.role import role_repository
 from app.schemas.login import CredentialsSchema
@@ -47,26 +46,28 @@ class UserService:
     async def authenticate(self, credentials: CredentialsSchema):
         user = await self.repo.get_by_username(credentials.username)
         if not user:
-            raise HTTPException(status_code=400, detail="无效的用户名")
+            raise AppError(code=400, msg="无效的用户名")
         verified = verify_password(credentials.password, user.password)
         if not verified:
-            raise HTTPException(status_code=400, detail="密码错误!")
+            raise AppError(code=400, msg="密码错误")
         if not user.is_active:
-            raise HTTPException(status_code=400, detail="用户已被禁用")
+            raise AppError(code=400, msg="用户已被禁用")
         return user
 
     async def update_roles(self, user, role_ids: List[int]) -> None:
         await user.roles.clear()
-        for role_id in role_ids:
-            role_obj = await role_repository.get(id=role_id)
-            await user.roles.add(role_obj)
+        if not role_ids:
+            return
+        from app.models.admin import Role
+        roles = await Role.filter(id__in=role_ids)
+        await user.roles.add(*roles)
 
     async def reset_password(self, user_id: int) -> str:
         import secrets
         import string
         user_obj = await self.repo.get(id=user_id)
         if user_obj.is_superuser:
-            raise HTTPException(status_code=403, detail="不允许重置超级管理员密码")
+            raise AppError(code=403, msg="不允许重置超级管理员密码")
         alphabet = string.ascii_letters + string.digits
         new_password = ''.join(secrets.choice(alphabet) for _ in range(12))
         user_obj.password = get_password_hash(password=new_password)

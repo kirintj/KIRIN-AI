@@ -1,3 +1,4 @@
+import os
 import shutil
 
 from aerich import Command
@@ -11,6 +12,89 @@ from app.schemas.users import UserCreate
 from app.services.api import api_service
 from app.services.user import user_service
 from app.settings.config import settings
+
+
+async def _ensure_business_tables():
+    conn = Tortoise.get_connection("postgres")
+    create_sqls = [
+        """CREATE TABLE IF NOT EXISTS "todo_item" (
+            "id" BIGSERIAL PRIMARY KEY,
+            "user_id" VARCHAR(50) NOT NULL,
+            "content" TEXT NOT NULL,
+            "priority" VARCHAR(10) NOT NULL DEFAULT 'medium',
+            "category" VARCHAR(20) NOT NULL DEFAULT 'other',
+            "due_date" VARCHAR(20) NOT NULL DEFAULT '',
+            "done" BOOLEAN NOT NULL DEFAULT FALSE,
+            "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS "tracker_application" (
+            "id" BIGSERIAL PRIMARY KEY,
+            "user_id" VARCHAR(50) NOT NULL,
+            "company" VARCHAR(100) NOT NULL DEFAULT '',
+            "position" VARCHAR(100) NOT NULL DEFAULT '',
+            "status" VARCHAR(20) NOT NULL DEFAULT 'applied',
+            "salary" VARCHAR(50) NOT NULL DEFAULT '',
+            "location" VARCHAR(50) NOT NULL DEFAULT '',
+            "source" VARCHAR(50) NOT NULL DEFAULT '',
+            "notes" TEXT NOT NULL DEFAULT '',
+            "contact" VARCHAR(100) NOT NULL DEFAULT '',
+            "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS "feedback_item" (
+            "id" BIGSERIAL PRIMARY KEY,
+            "user_id" VARCHAR(50) NOT NULL,
+            "rating" VARCHAR(10) NOT NULL DEFAULT '',
+            "comment" TEXT NOT NULL DEFAULT '',
+            "related_query" TEXT NOT NULL DEFAULT '',
+            "related_answer" TEXT NOT NULL DEFAULT '',
+            "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS "conversation" (
+            "id" BIGSERIAL PRIMARY KEY,
+            "user_id" VARCHAR(50) NOT NULL,
+            "title" VARCHAR(200) NOT NULL DEFAULT '新对话',
+            "message_count" INT NOT NULL DEFAULT 0,
+            "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS "conversation_message" (
+            "id" BIGSERIAL PRIMARY KEY,
+            "conversation_id" BIGINT NOT NULL REFERENCES "conversation"("id") ON DELETE CASCADE,
+            "role" VARCHAR(20) NOT NULL,
+            "content" TEXT NOT NULL,
+            "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""",
+        """CREATE TABLE IF NOT EXISTS "memory_item" (
+            "id" BIGSERIAL PRIMARY KEY,
+            "user_id" VARCHAR(50) NOT NULL,
+            "user_msg" TEXT NOT NULL,
+            "assistant_msg" TEXT NOT NULL,
+            "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )""",
+    ]
+    index_sqls = [
+        'CREATE INDEX IF NOT EXISTS "todo_item_user_id" ON "todo_item" ("user_id")',
+        'CREATE INDEX IF NOT EXISTS "tracker_app_user_id" ON "tracker_application" ("user_id")',
+        'CREATE INDEX IF NOT EXISTS "tracker_app_status" ON "tracker_application" ("status")',
+        'CREATE INDEX IF NOT EXISTS "feedback_item_user_id" ON "feedback_item" ("user_id")',
+        'CREATE INDEX IF NOT EXISTS "conversation_user_id" ON "conversation" ("user_id")',
+        'CREATE INDEX IF NOT EXISTS "memory_item_user_id" ON "memory_item" ("user_id")',
+    ]
+    for sql in create_sqls:
+        try:
+            await conn.execute_script(sql)
+        except Exception as e:
+            logger.warning("Failed to create business table: %s", e)
+    for sql in index_sqls:
+        try:
+            await conn.execute_script(sql)
+        except Exception:
+            pass
 
 
 async def init_db():
@@ -41,17 +125,23 @@ async def init_db():
         await Tortoise.init(config=settings.TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
+    await _ensure_business_tables()
+
 
 async def init_superuser():
     from app.repositories.user import user_repository
     user = await user_repository.model.exists()
     if not user:
+        admin_password = os.getenv("ADMIN_PASSWORD", "changeme")
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@example.com")
+        if admin_password == "changeme":
+            logger.warning("ADMIN_PASSWORD 未设置，使用默认密码，请尽快修改")
         await user_service.create_user(
             UserCreate(
                 username="admin",
-                email="admin@admin.com",
-                password="123456",
-                avatar="https://th.bing.com/th/id/OIP.OnlQGCq7OZG8-Qth4MIm_QHaEK?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3",
+                email=admin_email,
+                password=admin_password,
+                avatar="",
                 is_active=True,
                 is_superuser=True,
             )

@@ -1,13 +1,12 @@
 import logging
-from typing import Optional
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
 
 from app.core.dependency import DependAuth
 from app.models.admin import User
 from app.schemas.base import Success, Fail
+from app.schemas.business import GenerateResumeRequest, ExportDocxRequest, ExportTextRequest
 from app.tools.resume_export_tool import (
     generate_resume_data, export_docx, export_text,
     list_exports, RESUME_TEMPLATES,
@@ -15,20 +14,6 @@ from app.tools.resume_export_tool import (
 
 router = APIRouter()
 _logger = logging.getLogger(__name__)
-
-
-class GenerateResumeRequest(BaseModel):
-    user_info: str
-    template: Optional[str] = "classic"
-
-
-class ExportDocxRequest(BaseModel):
-    resume_data: dict
-    template: Optional[str] = "classic"
-
-
-class ExportTextRequest(BaseModel):
-    resume_data: dict
 
 
 @router.get("/templates")

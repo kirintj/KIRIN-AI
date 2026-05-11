@@ -2,11 +2,14 @@ import asyncio
 import logging
 
 from fastapi import APIRouter, UploadFile, File
-from pydantic import BaseModel
-from typing import Optional
 from app.core.dependency import DependAuth
+from app.core.constants import JOB_ASSISTANT_TIMEOUT_SECONDS
 from app.models.admin import User
 from app.schemas.base import Success, Fail
+from app.schemas.business import (
+    ResumeInput, JDInput, MatchInput, OptimizeInput, PlanInput,
+    FullPipelineInput, InterviewInput, SalaryInput, GuideInput, FeedbackInput,
+)
 from app.agent.job_agent import JobAgent
 from app.services.upload_service import (
     extract_text_from_file,
@@ -18,62 +21,6 @@ from app.services.upload_service import (
 router = APIRouter()
 job_agent = JobAgent()
 _logger = logging.getLogger(__name__)
-
-
-class ResumeInput(BaseModel):
-    resume_text: str
-
-
-class JDInput(BaseModel):
-    jd_text: str
-
-
-class MatchInput(BaseModel):
-    resume_json: str
-    jd_json: str
-
-
-class OptimizeInput(BaseModel):
-    resume_text: str
-    jd_text: str
-    match_result: str
-
-
-class PlanInput(BaseModel):
-    resume_summary: str
-    jd_text: str
-    match_result: str
-
-
-class FullPipelineInput(BaseModel):
-    resume_text: str
-    jd_text: str
-
-
-class InterviewInput(BaseModel):
-    company: str
-    position: str
-    interview_type: Optional[str] = "综合面试"
-
-
-class SalaryInput(BaseModel):
-    city: str
-    industry: str
-    position: str
-    experience: Optional[str] = ""
-    expected_salary: Optional[str] = "面议"
-
-
-class GuideInput(BaseModel):
-    scenario: str
-    goal: Optional[str] = "成功求职"
-
-
-class FeedbackInput(BaseModel):
-    rating: int
-    comment: Optional[str] = ""
-    related_query: Optional[str] = ""
-    related_answer: Optional[str] = ""
 
 
 @router.post("/resume", summary="解析简历")
@@ -233,7 +180,7 @@ async def full_pipeline(
     try:
         result = await asyncio.wait_for(
             job_agent.full_pipeline(request.resume_text, request.jd_text),
-            timeout=180,
+            timeout=JOB_ASSISTANT_TIMEOUT_SECONDS,
         )
         return Success(data=result)
     except asyncio.TimeoutError:

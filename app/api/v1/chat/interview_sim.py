@@ -1,12 +1,11 @@
 import logging
-from typing import Optional
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 from app.core.dependency import DependAuth
 from app.models.admin import User
 from app.schemas.base import Success, Fail
+from app.schemas.business import CreateSessionRequest, InterviewChatRequest, SessionIdRequest
 from app.tools.interview_sim_tool import (
     create_session, get_session, list_sessions,
     add_message_to_session, finish_session, delete_session,
@@ -16,21 +15,6 @@ from app.tools.interview_sim_tool import (
 
 router = APIRouter()
 _logger = logging.getLogger(__name__)
-
-
-class CreateSessionRequest(BaseModel):
-    company: Optional[str] = ""
-    position: Optional[str] = ""
-    interview_type: Optional[str] = "tech"
-
-
-class ChatRequest(BaseModel):
-    session_id: str
-    message: str
-
-
-class SessionIdRequest(BaseModel):
-    session_id: str
 
 
 @router.get("/sessions")
@@ -73,7 +57,7 @@ async def get_session_detail(
 
 @router.post("/sessions/chat")
 async def chat_in_session(
-    request: ChatRequest,
+    request: InterviewChatRequest,
     current_user: User = DependAuth,
 ):
     session = get_session(current_user.username, request.session_id)

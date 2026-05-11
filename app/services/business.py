@@ -1,3 +1,4 @@
+from app.core.constants import STATUS_LIST, STATUS_LABELS, STATUS_COLORS
 from app.repositories.business import (
     todo_repository,
     tracker_repository,
@@ -5,17 +6,6 @@ from app.repositories.business import (
     conversation_repository,
     memory_repository,
 )
-from app.models.business import TrackerApplication
-
-STATUS_LIST = ["wishlist", "applied", "screening", "interview", "offer", "rejected"]
-STATUS_LABELS = {
-    "wishlist": "意向", "applied": "已投递", "screening": "筛选中",
-    "interview": "面试中", "offer": "已录用", "rejected": "已拒绝",
-}
-STATUS_COLORS = {
-    "wishlist": "#86909C", "applied": "#0A59F7", "screening": "#722ED1",
-    "interview": "#ED6F21", "offer": "#64BB5C", "rejected": "#E84026",
-}
 
 
 class TodoService:

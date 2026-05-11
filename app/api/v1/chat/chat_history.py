@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Query
 from tortoise.expressions import Q
@@ -8,8 +7,8 @@ from app.core.dependency import DependAuth
 from app.services.chat import chat_service
 from app.models.chat import ChatHistory
 from app.models.admin import User
-from app.schemas.base import Success, SuccessExtra
-from pydantic import BaseModel
+from app.schemas.base import Success, SuccessExtra, Fail
+from app.schemas.business import ChatHistoryUpdate
 
 router = APIRouter()
 
@@ -46,12 +45,11 @@ async def get_chat_history_list(
 @router.post("/create", summary="创建对话记录")
 async def create_chat_history(
     current_user: User = DependAuth,
-    username: str = Query(..., description="用户名称"),
     role: str = Query(..., description="角色"),
     content: str = Query(..., description="消息内容"),
 ):
     record = await chat_service.create_record(
-        username=username,
+        username=current_user.username,
         role=role,
         content=content,
         timestamp=datetime.now(),
@@ -59,22 +57,16 @@ async def create_chat_history(
     return Success(data={"id": record.id})
 
 
-class ChatHistoryUpdate(BaseModel):
-    id: int
-    username: Optional[str] = None
-    role: Optional[str] = None
-    content: Optional[str] = None
-    timestamp: Optional[str] = None
-
-
 @router.post("/update", summary="更新对话记录")
 async def update_chat_history(
     req_in: ChatHistoryUpdate,
     current_user: User = DependAuth,
 ):
-    record = await ChatHistory.get(id=req_in.id)
-    if req_in.username is not None:
-        record.username = req_in.username
+    record = await ChatHistory.get_or_none(id=req_in.id)
+    if not record:
+        return Fail(code=404, msg="记录不存在")
+    if record.username != current_user.username:
+        return Fail(code=403, msg="无权修改他人记录")
     if req_in.role is not None:
         record.role = req_in.role
     if req_in.content is not None:
@@ -90,5 +82,10 @@ async def delete_chat_history(
     id: int = Query(..., description="记录ID"),
     current_user: User = DependAuth,
 ):
-    await ChatHistory.filter(id=id).delete()
+    record = await ChatHistory.get_or_none(id=id)
+    if not record:
+        return Fail(code=404, msg="记录不存在")
+    if record.username != current_user.username:
+        return Fail(code=403, msg="无权删除他人记录")
+    await record.delete()
     return Success(msg="删除成功")

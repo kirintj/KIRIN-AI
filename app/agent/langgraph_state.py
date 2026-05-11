@@ -11,5 +11,5 @@ class JobAssistantState(MessagesState):
     max_iterations: int = 3
     need_more: bool = False
     final_answer: str = ""
-    user_id: str = "default"
+    user_id: str = ""
     use_llm_router: bool = False

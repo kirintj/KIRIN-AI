@@ -31,29 +31,27 @@ class ApiService:
         all_api_list = []
         for route in app.routes:
             if isinstance(route, APIRoute) and len(route.dependencies) > 0:
-                all_api_list.append((list(route.methods)[0], route.path_format))
+                all_api_list.append((list(route.methods)[0], route.path_format, route.summary, list(route.tags)[0]))
 
-        delete_api = []
-        for api in await Api.all():
-            if (api.method, api.path) not in all_api_list:
-                delete_api.append((api.method, api.path))
-        for item in delete_api:
-            method, path = item
-            logger.debug(f"API Deleted {method} {path}")
-            await Api.filter(method=method, path=path).delete()
+        # Batch fetch existing APIs into a map
+        existing_apis = await Api.all()
+        existing_map = {(a.method, a.path): a for a in existing_apis}
 
-        for route in app.routes:
-            if isinstance(route, APIRoute) and len(route.dependencies) > 0:
-                method = list(route.methods)[0]
-                path = route.path_format
-                summary = route.summary
-                tags = list(route.tags)[0]
-                api_obj = await Api.filter(method=method, path=path).first()
-                if api_obj:
-                    await api_obj.update_from_dict(dict(method=method, path=path, summary=summary, tags=tags)).save()
-                else:
-                    logger.debug(f"API Created {method} {path}")
-                    await Api.create(method=method, path=path, summary=summary, tags=tags)
+        # Delete stale APIs
+        current_set = {(m, p) for m, p, _, _ in all_api_list}
+        for api in existing_apis:
+            if (api.method, api.path) not in current_set:
+                logger.debug(f"API Deleted {api.method} {api.path}")
+                await api.delete()
+
+        # Upsert current APIs
+        for method, path, summary, tags in all_api_list:
+            existing = existing_map.get((method, path))
+            if existing:
+                await existing.update_from_dict(dict(method=method, path=path, summary=summary, tags=tags)).save()
+            else:
+                logger.debug(f"API Created {method} {path}")
+                await Api.create(method=method, path=path, summary=summary, tags=tags)
 
 
 api_service = ApiService()

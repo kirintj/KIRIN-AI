@@ -7,30 +7,11 @@ from app.agent.common import (
     build_search_query,
     parse_json_response,
 )
-from app.tools.rag_tool import RAGTool
-from app.tools.todo_tool import TodoTool
-from app.tools.interview_tool import InterviewTool
-from app.tools.salary_tool import SalaryTool
-from app.tools.guide_tool import GuideTool
-from app.tools.feedback_tool import FeedbackTool
+from app.tools.registry import TOOL_MAP
 from app.utils.chat import call_llm
-from app.memory.memory import save_memory, get_memory
+from app.services.business import memory_service
 
-_rag_tool = RAGTool()
-_todo_tool = TodoTool()
-_interview_tool = InterviewTool()
-_salary_tool = SalaryTool()
-_guide_tool = GuideTool()
-_feedback_tool = FeedbackTool()
-
-TOOL_MAP = {
-    "rag_tool": _rag_tool,
-    "todo_tool": _todo_tool,
-    "interview_tool": _interview_tool,
-    "salary_tool": _salary_tool,
-    "guide_tool": _guide_tool,
-    "feedback_tool": _feedback_tool,
-}
+_todo_tool = TOOL_MAP.get("todo_tool")
 
 INTENT_CLASSIFY_PROMPT = """你是一个意图识别与参数提取助手。根据用户输入，判断意图并提取参数。
 
@@ -98,7 +79,9 @@ async def tool_executor_node(state: JobAssistantState) -> dict:
     tool_name = state.get("tool_name", "")
     query = state.get("query", "")
     tool_args = state.get("tool_args", {})
-    user_id = state.get("user_id", "default")
+    user_id = state.get("user_id", "")
+    if not user_id:
+        raise ValueError("user_id is required")
 
     if not tool_name or tool_name not in TOOL_MAP:
         answer = await _chat_fallback(query, state)
@@ -124,7 +107,9 @@ async def workflow_continue_node(state: JobAssistantState) -> dict:
     query = state.get("query", "")
     tool_output = state.get("tool_output", "")
     iteration = state.get("iteration", 0)
-    user_id = state.get("user_id", "default")
+    user_id = state.get("user_id", "")
+    if not user_id:
+        raise ValueError("user_id is required")
 
     if iteration == 1:
         todo_result = await _todo_tool.run(tool_output or query, user_id=user_id)
@@ -137,7 +122,9 @@ async def workflow_continue_node(state: JobAssistantState) -> dict:
 async def response_builder_node(state: JobAssistantState) -> dict:
     tool_output = state.get("tool_output", "")
     query = state.get("query", "")
-    user_id = state.get("user_id", "default")
+    user_id = state.get("user_id", "")
+    if not user_id:
+        raise ValueError("user_id is required")
 
     if tool_output:
         final_answer = tool_output
@@ -148,12 +135,15 @@ async def response_builder_node(state: JobAssistantState) -> dict:
     if recommendation:
         final_answer = f"{final_answer}\n\n---\n\n{recommendation}"
 
-    await save_memory(user_id, query, final_answer)
+    await memory_service.save_memory(user_id, query, final_answer)
     return {"final_answer": final_answer}
 
 
 async def _chat_fallback(query: str, state: JobAssistantState) -> str:
-    history = await get_memory(state.get("user_id", "default"))
+    uid = state.get("user_id", "")
+    if not uid:
+        raise ValueError("user_id is required")
+    history = await memory_service.get_memory(uid)
     parts = []
     for user_msg, ai_msg in history[-5:]:
         parts.append(f"用户：{user_msg}")

@@ -7,6 +7,7 @@ from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from app.utils.chat import call_llm
+from app.tools.base import BaseTool
 
 RESUME_EXPORT_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "resume_exports"
 
@@ -52,17 +53,7 @@ def _ensure_dir(user_id: str) -> Path:
 async def generate_resume_data(user_id: str, user_info: str) -> dict:
     prompt = RESUME_GENERATE_PROMPT.format(user_info=user_info)
     raw = await call_llm(prompt, max_tokens=2000, temperature=0.3)
-    try:
-        cleaned = raw.strip()
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[7:]
-        elif cleaned.startswith("```"):
-            cleaned = cleaned[3:]
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3]
-        return json.loads(cleaned.strip())
-    except (json.JSONDecodeError, AttributeError):
-        return {"name": "", "phone": "", "email": "", "title": "", "summary": user_info}
+    return BaseTool.parse_json(raw) or {"name": "", "phone": "", "email": "", "title": "", "summary": user_info}
 
 
 def _build_classic_doc(data: dict) -> Document:

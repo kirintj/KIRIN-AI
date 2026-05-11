@@ -49,13 +49,13 @@ class PermissionControl:
         path = request.url.path
         roles = await current_user.roles.all().prefetch_related("apis")
         if not roles:
-            raise HTTPException(status_code=403, detail="The user is not bound to a role")
+            raise HTTPException(status_code=403, detail="用户未绑定角色")
         permission_apis: set[tuple[str, str]] = set()
         for role in roles:
             for api in role.apis:
                 permission_apis.add((api.method, api.path))
         if (method, path) not in permission_apis:
-            raise HTTPException(status_code=403, detail=f"Permission denied method:{method} path:{path}")
+            raise HTTPException(status_code=403, detail=f"权限不足：{method} {path}")
 
 
 DependAuth = Depends(AuthControl.is_authed)

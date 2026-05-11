@@ -9,6 +9,7 @@ from starlette.requests import Request
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.core.dependency import AuthControl
+from app.core.constants import MAX_REQUEST_BODY_SIZE
 from app.models.admin import AuditLog, User
 
 from .bgtask import BgTasks
@@ -53,7 +54,7 @@ class HttpAuditLogMiddleware:
         self.methods = methods
         self.exclude_paths = exclude_paths
         self.audit_log_paths = ["/api/v1/auditlog/list"]
-        self.max_body_size = 1024 * 1024
+        self.max_body_size = MAX_REQUEST_BODY_SIZE
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] != "http":

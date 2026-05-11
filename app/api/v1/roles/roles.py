@@ -39,16 +39,16 @@ async def create_role(role_in: RoleCreate):
     if await role_service.is_exist(name=role_in.name):
         raise HTTPException(
             status_code=400,
-            detail="The role with this rolename already exists in the system.",
+            detail="该角色名已存在",
         )
     await role_service.create(obj_in=role_in)
-    return Success(msg="Created Successfully")
+    return Success(msg="创建成功")
 
 
 @router.post("/update", summary="更新角色")
 async def update_role(role_in: RoleUpdate):
     await role_service.update(id=role_in.id, obj_in=role_in)
-    return Success(msg="Updated Successfully")
+    return Success(msg="更新成功")
 
 
 @router.delete("/delete", summary="删除角色")
@@ -56,7 +56,7 @@ async def delete_role(
     role_id: int = Query(..., description="角色ID"),
 ):
     await role_service.remove(id=role_id)
-    return Success(msg="Deleted Success")
+    return Success(msg="删除成功")
 
 
 @router.get("/authorized", summary="查看角色权限")
@@ -70,4 +70,4 @@ async def get_role_authorized(id: int = Query(..., description="角色ID")):
 async def update_role_authorized(role_in: RoleUpdateMenusApis):
     role_obj = await role_service.get(id=role_in.id)
     await role_service.update_roles(role=role_obj, menu_ids=role_in.menu_ids, api_infos=role_in.api_infos)
-    return Success(msg="Updated Successfully")
+    return Success(msg="权限更新成功")

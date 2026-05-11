@@ -42,7 +42,7 @@ async def create_api(
     api_in: ApiCreate,
 ):
     await api_service.create(obj_in=api_in)
-    return Success(msg="Created Successfully")
+    return Success(msg="创建成功")
 
 
 @router.post("/update", summary="更新Api")
@@ -50,7 +50,7 @@ async def update_api(
     api_in: ApiUpdate,
 ):
     await api_service.update(id=api_in.id, obj_in=api_in)
-    return Success(msg="Update Successfully")
+    return Success(msg="更新成功")
 
 
 @router.delete("/delete", summary="删除Api")
@@ -58,10 +58,10 @@ async def delete_api(
     api_id: int = Query(..., description="ApiID"),
 ):
     await api_service.remove(id=api_id)
-    return Success(msg="Deleted Success")
+    return Success(msg="删除成功")
 
 
 @router.post("/refresh", summary="刷新API列表")
 async def refresh_api():
     await api_service.refresh_api()
-    return Success(msg="OK")
+    return Success(msg="刷新成功")

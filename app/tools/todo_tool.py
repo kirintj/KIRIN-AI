@@ -1,5 +1,3 @@
-import json
-
 from app.tools.base import BaseTool
 from app.utils.chat import call_llm
 from app.services.business import todo_service
@@ -29,17 +27,7 @@ async def _extract_todo_fields(query: str) -> dict:
         "- 只输出 JSON，不要其他内容"
     )
     raw = await call_llm(prompt, max_tokens=300, temperature=0.1)
-    try:
-        cleaned = raw.strip()
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[7:]
-        elif cleaned.startswith("```"):
-            cleaned = cleaned[3:]
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3]
-        return json.loads(cleaned.strip())
-    except (json.JSONDecodeError, AttributeError):
-        return {"content": query, "priority": "medium", "category": "other", "due_date": ""}
+    return BaseTool.parse_json(raw) or {"content": query, "priority": "medium", "category": "other", "due_date": ""}
 
 
 async def _generate_response(query: str, todo_item: dict) -> str:
@@ -68,7 +56,9 @@ class TodoTool(BaseTool):
     name = "todo_tool"
 
     async def run(self, query: str = "", **kwargs) -> str:
-        user_id = kwargs.get("user_id", "default")
+        user_id = kwargs.get("user_id", "")
+        if not user_id:
+            raise ValueError("user_id is required")
         fields = await _extract_todo_fields(query)
 
         await todo_service.create_todo(
@@ -88,7 +78,7 @@ class TodoTool(BaseTool):
         return await _generate_response(query, todo_item)
 
     @staticmethod
-    async def list_todos(user_id: str = "default") -> str:
+    async def list_todos(user_id: str) -> str:
         todos = await todo_service.list_todos(user_id)
         if not todos:
             return "当前没有任何待办任务。"
@@ -102,23 +92,23 @@ class TodoTool(BaseTool):
         return "\n".join(lines)
 
     @staticmethod
-    async def get_todos_list(user_id: str = "default") -> list[dict]:
+    async def get_todos_list(user_id: str) -> list[dict]:
         return await todo_service.list_todos(user_id)
 
     @staticmethod
-    async def toggle_todo(item_id: int, user_id: str = "default") -> bool:
+    async def toggle_todo(item_id: int, user_id: str) -> bool:
         result = await todo_service.toggle_todo(item_id, user_id)
         return result is not None
 
     @staticmethod
-    async def update_todo(item_id: int, user_id: str = "default", **updates) -> bool:
+    async def update_todo(item_id: int, user_id: str, **updates) -> bool:
         result = await todo_service.update_todo(item_id, user_id, **updates)
         return result is not None
 
     @staticmethod
-    async def delete_todo(item_id: int, user_id: str = "default") -> bool:
+    async def delete_todo(item_id: int, user_id: str) -> bool:
         return await todo_service.delete_todo(item_id, user_id)
 
     @staticmethod
-    async def clear_completed(user_id: str = "default") -> int:
+    async def clear_completed(user_id: str) -> int:
         return await todo_service.clear_completed(user_id)

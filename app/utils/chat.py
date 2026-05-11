@@ -5,15 +5,16 @@ import logging
 
 from app.schemas.chat import ChatMessage, ChatRequest
 from app.settings import settings
+from app.core.constants import LLM_TIMEOUT_SECONDS, LLM_CONNECT_TIMEOUT_SECONDS
 
 _logger = logging.getLogger(__name__)
 
-LLM_TIMEOUT = 120.0
+LLM_TIMEOUT = LLM_TIMEOUT_SECONDS
 
 async_client = AsyncOpenAI(
     api_key=settings.API_KEY,
     base_url=settings.BASE_URL,
-    timeout=httpx.Timeout(LLM_TIMEOUT, connect=10.0),
+    timeout=httpx.Timeout(LLM_TIMEOUT, connect=LLM_CONNECT_TIMEOUT_SECONDS),
 )
 
 

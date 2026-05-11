@@ -51,7 +51,7 @@ class GuideTool(BaseTool):
         search_query = f"{scenario} 求职攻略"
         docs = await self._pipeline.search(search_query, collection_name="guide")
 
-        doc_context, sources = self._build_context(docs)
+        doc_context, sources = self.build_rag_context(docs, "暂无该场景的攻略文档，将基于通用求职经验生成建议。")
 
         prompt = GUIDE_PROMPT.format(
             scenario=scenario,
@@ -64,10 +64,3 @@ class GuideTool(BaseTool):
             answer += f"\n\n参考文档来源：{', '.join(sources)}"
         return answer
 
-    @staticmethod
-    def _build_context(docs: list[dict]) -> tuple[str, list[str]]:
-        if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
-            return "暂无该场景的攻略文档，将基于通用求职经验生成建议。", []
-        context_parts = [f"[文档{i+1}] {d['content']}" for i, d in enumerate(docs) if d.get("content")]
-        sources = list(set(d.get("source", "") for d in docs if d.get("source")))
-        return "\n\n".join(context_parts), sources

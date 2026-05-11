@@ -6,7 +6,9 @@ class FeedbackTool(BaseTool):
     name = "feedback_tool"
 
     async def run(self, query: str = "", **kwargs) -> str:
-        user_id = kwargs.get("user_id", "default")
+        user_id = kwargs.get("user_id", "")
+        if not user_id:
+            raise ValueError("user_id is required")
         rating = kwargs.get("rating", "")
         comment = kwargs.get("comment", "")
         related_query = kwargs.get("related_query", "")
@@ -23,9 +25,9 @@ class FeedbackTool(BaseTool):
         return f"反馈已记录：评分={rating}，意见={comment or '无'}"
 
     @staticmethod
-    async def get_feedback_list(user_id: str = "default") -> list[dict]:
+    async def get_feedback_list(user_id: str) -> list[dict]:
         return await feedback_service.list_feedback(user_id)
 
     @staticmethod
-    async def get_low_rating_feedback(threshold: int = 3, user_id: str = "default") -> list[dict]:
+    async def get_low_rating_feedback(threshold: int = 3, user_id: str = "") -> list[dict]:
         return await feedback_service.get_low_rating(user_id, threshold)

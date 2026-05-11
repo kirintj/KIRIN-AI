@@ -1,8 +1,15 @@
 import json
 
 from app.utils.chat import call_llm
-from app.memory.memory import get_raw_history
+from app.services.business import memory_service
+from app.tools.base import BaseTool
 from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
+from app.core.constants import (
+    MEMORY_HISTORY_THRESHOLD,
+    MEMORY_HISTORY_SLICE,
+    CONTENT_PREVIEW_LENGTH,
+    CONTENT_RAG_PREVIEW_LENGTH,
+)
 
 _recommend_pipeline = AdvancedRAGPipeline(PipelineConfig(
     enable_query_rewrite=True,
@@ -45,24 +52,8 @@ PERSONALIZED_RECOMMEND_PROMPT = """你是一个个性化求职推荐助手。请
 注意：推荐要具体、贴合用户偏好，避免泛泛而谈。"""
 
 
-def clean_json_response(raw: str) -> str:
-    """清理 LLM 返回的 JSON 文本，去除 markdown 代码块标记"""
-    cleaned = raw.strip()
-    if cleaned.startswith("```json"):
-        cleaned = cleaned[7:]
-    elif cleaned.startswith("```"):
-        cleaned = cleaned[3:]
-    if cleaned.endswith("```"):
-        cleaned = cleaned[:-3]
-    return cleaned.strip()
-
-
-def parse_json_response(raw: str) -> dict | None:
-    """解析 LLM 返回的 JSON，失败返回 None"""
-    try:
-        return json.loads(clean_json_response(raw))
-    except (json.JSONDecodeError, AttributeError):
-        return None
+clean_json_response = BaseTool.clean_json
+parse_json_response = BaseTool.parse_json
 
 
 async def extract_preferences(history_text: str) -> dict | None:
@@ -98,13 +89,13 @@ def build_search_query(preferences: dict, current_query: str = "") -> str:
 
 async def build_personalized_recommendation(user_id: str, current_query: str = "") -> str:
     """基于用户历史提取偏好标签，再调用 RAG 检索个性化内容"""
-    history = await get_raw_history(user_id)
-    if len(history) < 3:
+    history = await memory_service.get_raw_history(user_id)
+    if len(history) < MEMORY_HISTORY_THRESHOLD:
         return ""
 
     history_text = "\n".join(
-        f"用户：{item['user']}\n助手：{item['assistant'][:200]}"
-        for item in history[-10:]
+        f"用户：{item['user']}\n助手：{item['assistant'][:CONTENT_PREVIEW_LENGTH]}"
+        for item in history[-MEMORY_HISTORY_SLICE:]
     )
 
     preferences = await extract_preferences(history_text)
@@ -120,7 +111,7 @@ async def build_personalized_recommendation(user_id: str, current_query: str = "
         return ""
 
     rag_context = "\n\n".join(
-        f"[资料{i+1}] {d['content'][:300]}" for i, d in enumerate(docs) if d.get("content")
+        f"[资料{i+1}] {d['content'][:CONTENT_RAG_PREVIEW_LENGTH]}" for i, d in enumerate(docs) if d.get("content")
     )
 
     prompt = PERSONALIZED_RECOMMEND_PROMPT.format(

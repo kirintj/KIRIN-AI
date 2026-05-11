@@ -1,5 +1,3 @@
-import json
-
 from app.tools.base import BaseTool
 from app.utils.chat import call_llm
 from app.services.business import tracker_service, STATUS_LIST, STATUS_LABELS
@@ -30,17 +28,7 @@ async def _extract_application_fields(query: str) -> dict:
         "- 只输出 JSON，不要其他内容"
     )
     raw = await call_llm(prompt, max_tokens=400, temperature=0.1)
-    try:
-        cleaned = raw.strip()
-        if cleaned.startswith("```json"):
-            cleaned = cleaned[7:]
-        elif cleaned.startswith("```"):
-            cleaned = cleaned[3:]
-        if cleaned.endswith("```"):
-            cleaned = cleaned[:-3]
-        return json.loads(cleaned.strip())
-    except (json.JSONDecodeError, AttributeError):
-        return {"company": "", "position": "", "status": "applied"}
+    return BaseTool.parse_json(raw) or {"company": "", "position": "", "status": "applied"}
 
 
 async def _generate_tracker_response(query: str, app_data: dict) -> str:
@@ -66,7 +54,9 @@ class TrackerTool(BaseTool):
     name = "tracker_tool"
 
     async def run(self, query: str = "", **kwargs) -> str:
-        user_id = kwargs.get("user_id", "default")
+        user_id = kwargs.get("user_id", "")
+        if not user_id:
+            raise ValueError("user_id is required")
         fields = await _extract_application_fields(query)
         app_data = await tracker_service.create_application(user_id, **fields)
         return await _generate_tracker_response(query, app_data)

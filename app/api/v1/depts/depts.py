@@ -29,7 +29,7 @@ async def create_dept(
     dept_in: DeptCreate,
 ):
     await dept_service.create_dept(obj_in=dept_in)
-    return Success(msg="Created Successfully")
+    return Success(msg="创建成功")
 
 
 @router.post("/update", summary="更新部门")
@@ -37,7 +37,7 @@ async def update_dept(
     dept_in: DeptUpdate,
 ):
     await dept_service.update_dept(obj_in=dept_in)
-    return Success(msg="Update Successfully")
+    return Success(msg="更新成功")
 
 
 @router.delete("/delete", summary="删除部门")
@@ -45,4 +45,4 @@ async def delete_dept(
     dept_id: int = Query(..., description="部门ID"),
 ):
     await dept_service.delete_dept(dept_id=dept_id)
-    return Success(msg="Deleted Success")
+    return Success(msg="删除成功")

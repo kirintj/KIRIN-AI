@@ -1,15 +1,9 @@
 from app.agent.router import route_intent
-from app.agent.common import build_personalized_recommendation, clean_json_response
+from app.agent.common import build_personalized_recommendation
 from app.tools.base import BaseTool
-from app.tools.rag_tool import RAGTool
-from app.tools.todo_tool import TodoTool
-from app.tools.interview_tool import InterviewTool
-from app.tools.salary_tool import SalaryTool
-from app.tools.guide_tool import GuideTool
-from app.tools.feedback_tool import FeedbackTool
-from app.tools.tracker_tool import TrackerTool
+from app.tools.registry import create_default_tools
 from app.utils.chat import call_llm
-from app.memory.memory import get_memory, save_memory
+from app.services.business import memory_service
 
 
 class AgentExecutor:
@@ -19,24 +13,19 @@ class AgentExecutor:
         self._register_default_tools()
 
     def _register_default_tools(self):
-        default_tools = [
-            RAGTool(), TodoTool(), InterviewTool(),
-            SalaryTool(), GuideTool(), FeedbackTool(), TrackerTool(),
-        ]
-        for tool in default_tools:
-            self.tools[tool.name] = tool
+        self.tools = create_default_tools()
 
     def register_tool(self, tool: BaseTool):
         self.tools[tool.name] = tool
 
-    async def run(self, query: str, user_id: str = "default", use_llm_router: bool | None = None) -> str:
+    async def run(self, query: str, user_id: str, use_llm_router: bool | None = None) -> str:
         use_llm = use_llm_router if use_llm_router is not None else self.use_llm_router
         tool_name = await route_intent(query, use_llm=use_llm)
 
         if tool_name == "workflow":
             result = await self._run_workflow(query, user_id)
         elif tool_name == "chat":
-            history = await get_memory(user_id)
+            history = await memory_service.get_memory(user_id)
             prompt = self._build_chat_prompt(query, history)
             result = await call_llm(prompt)
         else:
@@ -49,7 +38,7 @@ class AgentExecutor:
         if recommendation:
             result = f"{result}\n\n---\n\n{recommendation}"
 
-        await save_memory(user_id, query, result)
+        await memory_service.save_memory(user_id, query, result)
         return result
 
     async def _run_workflow(self, query: str, user_id: str) -> str:

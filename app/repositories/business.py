@@ -1,3 +1,4 @@
+from app.core.constants import MEMORY_MAX_HISTORY, CONTENT_TRUNCATION_LENGTH
 from app.models.business import TodoItem, TrackerApplication, FeedbackItem, Conversation, ConversationMessage, MemoryItem
 
 
@@ -138,9 +139,9 @@ class ConversationRepository:
         if not conv:
             return None
         msg = await self.msg_model.create(conversation_id=conv_id, role=role, content=content)
-        conv.message_count = await self.msg_model.filter(conversation_id=conv_id).count()
+        conv.message_count = conv.message_count + 1
         if conv.message_count <= 2 and role == "user":
-            conv.title = content[:30] + ("..." if len(content) > 30 else "")
+            conv.title = content[:CONTENT_TRUNCATION_LENGTH] + ("..." if len(content) > CONTENT_TRUNCATION_LENGTH else "")
         await conv.save()
         return msg
 
@@ -152,21 +153,20 @@ class MemoryRepository:
     def __init__(self):
         self.model = MemoryItem
 
-    MAX_HISTORY = 20
+    MAX_HISTORY = MEMORY_MAX_HISTORY
 
     async def list_by_user(self, user_id: str) -> list[MemoryItem]:
         return await self.model.filter(user_id=user_id).order_by("created_at")
 
     async def save(self, user_id: str, user_msg: str, assistant_msg: str) -> MemoryItem:
         item = await self.model.create(user_id=user_id, user_msg=user_msg, assistant_msg=assistant_msg)
-        count = await self.model.filter(user_id=user_id).count()
-        if count > self.MAX_HISTORY:
-            ids_to_keep = await (
-                self.model.filter(user_id=user_id)
-                .order_by("-created_at")
-                .limit(self.MAX_HISTORY)
-                .values_list("id", flat=True)
-            )
+        ids_to_keep = await (
+            self.model.filter(user_id=user_id)
+            .order_by("-created_at")
+            .limit(self.MAX_HISTORY)
+            .values_list("id", flat=True)
+        )
+        if ids_to_keep:
             await self.model.filter(user_id=user_id).exclude(id__in=ids_to_keep).delete()
         return item
 
