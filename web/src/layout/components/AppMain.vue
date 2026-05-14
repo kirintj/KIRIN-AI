@@ -1,6 +1,6 @@
 <template>
   <router-view v-slot="{ Component, route }">
-    <transition name="fade-slide" mode="out-in" appear>
+    <transition name="fade-slide" appear>
       <KeepAlive :include="keepAliveRouteNames">
         <component
           :is="Component"
@@ -19,8 +19,10 @@ import { useRouter } from 'vue-router'
 const appStore = useAppStore()
 const router = useRouter()
 
-const allRoutes = router.getRoutes()
 const keepAliveRouteNames = computed(() => {
-  return allRoutes.filter((route) => route.meta?.keepAlive).map((route) => route.name)
+  return router
+    .getRoutes()
+    .filter((route) => route.meta?.keepAlive)
+    .map((route) => route.name)
 })
 </script>
