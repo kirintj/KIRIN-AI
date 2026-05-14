@@ -763,7 +763,8 @@ onMounted(() => {
 }
 
 .hm-todo-item.overdue {
-  border-left: 3px solid #E84026;
+  background: rgba(232, 64, 38, 0.06);
+  border-color: rgba(232, 64, 38, 0.15);
 }
 
 .hm-todo-left {
@@ -839,10 +840,26 @@ onMounted(() => {
     align-items: flex-start;
     padding: 16px;
     gap: 12px;
+    overflow: visible;
   }
   .hm-todo-actions {
     width: 100%;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    overflow: visible;
+  }
+  .hm-view-toggle {
+    flex-shrink: 0;
+  }
+  .hm-view-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .hm-todo-actions .hm-action-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .hm-page-title {
     font-size: 22px;
@@ -865,8 +882,27 @@ onMounted(() => {
     grid-column: span 2;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     padding: 12px 16px;
+  }
+  .hm-progress-ring {
+    position: static;
+    transform: none;
+    width: 48px;
+    height: 48px;
+  }
+  .hm-progress-num {
+    font-size: 22px;
+  }
+  .hm-progress-unit {
+    font-size: 12px;
+  }
+  .hm-progress-label {
+    margin-top: 0;
+    margin-left: 4px;
+  }
+  .hm-progress-text {
+    align-items: baseline;
   }
   .hm-filter-row {
     gap: 6px;
@@ -889,6 +925,15 @@ onMounted(() => {
   }
   .hm-progress-card {
     grid-column: span 2;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .hm-progress-ring {
+    width: 40px;
+    height: 40px;
+  }
+  .hm-progress-num {
+    font-size: 18px;
   }
   .hm-todo-right {
     gap: 2px;

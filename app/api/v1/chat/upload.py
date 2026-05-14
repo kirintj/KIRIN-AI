@@ -24,9 +24,9 @@ _logger = logging.getLogger(__name__)
 
 COLLECTION_MAP = {
     "resume": "resume",
-    "interview": "interview",
+    "interview": "activity-source",
     "salary": "salary",
-    "guide": "guide",
+    "guide": "map-draw",
 }
 
 

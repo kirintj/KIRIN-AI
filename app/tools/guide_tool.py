@@ -49,7 +49,7 @@ class GuideTool(BaseTool):
         goal = kwargs.get("goal", "成功求职")
 
         search_query = f"{scenario} 求职攻略"
-        docs = await self._pipeline.search(search_query, collection_name="guide")
+        docs = await self._pipeline.search(search_query, collection_name="map-draw")
 
         doc_context, sources = self.build_rag_context(docs, "暂无该场景的攻略文档，将基于通用求职经验生成建议。")
 

@@ -1,13 +1,18 @@
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from pydantic import BaseModel
 from app.core.dependency import DependAuth
 from app.models.admin import User
 from app.schemas.base import Success, Fail
 from app.schemas.business import AgentChatRequest, AddDocumentRequest
 from app.agent.executor import AgentExecutor
 from app.agent.langgraph_graph import get_graph
-from app.rag.chromadb_client import add_documents, delete_all_documents, get_collection_stats, list_documents, get_document_chunks
+from app.rag.chromadb_client import (
+    add_documents, delete_all_documents, get_collection_stats, list_documents, get_document_chunks,
+    search_chromadb, search_with_filter, hybrid_search, rebuild_all_collections, COLLECTION_NAMES,
+)
+from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
 from app.services.business import conversation_service
 
 router = APIRouter()
@@ -146,3 +151,95 @@ async def get_document_detail(
     except Exception:
         _logger.exception("获取文档详情失败")
         return Fail(code=500, msg="获取文档详情失败")
+
+
+class SearchInput(BaseModel):
+    query: str
+    collection_name: str = "knowledge_base"
+    top_k: int = 5
+    doc_type: str = ""
+    source: str = ""
+
+
+@router.post("/documents/search", summary="基础向量检索")
+async def search_documents(
+    data: SearchInput,
+    current_user: User = DependAuth,
+):
+    try:
+        if data.doc_type or data.source:
+            docs = await search_with_filter(
+                data.query, top_k=data.top_k,
+                collection_name=data.collection_name,
+                doc_type=data.doc_type, source=data.source,
+            )
+        else:
+            docs = await search_chromadb(data.query, top_k=data.top_k, collection_name=data.collection_name)
+        return Success(data={"results": docs, "count": len(docs)})
+    except Exception:
+        _logger.exception("检索失败")
+        return Fail(code=500, msg="检索失败")
+
+
+@router.post("/documents/hybrid-search", summary="混合检索（向量+关键词）")
+async def hybrid_search_documents(
+    data: SearchInput,
+    current_user: User = DependAuth,
+):
+    try:
+        docs = await hybrid_search(
+            data.query, top_k=data.top_k, collection_name=data.collection_name,
+        )
+        return Success(data={"results": docs, "count": len(docs)})
+    except Exception:
+        _logger.exception("混合检索失败")
+        return Fail(code=500, msg="混合检索失败")
+
+
+class AdvancedSearchInput(BaseModel):
+    query: str
+    collection_name: str = ""
+    top_k: int = 5
+    enable_query_rewrite: bool = True
+    enable_rerank: bool = True
+    enable_hybrid_search: bool = True
+    enable_context_compress: bool = False
+    doc_type: str = ""
+    source: str = ""
+
+
+@router.post("/documents/advanced-search", summary="高级 RAG 检索")
+async def advanced_search_documents(
+    data: AdvancedSearchInput,
+    current_user: User = DependAuth,
+):
+    try:
+        config = PipelineConfig(
+            enable_query_rewrite=data.enable_query_rewrite,
+            enable_rerank=data.enable_rerank,
+            enable_hybrid_search=data.enable_hybrid_search,
+            enable_context_compress=data.enable_context_compress,
+            top_k=data.top_k,
+        )
+        pipeline = AdvancedRAGPipeline(config)
+        collection_name = data.collection_name if data.collection_name else None
+        docs = await pipeline.search(
+            data.query,
+            collection_name=collection_name,
+            doc_type=data.doc_type,
+            source=data.source,
+        )
+        return Success(data={"results": docs, "count": len(docs)})
+    except Exception:
+        _logger.exception("高级检索失败")
+        return Fail(code=500, msg="高级检索失败")
+
+
+@router.post("/documents/rebuild", summary="迁移重建：用新 embedding 模型重建所有集合")
+async def rebuild_collections(current_user: User = DependAuth):
+    try:
+        result = await rebuild_all_collections()
+        return Success(data={"migrated": result})
+    except Exception:
+        _logger.exception("迁移重建失败")
+        return Fail(code=500, msg="迁移重建失败")

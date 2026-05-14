@@ -48,7 +48,7 @@ class InterviewTool(BaseTool):
         interview_type = kwargs.get("interview_type", "综合面试")
 
         search_query = f"{company} {position} 面试题 企业文化"
-        docs = await self._pipeline.search(search_query, collection_name="interview")
+        docs = await self._pipeline.search(search_query, collection_name="activity-source")
 
         doc_context, sources = self.build_rag_context(docs, "暂无该企业/岗位的面试文档，将基于通用面试经验生成建议。")
 

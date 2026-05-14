@@ -29,6 +29,7 @@ const docListLoading = ref(false)
 const showDocDetail = ref(false)
 const docDetailData = ref<any>(null)
 const docDetailLoading = ref(false)
+const currentChunkPage = ref(1)
 const { uploading: uploadLoading, uploadToKnowledgeBase } = useFileUpload()
 const { formatMarkdown } = useMarkdown()
 
@@ -72,17 +73,22 @@ const handleAddDocument = async () => {
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0)
+    if (documents.length === 0) {
+      window.$message?.warning('请输入有效的文档内容')
+      return
+    }
     await api.addDocuments({
       documents,
       collection_name: selectedCollection.value,
       doc_type: selectedDocType.value,
     })
-    window.$message?.success(`成功添加 ${documents.length} 条文档到 [${selectedCollection.value}]`)
+    window.$message?.success(`成功添加 ${documents.length} 条文档到 [${getCollectionLabel(selectedCollection.value)}]`)
     docContent.value = ''
     await loadStats()
     if (browseTab.value === 'browse') loadDocList()
-  } catch (error) {
-    console.error('添加文档失败', error)
+  } catch (error: any) {
+    const msg = error?.message || error?.msg || '添加文档失败'
+    window.$message?.error(msg)
   } finally {
     docLoading.value = false
   }
@@ -101,6 +107,15 @@ const handleClearDocuments = async () => {
   }
 }
 
+let statsReloadTimer: ReturnType<typeof setTimeout> | null = null
+const debouncedLoadStats = () => {
+  if (statsReloadTimer) clearTimeout(statsReloadTimer)
+  statsReloadTimer = setTimeout(() => {
+    loadStats()
+    if (browseTab.value === 'browse') loadDocList()
+  }, 500)
+}
+
 const handleUpload = async ({ file, onFinish, onError }: any) => {
   const nativeFile = file.file
   if (!nativeFile) {
@@ -109,7 +124,7 @@ const handleUpload = async ({ file, onFinish, onError }: any) => {
   }
   const result = await uploadToKnowledgeBase(nativeFile, selectedCollection.value, selectedDocType.value)
   if (result) {
-    await loadStats()
+    debouncedLoadStats()
     onFinish()
     return true
   }
@@ -132,19 +147,27 @@ const totalDocs = () => {
   return Object.values(collectionStats.value).reduce((sum, s) => sum + (s.count || 0), 0)
 }
 
-const statItems = ref<{ key: string; label: string; count: number; color: string }[]>([])
+const statItems = ref<{ key: string; label: string; count: number; color: string; icon: string }[]>([])
 
 const updateStatItems = () => {
   const colors: Record<string, string> = {
     knowledge_base: '#0A59F7',
     resume: '#722ED1',
-    interview: '#ED6F21',
+    'activity-source': '#ED6F21',
     salary: '#64BB5C',
-    guide: '#E84026',
+    'map-draw': '#E84026',
   }
-  const items = [{ key: '_total', label: '总文档', count: totalDocs(), color: '#0A59F7' }]
+  const icons: Record<string, string> = {
+    _total: 'icon-park-outline:data-file',
+    knowledge_base: 'icon-park-outline:data',
+    resume: 'icon-park-outline:clipboard',
+    'activity-source': 'icon-park-outline:activity-source',
+    salary: 'icon-park-outline:finance',
+    'map-draw': 'icon-park-outline:map-draw',
+  }
+  const items = [{ key: '_total', label: '总文档', count: totalDocs(), color: '#0A59F7', icon: icons._total }]
   for (const [key, val] of Object.entries(collectionStats.value)) {
-    items.push({ key, label: getCollectionLabel(key), count: val.count || 0, color: colors[key] || '#86909C' })
+    items.push({ key, label: getCollectionLabel(key), count: val.count || 0, color: colors[key] || '#86909C', icon: icons[key] || 'icon-park-outline:file' })
   }
   statItems.value = items
 }
@@ -161,16 +184,16 @@ const collectionCards = computed(() => {
   const colors: Record<string, string> = {
     knowledge_base: '#0A59F7',
     resume: '#722ED1',
-    interview: '#ED6F21',
+    'activity-source': '#ED6F21',
     salary: '#64BB5C',
-    guide: '#E84026',
+    'map-draw': '#E84026',
   }
   const icons: Record<string, string> = {
     knowledge_base: 'icon-park-outline:data',
     resume: 'icon-park-outline:clipboard',
-    interview: 'icon-park-outline:activity-source',
+    'activity-source': 'icon-park-outline:activity-source',
     salary: 'icon-park-outline:finance',
-    guide: 'icon-park-outline:map-draw',
+    'map-draw': 'icon-park-outline:map-draw',
   }
   return collectionOptions.map((opt) => {
     const stat = collectionStats.value[opt.value]
@@ -259,6 +282,7 @@ const loadDocDetail = async (docId: string) => {
   docDetailLoading.value = true
   showDocDetail.value = true
   docDetailData.value = null
+  currentChunkPage.value = 1
   try {
     const res = await api.getDocumentDetail({
       doc_id: docId,
@@ -274,6 +298,13 @@ const loadDocDetail = async (docId: string) => {
 }
 
 const totalPages = computed(() => Math.max(1, Math.ceil(docListTotal.value / docListPageSize.value)))
+
+const chunkTotal = computed(() => docDetailData.value?.chunks?.length || 0)
+const currentChunk = computed(() => {
+  const chunks = docDetailData.value?.chunks
+  if (!chunks || chunks.length === 0) return null
+  return chunks[currentChunkPage.value - 1] || null
+})
 
 const handlePageChange = (page: number) => {
   docListPage.value = page
@@ -302,270 +333,242 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 <template>
   <AppPage :show-footer="false">
     <div class="hm-page-container">
-    <div class="hm-page-header">
-      <div>
-        <h1 class="hm-page-title">知识库管理</h1>
-        <p class="hm-page-subtitle">文档管理 · 向量化 · RAG 检索</p>
-      </div>
-      <div class="hm-kn-actions">
-        <button class="hm-action-btn" @click="loadStats" :disabled="statsLoading">
-          <TheIcon icon="icon-park-outline:refresh" :size="16" />
-        </button>
-        <NPopconfirm @positive-click="handleClearDocuments">
-          <template #trigger>
-            <button class="hm-action-btn danger">
-              <TheIcon icon="icon-park-outline:delete" :size="16" />
-              清空当前集合
-            </button>
-          </template>
-          确定要清空集合 [{{ getCollectionLabel(selectedCollection) }}] 的所有文档吗？此操作不可恢复。
-        </NPopconfirm>
-      </div>
-    </div>
-
-    <div class="hm-stats-row">
-      <div
-        v-for="stat in statItems"
-        :key="stat.key"
-        class="hm-stat-card"
-      >
-        <div class="hm-stat-icon" :style="{ background: stat.color + '14' }">
-          <TheIcon icon="icon-park-outline:data" :size="20" :color="stat.color" />
+      <div class="hm-page-header">
+        <div>
+          <h1 class="hm-page-title">知识库管理</h1>
+          <p class="hm-page-subtitle">文档管理 · 向量化 · RAG 检索</p>
         </div>
-        <div class="hm-stat-info">
-          <div class="hm-stat-value" :style="{ color: stat.color }">{{ stat.count }}</div>
-          <div class="hm-stat-label">{{ stat.label }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="hm-section">
-      <h2 class="hm-section-title">文档搜索</h2>
-      <div class="hm-search-bar">
-        <div class="hm-search-box" style="flex: 1; padding: 10px 16px;">
-          <TheIcon icon="icon-park-outline:search" :size="16" color="var(--hm-font-fourth)" />
-          <input
-            v-model="searchKeyword"
-            class="hm-search-input"
-            style="font-size: 14px;"
-            placeholder="输入关键词搜索文档..."
-            @keydown.enter="handleSearch"
-          />
-          <button v-if="searchKeyword" class="hm-search-clear" @click="searchKeyword = ''">
-            <TheIcon icon="icon-park-outline:close" :size="12" />
+        <div class="hm-kn-actions">
+          <button class="hm-action-btn" @click="loadStats" :disabled="statsLoading">
+            <TheIcon icon="icon-park-outline:refresh" :size="16" />
           </button>
+          <NPopconfirm @positive-click="handleClearDocuments">
+            <template #trigger>
+              <button class="hm-action-btn danger">
+                <TheIcon icon="icon-park-outline:delete" :size="16" />
+                <span class="hm-btn-text">清空当前集合</span>
+              </button>
+            </template>
+            确定要清空集合 [{{ getCollectionLabel(selectedCollection) }}] 的所有文档吗？此操作不可恢复。
+          </NPopconfirm>
         </div>
-        <button class="hm-action-btn primary" @click="handleSearch" :disabled="!searchKeyword.trim()">
-          <TheIcon icon="icon-park-outline:search" :size="14" color="#fff" />
-          搜索
-        </button>
       </div>
-    </div>
 
-    <div class="hm-section">
-      <h2 class="hm-section-title">集合概览</h2>
-      <div class="hm-collection-grid">
-        <div
-          v-for="card in collectionCards"
-          :key="card.key"
-          :class="['hm-collection-card', { active: card.active }]"
-          @click="selectedCollection = card.key"
-        >
-          <div class="hm-collection-icon" :style="{ background: card.color + '14' }">
-            <TheIcon :icon="card.icon" :size="24" :color="card.color" />
+      <div class="hm-stats-row">
+        <div v-for="stat in statItems" :key="stat.key" class="hm-stat-card">
+          <div class="hm-stat-icon" :style="{ background: stat.color + '14' }">
+            <TheIcon :icon="stat.icon" :size="20" :color="stat.color" />
           </div>
-          <div class="hm-collection-info">
-            <div class="hm-collection-label">{{ card.label }}</div>
-            <div class="hm-collection-count">{{ card.count }} 条文档</div>
+          <div class="hm-stat-info">
+            <div class="hm-stat-value" :style="{ color: stat.color }">{{ stat.count }}</div>
+            <div class="hm-stat-label">{{ stat.label }}</div>
           </div>
-          <button class="hm-collection-preview" @click.stop="openPreview(card.key)">
-            <TheIcon icon="icon-park-outline:preview-open" :size="14" color="var(--hm-font-fourth)" />
+        </div>
+      </div>
+
+      <div class="hm-section">
+        <h2 class="hm-section-title">文档搜索</h2>
+        <div class="hm-search-bar">
+          <div class="hm-search-box" style="flex: 1; padding: 10px 16px;">
+            <TheIcon icon="icon-park-outline:search" :size="16" color="var(--hm-font-fourth)" />
+            <input v-model="searchKeyword" class="hm-search-input" style="font-size: 14px;" placeholder="输入关键词搜索文档..."
+              @keydown.enter="handleSearch" />
+            <button v-if="searchKeyword" class="hm-search-clear" @click="searchKeyword = ''">
+              <TheIcon icon="icon-park-outline:close" :size="12" />
+            </button>
+          </div>
+          <button class="hm-action-btn primary" @click="handleSearch" :disabled="!searchKeyword.trim()">
+            <TheIcon icon="icon-park-outline:search" :size="14" color="#fff" />
+            搜索
           </button>
         </div>
       </div>
-    </div>
 
-    <div class="hm-section">
-      <div class="hm-tab-bar">
-        <button :class="['hm-tab-item', { active: browseTab === 'upload' }]" @click="browseTab = 'upload'">
-          <TheIcon icon="icon-park-outline:upload" :size="16" />
-          上传管理
-        </button>
-        <button :class="['hm-tab-item', { active: browseTab === 'browse' }]" @click="browseTab = 'browse'">
-          <TheIcon icon="icon-park-outline:preview-open" :size="16" />
-          浏览文档
-        </button>
-      </div>
-
-      <template v-if="browseTab === 'upload'">
-        <div class="hm-section-inner">
-          <div class="hm-selector-row">
-            <div class="hm-selector-item">
-              <label class="hm-selector-label">文档集合</label>
-              <NSelect v-model:value="selectedCollection" :options="collectionOptions" size="small" style="width: 180px" />
+      <div class="hm-section">
+        <h2 class="hm-section-title">集合概览</h2>
+        <div class="hm-collection-grid">
+          <div v-for="card in collectionCards" :key="card.key" :class="['hm-collection-card', { active: card.active }]"
+            @click="selectedCollection = card.key">
+            <div class="hm-collection-icon" :style="{ background: card.color + '14' }">
+              <TheIcon :icon="card.icon" :size="24" :color="card.color" />
             </div>
-            <div class="hm-selector-item">
-              <label class="hm-selector-label">文档类型</label>
-              <NSelect v-model:value="selectedDocType" :options="docTypeOptions" size="small" style="width: 180px" />
+            <div class="hm-collection-info">
+              <div class="hm-collection-label">{{ card.label }}</div>
+              <div class="hm-collection-count">{{ card.count }} 条文档</div>
             </div>
-          </div>
-
-          <h3 class="hm-sub-title">添加文档</h3>
-          <div class="hm-doc-form">
-            <NInput
-              v-model:value="docContent"
-              type="textarea"
-              placeholder="输入文档内容，每行一条文档..."
-              :rows="6"
-              :disabled="docLoading"
-            />
-            <div class="hm-doc-actions">
-              <span class="hm-doc-target">目标集合：{{ getCollectionLabel(selectedCollection) }}</span>
-              <button
-                class="hm-action-btn primary"
-                :disabled="!docContent.trim()"
-                @click="handleAddDocument"
-              >
-                <TheIcon v-if="!docLoading" icon="icon-park-outline:add" :size="16" color="#fff" />
-                {{ docLoading ? '添加中...' : '添加到知识库' }}
-              </button>
-            </div>
-          </div>
-
-          <h3 class="hm-sub-title">上传文件</h3>
-          <div class="hm-upload-form">
-            <NUpload
-              v-model:file-list="fileList"
-              :before-upload="handleBeforeUpload"
-              :custom-request="handleUpload"
-              :max="5"
-              :multiple="true"
-              :disabled="uploadLoading"
-            >
-              <button class="hm-upload-btn">
-                <TheIcon icon="material-symbols:upload" :size="20" color="var(--hm-brand)" />
-                <span>选择文件上传</span>
-              </button>
-            </NUpload>
-            <p class="hm-upload-tip">
-              支持 PDF、DOCX、TXT、MD 等文件，单个不超过 10MB，上传到 [{{ getCollectionLabel(selectedCollection) }}] 集合
-            </p>
-          </div>
-        </div>
-      </template>
-
-      <template v-else>
-        <div class="hm-section-inner">
-          <div class="hm-browse-header">
-            <div class="hm-browse-info">
-              当前集合：<strong>{{ getCollectionLabel(selectedCollection) }}</strong>
-              <span class="hm-browse-total">共 {{ docListTotal }} 篇文档</span>
-            </div>
-            <button class="hm-action-btn" @click="loadDocList" :disabled="docListLoading">
-              <TheIcon icon="icon-park-outline:refresh" :size="14" />
-              刷新
+            <button class="hm-collection-preview" @click.stop="openPreview(card.key)">
+              <TheIcon icon="icon-park-outline:preview-open" :size="14" color="var(--hm-font-fourth)" />
             </button>
           </div>
-
-          <div v-if="docListLoading" class="hm-browse-skeleton">
-            <div v-for="i in 5" :key="i" class="hm-skeleton hm-skeleton-text long"></div>
-          </div>
-
-          <div v-else-if="docList.length === 0" class="hm-empty-state">
-            <div class="hm-empty-state-icon">
-              <TheIcon icon="icon-park-outline:data" :size="32" color="var(--hm-font-fourth)" />
-            </div>
-            <div class="hm-empty-state-title">暂无文档</div>
-            <div class="hm-empty-state-desc">切换到"上传管理"标签页添加文档</div>
-          </div>
-
-          <div v-else class="hm-doc-list">
-            <div
-              v-for="doc in docList"
-              :key="doc.doc_id"
-              class="hm-doc-item"
-              @click="loadDocDetail(doc.doc_id)"
-            >
-              <div class="hm-doc-item-icon">
-                <TheIcon icon="icon-park-outline:file-text" :size="20" color="var(--hm-brand)" />
-              </div>
-              <div class="hm-doc-item-info">
-                <div class="hm-doc-item-id">{{ doc.source || doc.doc_id }}</div>
-                <div class="hm-doc-item-preview">{{ doc.preview }}</div>
-              </div>
-              <div class="hm-doc-item-meta">
-                <span v-if="doc.doc_type" class="hm-doc-type-tag">{{ doc.doc_type }}</span>
-                <span class="hm-doc-chunk-count">{{ doc.chunk_count }} 块</span>
-              </div>
-              <TheIcon icon="icon-park-outline:right" :size="14" color="var(--hm-font-fourth)" />
-            </div>
-          </div>
-
-          <div v-if="docListTotal > docListPageSize" class="hm-pagination">
-            <button
-              class="hm-page-btn"
-              :disabled="docListPage <= 1"
-              @click="handlePageChange(docListPage - 1)"
-            >上一页</button>
-            <span class="hm-page-info">{{ docListPage }} / {{ totalPages }}</span>
-            <button
-              class="hm-page-btn"
-              :disabled="docListPage >= totalPages"
-              @click="handlePageChange(docListPage + 1)"
-            >下一页</button>
-          </div>
         </div>
-      </template>
-    </div>
+      </div>
 
-    <div class="hm-section">
-      <h2 class="hm-section-title">使用说明</h2>
-      <div class="hm-guide-list">
-        <div v-for="g in guides" :key="g.title" class="hm-guide-item">
-          <div class="hm-guide-icon" :style="{ background: g.color + '14' }">
-            <TheIcon :icon="g.icon" :size="20" :color="g.color" />
+      <div class="hm-section">
+        <div class="hm-tab-bar">
+          <button :class="['hm-tab-item', { active: browseTab === 'upload' }]" @click="browseTab = 'upload'">
+            <TheIcon icon="icon-park-outline:upload" :size="16" />
+            上传管理
+          </button>
+          <button :class="['hm-tab-item', { active: browseTab === 'browse' }]" @click="browseTab = 'browse'">
+            <TheIcon icon="icon-park-outline:preview-open" :size="16" />
+            浏览文档
+          </button>
+        </div>
+
+        <template v-if="browseTab === 'upload'">
+          <div class="hm-section-inner">
+            <div class="hm-selector-row">
+              <div class="hm-selector-item">
+                <label class="hm-selector-label">文档集合</label>
+                <NSelect v-model:value="selectedCollection" :options="collectionOptions" size="small"
+                  style="width: 180px" />
+              </div>
+              <div class="hm-selector-item">
+                <label class="hm-selector-label">文档类型</label>
+                <NSelect v-model:value="selectedDocType" :options="docTypeOptions" size="small" style="width: 180px" />
+              </div>
+            </div>
+
+            <h3 class="hm-sub-title">添加文档</h3>
+            <div class="hm-doc-form">
+              <NInput v-model:value="docContent" type="textarea" placeholder="输入文档内容，每行一条文档..." :rows="6"
+                :disabled="docLoading" />
+              <div class="hm-doc-actions">
+                <span class="hm-doc-target">目标集合：{{ getCollectionLabel(selectedCollection) }}</span>
+                <button class="hm-action-btn primary" :disabled="!docContent.trim()" @click="handleAddDocument">
+                  <TheIcon v-if="!docLoading" icon="icon-park-outline:add" :size="16" color="#fff" />
+                  {{ docLoading ? '添加中...' : '添加到知识库' }}
+                </button>
+              </div>
+            </div>
+
+            <h3 class="hm-sub-title">上传文件</h3>
+            <div class="hm-upload-form">
+              <NUpload v-model:file-list="fileList" :before-upload="handleBeforeUpload" :custom-request="handleUpload"
+                :max="5" :multiple="true" :disabled="uploadLoading">
+                <button class="hm-upload-btn">
+                  <TheIcon icon="material-symbols:upload" :size="20" color="var(--hm-brand)" />
+                  <span>选择文件上传</span>
+                </button>
+              </NUpload>
+              <p class="hm-upload-tip">
+                支持 PDF、DOCX、TXT、MD 等文件，单个不超过 10MB，上传到 [{{ getCollectionLabel(selectedCollection) }}] 集合
+              </p>
+            </div>
           </div>
-          <div class="hm-guide-info">
-            <div class="hm-guide-title">{{ g.title }}</div>
-            <div class="hm-guide-desc">{{ g.desc }}</div>
+        </template>
+
+        <template v-else>
+          <div class="hm-section-inner">
+            <div class="hm-browse-header">
+              <div class="hm-browse-info">
+                当前集合：<strong>{{ getCollectionLabel(selectedCollection) }}</strong>
+                <span class="hm-browse-total">共 {{ docListTotal }} 篇文档</span>
+              </div>
+              <button class="hm-action-btn" @click="loadDocList" :disabled="docListLoading">
+                <TheIcon icon="icon-park-outline:refresh" :size="14" />
+                刷新
+              </button>
+            </div>
+
+            <div v-if="docListLoading" class="hm-browse-skeleton">
+              <div v-for="i in 5" :key="i" class="hm-skeleton hm-skeleton-text long"></div>
+            </div>
+
+            <div v-else-if="docList.length === 0" class="hm-empty-state">
+              <div class="hm-empty-state-icon">
+                <TheIcon icon="icon-park-outline:data" :size="32" color="var(--hm-font-fourth)" />
+              </div>
+              <div class="hm-empty-state-title">暂无文档</div>
+              <div class="hm-empty-state-desc">切换到"上传管理"标签页添加文档</div>
+            </div>
+
+            <div v-else class="hm-doc-list">
+              <div v-for="doc in docList" :key="doc.doc_id" class="hm-doc-item" @click="loadDocDetail(doc.doc_id)">
+                <div class="hm-doc-item-icon">
+                  <TheIcon icon="icon-park-outline:file-text" :size="20" color="var(--hm-brand)" />
+                </div>
+                <div class="hm-doc-item-info">
+                  <div class="hm-doc-item-id">{{ doc.source || doc.doc_id }}</div>
+                  <div class="hm-doc-item-preview">{{ doc.preview }}</div>
+                </div>
+                <div class="hm-doc-item-meta">
+                  <span v-if="doc.doc_type" class="hm-doc-type-tag">{{ doc.doc_type }}</span>
+                  <span class="hm-doc-chunk-count">{{ doc.chunk_count }} 块</span>
+                </div>
+                <TheIcon icon="icon-park-outline:right" :size="14" color="var(--hm-font-fourth)" />
+              </div>
+            </div>
+
+            <div v-if="docListTotal > docListPageSize" class="hm-pagination">
+              <button class="hm-page-btn" :disabled="docListPage <= 1"
+                @click="handlePageChange(docListPage - 1)">上一页</button>
+              <span class="hm-page-info">{{ docListPage }} / {{ totalPages }}</span>
+              <button class="hm-page-btn" :disabled="docListPage >= totalPages"
+                @click="handlePageChange(docListPage + 1)">下一页</button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="hm-section">
+        <h2 class="hm-section-title">使用说明</h2>
+        <div class="hm-guide-list">
+          <div v-for="g in guides" :key="g.title" class="hm-guide-item">
+            <div class="hm-guide-icon" :style="{ background: g.color + '14' }">
+              <TheIcon :icon="g.icon" :size="20" :color="g.color" />
+            </div>
+            <div class="hm-guide-info">
+              <div class="hm-guide-title">{{ g.title }}</div>
+              <div class="hm-guide-desc">{{ g.desc }}</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <NModal v-model:show="showPreview" preset="card" :title="previewTitle" style="width: 600px">
-      <div class="hm-preview-content md-bubble" v-html="formatMarkdown(previewContent)"></div>
-      <template #footer>
-        <button class="hm-action-btn" @click="showPreview = false">关闭</button>
-      </template>
-    </NModal>
+      <NModal v-model:show="showPreview" preset="card" :title="previewTitle" style="width: 600px">
+        <div class="hm-preview-content md-bubble" v-html="formatMarkdown(previewContent)"></div>
+        <template #footer>
+          <button class="hm-action-btn" @click="showPreview = false">关闭</button>
+        </template>
+      </NModal>
 
-    <NModal v-model:show="showDocDetail" preset="card" :title="docDetailData ? `文档详情 - ${docDetailData.doc_id}` : '文档详情'" style="width: 680px">
-      <div v-if="docDetailLoading" class="hm-browse-skeleton">
-        <div v-for="i in 3" :key="i" class="hm-skeleton hm-skeleton-text long"></div>
-      </div>
-      <div v-else-if="docDetailData" class="hm-doc-detail">
-        <div class="hm-doc-detail-meta">
-          <span>共 {{ docDetailData.total_chunks }} 个分块</span>
+      <NModal v-model:show="showDocDetail" preset="card"
+        :title="docDetailData ? `文档详情 - ${docDetailData.doc_id}` : '文档详情'" style="width: 760px">
+        <div v-if="docDetailLoading" class="hm-browse-skeleton">
+          <div v-for="i in 3" :key="i" class="hm-skeleton hm-skeleton-text long"></div>
         </div>
-        <div class="hm-doc-chunks">
-          <div v-for="chunk in docDetailData.chunks" :key="chunk.chunk_index" class="hm-doc-chunk">
+        <div v-else-if="docDetailData" class="hm-doc-detail">
+          <div class="hm-doc-detail-meta">
+            <span>共 {{ chunkTotal }} 个分块</span>
+          </div>
+          <div v-if="currentChunk" class="hm-doc-chunk">
             <div class="hm-doc-chunk-header">
-              <span class="hm-doc-chunk-index">分块 #{{ chunk.chunk_index }}</span>
-              <span v-if="chunk.doc_type" class="hm-doc-type-tag">{{ chunk.doc_type }}</span>
+              <span class="hm-doc-chunk-index">分块 #{{ currentChunk.chunk_index }}</span>
+              <span v-if="currentChunk.doc_type" class="hm-doc-type-tag">{{ currentChunk.doc_type }}</span>
             </div>
-            <div class="hm-doc-chunk-content">{{ chunk.content }}</div>
+            <div class="hm-doc-chunk-content">{{ currentChunk.content }}</div>
+          </div>
+          <div v-if="chunkTotal > 1" class="hm-chunk-pagination">
+            <button class="hm-page-btn" :disabled="currentChunkPage <= 1" @click="currentChunkPage--">上一个</button>
+            <div class="hm-chunk-page-jump">
+              <input v-model.number="currentChunkPage" type="number" :min="1" :max="chunkTotal"
+                class="hm-chunk-page-input"
+                @change="currentChunkPage = Math.max(1, Math.min(chunkTotal, currentChunkPage))" />
+              <span class="hm-chunk-page-total">/ {{ chunkTotal }}</span>
+            </div>
+            <button class="hm-page-btn" :disabled="currentChunkPage >= chunkTotal"
+              @click="currentChunkPage++">下一个</button>
           </div>
         </div>
-      </div>
-      <div v-else class="hm-empty-state">
-        <div class="hm-empty-state-title">无法加载文档详情</div>
-      </div>
-      <template #footer>
-        <button class="hm-action-btn" @click="showDocDetail = false">关闭</button>
-      </template>
-    </NModal>
-  </div>
+        <div v-else class="hm-empty-state">
+          <div class="hm-empty-state-title">无法加载文档详情</div>
+        </div>
+        <template #footer>
+          <button class="hm-action-btn" @click="showDocDetail = false">关闭</button>
+        </template>
+      </NModal>
+    </div>
   </AppPage>
 </template>
 
@@ -609,11 +612,10 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 }
 
 .hm-stats-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-bottom: 28px;
-  overflow-x: auto;
-  padding-bottom: 4px;
 }
 
 .hm-stat-card {
@@ -627,8 +629,6 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   border-radius: var(--hm-radius-xl);
   border: 1px solid var(--hm-border-glass);
   box-shadow: var(--hm-shadow-layered);
-  flex-shrink: 0;
-  min-width: 120px;
   transition: all 0.35s var(--hm-spring);
 }
 
@@ -880,39 +880,6 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   color: var(--hm-font-primary);
 }
 
-.hm-tab-bar {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--hm-divider);
-  padding-bottom: 0;
-}
-
-.hm-tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font-size: 14px;
-  color: var(--hm-font-tertiary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-  margin-bottom: -1px;
-}
-
-.hm-tab-btn:hover {
-  color: var(--hm-brand);
-  transform: translateY(-1px);
-}
-
-.hm-tab-btn.active {
-  color: var(--hm-brand);
-  font-weight: 500;
-  border-bottom-color: var(--hm-brand);
-}
 
 .hm-section-inner {
   padding: 0 4px;
@@ -1077,17 +1044,52 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 .hm-doc-detail-meta {
   font-size: 13px;
   color: var(--hm-font-tertiary);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--hm-divider);
+}
+
+.hm-chunk-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hm-divider);
+}
+
+.hm-chunk-page-jump {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hm-chunk-page-input {
+  width: 48px;
+  height: 28px;
+  border: 1px solid var(--hm-border);
+  border-radius: var(--hm-radius-sm);
+  text-align: center;
+  font-size: 13px;
+  color: var(--hm-font-primary);
+  background: var(--hm-bg-secondary);
+}
+
+.hm-chunk-page-input:focus {
+  outline: none;
+  border-color: var(--hm-brand);
+}
+
+.hm-chunk-page-total {
+  font-size: 13px;
+  color: var(--hm-font-tertiary);
 }
 
 .hm-doc-chunks {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 400px;
-  overflow-y: auto;
 }
 
 .hm-doc-chunk {
@@ -1248,71 +1250,132 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   .hm-knowledge-page {
     padding: 16px 12px;
   }
+
   .hm-kn-header {
     flex-direction: column;
     align-items: flex-start;
     padding: 16px;
     gap: 12px;
   }
+
   .hm-kn-header-right {
     width: 100%;
     justify-content: space-between;
   }
+
   .hm-kn-title {
     font-size: 22px;
   }
+
   .hm-stats-row {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
+
   .hm-stat-card {
-    min-width: 0;
-    flex: 1 1 calc(50% - 4px);
     padding: 12px;
   }
+
   .hm-stat-icon {
     width: 36px;
     height: 36px;
   }
+
   .hm-stat-value {
     font-size: 20px;
   }
+
   .hm-selector-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
+
   .hm-doc-item {
     padding: 10px 12px;
   }
+
   .hm-doc-item-icon {
     width: 34px;
     height: 34px;
   }
+
   .hm-doc-item-meta {
     flex-direction: column;
     gap: 2px;
   }
+
   .hm-guide-item {
     padding: 12px 14px;
   }
+
   .hm-guide-icon {
     width: 34px;
     height: 34px;
   }
+
   .hm-browse-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
+
+  .hm-kn-actions {
+    width: 100%;
+    order: 3;
+  }
+
+  .hm-kn-actions .hm-btn-text {
+    display: none;
+  }
+
+  .hm-kn-actions .hm-action-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .hm-search-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hm-search-bar .hm-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hm-upload-btn {
+    padding: 16px;
+    font-size: 13px;
+  }
+
+  .hm-chunk-pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .hm-chunk-page-input {
+    width: 40px;
+  }
 }
 
 @media (max-width: 480px) {
-  .hm-stat-card {
-    flex: 1 1 100%;
+  .hm-stats-row {
+    grid-template-columns: 1fr;
   }
+
   .hm-doc-item-preview {
     display: none;
+  }
+
+  .hm-kn-actions .hm-action-btn {
+    font-size: 12px;
+    padding: 7px 10px;
+  }
+
+  .hm-chunk-pagination .hm-page-btn {
+    padding: 5px 10px;
+    font-size: 12px;
   }
 }
 </style>

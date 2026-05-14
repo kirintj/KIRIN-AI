@@ -1,4 +1,5 @@
 import logging
+import math
 from dataclasses import dataclass, field
 
 from app.rag.chromadb_client import (
@@ -8,6 +9,7 @@ from app.rag.chromadb_client import (
     hybrid_search,
     search_with_filter,
 )
+from app.rag.embedding import DashScopeEmbeddingFunction
 from app.utils.chat import call_llm
 from app.settings import settings
 
@@ -141,10 +143,48 @@ class AdvancedRAGPipeline:
         return all_docs
 
     async def _rerank(self, query: str, documents: list[dict], top_n: int) -> list[dict]:
-        """LLM 重排：选出最相关的 top_n 文档"""
+        """DashScope gte-rerank 模型重排"""
         if len(documents) <= top_n:
             return documents
 
+        try:
+            import httpx
+
+            api_key = settings.API_KEY
+            if not api_key:
+                _logger.warning("DASHSCOPE_API_KEY 未配置，使用 LLM 重排")
+                return await self._rerank_with_llm(query, documents, top_n)
+
+            docs_text = [d["content"][:500] for d in documents]
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    "https://dashscope.aliyuncs.com/api/v1/services/reranking/text-reranking/text-reranking",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "gte-rerank",
+                        "input": {"query": query, "documents": docs_text},
+                        "parameters": {"top_n": top_n, "return_documents": False},
+                    },
+                )
+
+            if response.status_code == 200:
+                result = response.json()
+                indices = [item["index"] for item in result["output"]["results"]]
+                return [documents[i] for i in indices]
+            else:
+                _logger.warning("gte-rerank 调用失败: %s, 回退 LLM 重排", response.status_code)
+                return await self._rerank_with_llm(query, documents, top_n)
+
+        except Exception:
+            _logger.exception("重排失败，回退 LLM 重排")
+            return await self._rerank_with_llm(query, documents, top_n)
+
+    async def _rerank_with_llm(self, query: str, documents: list[dict], top_n: int) -> list[dict]:
+        """LLM 重排：选出最相关的 top_n 文档"""
         doc_list = "\n".join(
             f"[{i + 1}] {d['content'][:200]}" for i, d in enumerate(documents)
         )
@@ -167,17 +207,22 @@ class AdvancedRAGPipeline:
 
             return [documents[i] for i in selected_indices[:top_n]]
         except Exception:
-            _logger.exception("重排失败，返回原始排序")
+            _logger.exception("LLM 重排失败，返回原始排序")
             return documents[:top_n]
 
     async def _compress_context(self, query: str, documents: list[dict]) -> list[dict]:
-        """上下文压缩：用 LLM 提取与 query 相关的关键内容"""
+        """上下文压缩：用 LLM 提取与 query 相关的关键内容，保留原始来源"""
         if not documents:
             return documents
 
         full_context = self._build_context(documents)
         if len(full_context) <= self.config.max_context_chars:
             return documents
+
+        # 收集所有原始来源
+        sources = list(set(d.get("source", "") for d in documents if d.get("source")))
+        doc_types = list(set(d.get("doc_type", "") for d in documents if d.get("doc_type")))
+        collections = list(set(d.get("collection", "") for d in documents if d.get("collection")))
 
         prompt = (
             f"请从以下资料中提取与问题最相关的内容，保留关键信息，去除无关和重复部分，"
@@ -186,22 +231,54 @@ class AdvancedRAGPipeline:
         )
         try:
             compressed = await call_llm(prompt, max_tokens=self.config.max_context_chars, temperature=0.3)
-            return [{"content": compressed, "source": "compressed", "doc_type": "", "collection": "", "distance": 0.0}]
+            return [{
+                "content": compressed,
+                "source": ", ".join(sources) if sources else "",
+                "doc_type": ", ".join(doc_types) if doc_types else "",
+                "collection": ", ".join(collections) if collections else "",
+                "distance": 0.0,
+                "is_compressed": True,
+                "source_count": len(sources),
+            }]
         except Exception:
             _logger.exception("上下文压缩失败，返回原始文档")
             return documents
 
     @staticmethod
-    def _deduplicate(documents: list[dict]) -> list[dict]:
-        """按内容前 80 字符去重"""
-        seen: set[str] = set()
-        unique: list[dict] = []
-        for d in documents:
-            key = d.get("content", "")[:80]
-            if key not in seen:
-                seen.add(key)
-                unique.append(d)
-        return unique
+    def _cosine_similarity(a: list[float], b: list[float]) -> float:
+        """计算两个向量的余弦相似度"""
+        dot_product = sum(x * y for x, y in zip(a, b))
+        norm_a = math.sqrt(sum(x * x for x in a))
+        norm_b = math.sqrt(sum(x * x for x in b))
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+        return dot_product / (norm_a * norm_b)
+
+    @staticmethod
+    def _deduplicate(documents: list[dict], similarity_threshold: float = 0.95) -> list[dict]:
+        """用 embedding 余弦相似度去重，阈值 0.95"""
+        if not documents:
+            return documents
+
+        embed_fn = DashScopeEmbeddingFunction()
+        contents = [d.get("content", "") for d in documents]
+        embeddings = embed_fn(contents)
+
+        unique_indices: list[int] = []
+        unique_embeddings: list[list[float]] = []
+
+        for i, embed in enumerate(embeddings):
+            is_duplicate = False
+            for unique_embed in unique_embeddings:
+                sim = AdvancedRAGPipeline._cosine_similarity(embed, unique_embed)
+                if sim >= similarity_threshold:
+                    is_duplicate = True
+                    break
+            if not is_duplicate:
+                unique_indices.append(i)
+                unique_embeddings.append(embed)
+
+        return [documents[i] for i in unique_indices]
 
     @staticmethod
     def _build_context(documents: list[dict]) -> str:

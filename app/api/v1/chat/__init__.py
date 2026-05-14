@@ -15,7 +15,6 @@ from .tracker import router as tracker_router
 from .interview_sim import router as interview_sim_router
 from .resume_export import router as resume_export_router
 from .dashboard import router as dashboard_router
-from .knowledge import router as knowledge_router
 
 chat_router = APIRouter()
 chat_router.include_router(router, tags=["chat模块"])
@@ -31,6 +30,5 @@ chat_router.include_router(tracker_router, prefix="/tracker", tags=["求职进�
 chat_router.include_router(interview_sim_router, prefix="/interview-sim", tags=["面试模拟模块"])
 chat_router.include_router(resume_export_router, prefix="/resume-export", tags=["简历导出模块"])
 chat_router.include_router(dashboard_router, prefix="/dashboard", tags=["数据仪表盘模块"])
-chat_router.include_router(knowledge_router, prefix="/knowledge", tags=["知识库管理模块"])
 
 __all__ = ["chat_router"]

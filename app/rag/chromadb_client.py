@@ -1,5 +1,6 @@
 import logging
 import re
+import asyncio
 import chromadb
 from pathlib import Path
 from typing import Optional
@@ -14,7 +15,7 @@ CHROMA_PERSIST_DIR = str(Path(__file__).resolve().parent.parent.parent / "data" 
 CHUNK_SIZE = 500
 TOP_K = 5
 
-COLLECTION_NAMES = ("knowledge_base", "resume", "interview", "salary", "guide")
+COLLECTION_NAMES = ("knowledge_base", "resume", "activity-source", "salary", "map-draw")
 
 _client: Optional[chromadb.ClientAPI] = None
 _collections: dict[str, chromadb.Collection] = {}
@@ -87,11 +88,9 @@ async def add_documents(
             })
 
     if all_chunks:
-        collection.add(
-            documents=all_chunks,
-            ids=all_ids,
-            metadatas=all_metadatas,
-        )
+        def _add():
+            collection.add(documents=all_chunks, ids=all_ids, metadatas=all_metadatas)
+        await asyncio.to_thread(_add)
 
 
 async def search_chromadb(
@@ -101,13 +100,18 @@ async def search_chromadb(
 ) -> list[dict]:
     """从指定集合检索，返回带溯源元数据的结果"""
     collection = _get_collection(collection_name)
-    if collection.count() == 0:
-        return [{"content": "知识库暂无数据，请先添加文档。", "source": "", "doc_type": ""}]
 
-    results = collection.query(
-        query_texts=[query],
-        n_results=min(top_k, collection.count()),
-    )
+    def _query():
+        if collection.count() == 0:
+            return None
+        return collection.query(
+            query_texts=[query],
+            n_results=min(top_k, collection.count()),
+        )
+
+    results = await asyncio.to_thread(_query)
+    if results is None:
+        return [{"content": "知识库暂无数据，请先添加文档。", "source": "", "doc_type": ""}]
     return _parse_query_results(results, collection_name)
 
 
@@ -120,20 +124,24 @@ async def search_with_filter(
 ) -> list[dict]:
     """带元数据过滤的检索"""
     collection = _get_collection(collection_name)
-    if collection.count() == 0:
+
+    def _query():
+        if collection.count() == 0:
+            return None
+        where_filter: dict = {}
+        if doc_type:
+            where_filter["doc_type"] = doc_type
+        if source:
+            where_filter["source"] = source
+        return collection.query(
+            query_texts=[query],
+            n_results=min(top_k, collection.count()),
+            where=where_filter if where_filter else None,
+        )
+
+    results = await asyncio.to_thread(_query)
+    if results is None:
         return []
-
-    where_filter: dict = {}
-    if doc_type:
-        where_filter["doc_type"] = doc_type
-    if source:
-        where_filter["source"] = source
-
-    results = collection.query(
-        query_texts=[query],
-        n_results=min(top_k, collection.count()),
-        where=where_filter if where_filter else None,
-    )
     return _parse_query_results(results, collection_name)
 
 
@@ -144,18 +152,28 @@ async def hybrid_search(
 ) -> list[dict]:
     """混合检索：向量检索 + 关键词匹配，RRF 融合排序"""
     collection = _get_collection(collection_name)
-    if collection.count() == 0:
+
+    def _search():
+        if collection.count() == 0:
+            return None, None
+
+        n_retrieve = min(top_k * 3, collection.count())
+
+        vector_results = collection.query(
+            query_texts=[query],
+            n_results=n_retrieve,
+            include=["documents", "metadatas", "distances", "embeddings"],
+        )
+
+        keywords = _extract_keywords(query)
+        keyword_results = _do_keyword_search(collection, keywords, n_retrieve)
+
+        return vector_results, keyword_results
+
+    vector_results, keyword_results = await asyncio.to_thread(_search)
+
+    if vector_results is None:
         return []
-
-    n_retrieve = min(top_k * 3, collection.count())
-
-    vector_results = collection.query(
-        query_texts=[query],
-        n_results=n_retrieve,
-    )
-
-    keywords = _extract_keywords(query)
-    keyword_results = _do_keyword_search(collection, keywords, n_retrieve)
 
     if not keyword_results:
         return _parse_query_results(vector_results, collection_name)
@@ -193,10 +211,14 @@ async def search_all_collections_hybrid(query: str, top_k: int = 3) -> list[dict
 async def delete_all_documents(collection_name: str = "knowledge_base"):
     """清空指定集合"""
     client = _get_client()
-    try:
-        client.delete_collection(collection_name)
-    except Exception:
-        pass
+
+    def _delete():
+        try:
+            client.delete_collection(collection_name)
+        except Exception:
+            pass
+
+    await asyncio.to_thread(_delete)
     _collections.pop(collection_name, None)
 
 
@@ -204,80 +226,87 @@ async def rebuild_all_collections() -> dict:
     """迁移工具：用新 embedding 重建所有集合"""
     client = _get_client()
     embed_fn = _get_embedding_function()
-    migrated: dict[str, int] = {}
 
-    for name in COLLECTION_NAMES:
-        try:
-            old_collection = client.get_collection(name=name)
-            if old_collection.count() == 0:
-                migrated[name] = 0
-                continue
+    def _rebuild():
+        migrated: dict[str, int] = {}
 
-            all_data = old_collection.get(include=["documents", "metadatas"])
-            raw_docs = all_data.get("documents", [])
-            raw_metas = all_data.get("metadatas", [])
+        for name in COLLECTION_NAMES:
+            try:
+                old_collection = client.get_collection(name=name)
+                if old_collection.count() == 0:
+                    migrated[name] = 0
+                    continue
 
-            doc_groups: dict[str, dict] = {}
-            for i, content in enumerate(raw_docs):
-                meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
-                doc_id = meta.get("doc_id", f"doc_{i}")
-                if doc_id not in doc_groups:
-                    doc_groups[doc_id] = {
-                        "chunks": [],
-                        "source": meta.get("source", ""),
-                        "doc_type": meta.get("doc_type", ""),
-                    }
-                doc_groups[doc_id]["chunks"].append(content)
+                all_data = old_collection.get(include=["documents", "metadatas"])
+                raw_docs = all_data.get("documents", [])
+                raw_metas = all_data.get("metadatas", [])
 
-            client.delete_collection(name)
-            _collections.pop(name, None)
+                doc_groups: dict[str, dict] = {}
+                for i, content in enumerate(raw_docs):
+                    meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
+                    doc_id = meta.get("doc_id", f"doc_{i}")
+                    if doc_id not in doc_groups:
+                        doc_groups[doc_id] = {
+                            "chunks": [],
+                            "source": meta.get("source", ""),
+                            "doc_type": meta.get("doc_type", ""),
+                        }
+                    doc_groups[doc_id]["chunks"].append(content)
 
-            new_collection = client.get_or_create_collection(
-                name=name,
-                metadata={"hnsw:space": "cosine"},
-                embedding_function=embed_fn,
-            )
-            _collections[name] = new_collection
+                client.delete_collection(name)
+                _collections.pop(name, None)
 
-            count = 0
-            for doc_id, group in doc_groups.items():
-                full_text = "\n\n".join(group["chunks"])
-                chunks = semantic_chunk(full_text, max_size=CHUNK_SIZE)
-                chunk_ids = [f"{doc_id}_chunk_{j}" for j in range(len(chunks))]
-                metas = [
-                    {
-                        "doc_id": doc_id,
-                        "chunk_index": j,
-                        "source": group["source"],
-                        "doc_type": group["doc_type"],
-                        "collection": name,
-                    }
-                    for j in range(len(chunks))
-                ]
-                if chunks:
-                    new_collection.add(documents=chunks, ids=chunk_ids, metadatas=metas)
-                    count += len(chunks)
+                new_collection = client.get_or_create_collection(
+                    name=name,
+                    metadata={"hnsw:space": "cosine"},
+                    embedding_function=embed_fn,
+                )
+                _collections[name] = new_collection
 
-            migrated[name] = count
-            _logger.info("集合 [%s] 迁移完成, %d 个分块", name, count)
+                count = 0
+                for doc_id, group in doc_groups.items():
+                    full_text = "\n\n".join(group["chunks"])
+                    chunks = semantic_chunk(full_text, max_size=CHUNK_SIZE)
+                    chunk_ids = [f"{doc_id}_chunk_{j}" for j in range(len(chunks))]
+                    metas = [
+                        {
+                            "doc_id": doc_id,
+                            "chunk_index": j,
+                            "source": group["source"],
+                            "doc_type": group["doc_type"],
+                            "collection": name,
+                        }
+                        for j in range(len(chunks))
+                    ]
+                    if chunks:
+                        new_collection.add(documents=chunks, ids=chunk_ids, metadatas=metas)
+                        count += len(chunks)
 
-        except Exception:
-            _logger.exception("集合 [%s] 迁移失败", name)
-            migrated[name] = -1
+                migrated[name] = count
+                _logger.info("集合 [%s] 迁移完成, %d 个分块", name, count)
 
-    return migrated
+            except Exception:
+                _logger.exception("集合 [%s] 迁移失败", name)
+                migrated[name] = -1
+
+        return migrated
+
+    return await asyncio.to_thread(_rebuild)
 
 
 async def get_collection_stats() -> dict:
     """获取所有集合的文档统计"""
-    stats = {}
-    for name in COLLECTION_NAMES:
-        try:
-            collection = _get_collection(name)
-            stats[name] = {"count": collection.count()}
-        except Exception:
-            stats[name] = {"count": 0}
-    return stats
+    def _get_stats():
+        stats = {}
+        for name in COLLECTION_NAMES:
+            try:
+                collection = _get_collection(name)
+                stats[name] = {"count": collection.count()}
+            except Exception:
+                stats[name] = {"count": 0}
+        return stats
+
+    return await asyncio.to_thread(_get_stats)
 
 
 async def list_documents(
@@ -288,51 +317,55 @@ async def list_documents(
 ) -> dict:
     """分页浏览指定集合的文档，按 doc_id 聚合"""
     collection = _get_collection(collection_name)
-    total = collection.count()
-    if total == 0:
-        return {"total": 0, "page": page, "page_size": page_size, "documents": []}
 
-    results = collection.get(include=["documents", "metadatas"])
-    raw_docs = results.get("documents", [])
-    raw_metas = results.get("metadatas", [])
-    raw_ids = results.get("ids", [])
+    def _list():
+        total = collection.count()
+        if total == 0:
+            return {"total": 0, "page": page, "page_size": page_size, "documents": []}
 
-    doc_groups: dict[str, dict] = {}
-    for i, chunk_id in enumerate(raw_ids):
-        meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
-        doc_id = meta.get("doc_id", chunk_id)
-        dtype = meta.get("doc_type", "")
-        source = meta.get("source", "")
+        results = collection.get(include=["documents", "metadatas"])
+        raw_docs = results.get("documents", [])
+        raw_metas = results.get("metadatas", [])
+        raw_ids = results.get("ids", [])
 
-        if doc_type and dtype != doc_type:
-            continue
+        doc_groups: dict[str, dict] = {}
+        for i, chunk_id in enumerate(raw_ids):
+            meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
+            doc_id = meta.get("doc_id", chunk_id)
+            dtype = meta.get("doc_type", "")
+            source = meta.get("source", "")
 
-        if doc_id not in doc_groups:
-            doc_groups[doc_id] = {
-                "doc_id": doc_id,
-                "source": source,
-                "doc_type": dtype,
-                "chunk_count": 0,
-                "preview": "",
-            }
-        doc_groups[doc_id]["chunk_count"] += 1
-        content = raw_docs[i] if i < len(raw_docs) else ""
-        if not doc_groups[doc_id]["preview"] and content:
-            doc_groups[doc_id]["preview"] = content[:200]
+            if doc_type and dtype != doc_type:
+                continue
 
-    all_docs = list(doc_groups.values())
-    all_docs.sort(key=lambda x: x.get("doc_id", ""))
+            if doc_id not in doc_groups:
+                doc_groups[doc_id] = {
+                    "doc_id": doc_id,
+                    "source": source,
+                    "doc_type": dtype,
+                    "chunk_count": 0,
+                    "preview": "",
+                }
+            doc_groups[doc_id]["chunk_count"] += 1
+            content = raw_docs[i] if i < len(raw_docs) else ""
+            if not doc_groups[doc_id]["preview"] and content:
+                doc_groups[doc_id]["preview"] = content[:200]
 
-    start = (page - 1) * page_size
-    end = start + page_size
-    paged = all_docs[start:end]
+        all_docs = list(doc_groups.values())
+        all_docs.sort(key=lambda x: x.get("doc_id", ""))
 
-    return {
-        "total": len(all_docs),
-        "page": page,
-        "page_size": page_size,
-        "documents": paged,
-    }
+        start = (page - 1) * page_size
+        end = start + page_size
+        paged = all_docs[start:end]
+
+        return {
+            "total": len(all_docs),
+            "page": page,
+            "page_size": page_size,
+            "documents": paged,
+        }
+
+    return await asyncio.to_thread(_list)
 
 
 async def get_document_chunks(
@@ -342,25 +375,28 @@ async def get_document_chunks(
     """获取指定文档的所有分块内容"""
     collection = _get_collection(collection_name)
 
-    results = collection.get(
-        where={"doc_id": doc_id},
-        include=["documents", "metadatas"],
-    )
+    def _get_chunks():
+        results = collection.get(
+            where={"doc_id": doc_id},
+            include=["documents", "metadatas"],
+        )
 
-    chunks = []
-    raw_docs = results.get("documents", [])
-    raw_metas = results.get("metadatas", [])
-    for i, content in enumerate(raw_docs):
-        meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
-        chunks.append({
-            "chunk_index": meta.get("chunk_index", i),
-            "content": content,
-            "source": meta.get("source", ""),
-            "doc_type": meta.get("doc_type", ""),
-        })
+        chunks = []
+        raw_docs = results.get("documents", [])
+        raw_metas = results.get("metadatas", [])
+        for i, content in enumerate(raw_docs):
+            meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
+            chunks.append({
+                "chunk_index": meta.get("chunk_index", i),
+                "content": content,
+                "source": meta.get("source", ""),
+                "doc_type": meta.get("doc_type", ""),
+            })
 
-    chunks.sort(key=lambda x: x["chunk_index"])
-    return chunks
+        chunks.sort(key=lambda x: x["chunk_index"])
+        return chunks
+
+    return await asyncio.to_thread(_get_chunks)
 
 
 def _parse_query_results(results: dict, collection_name: str) -> list[dict]:
@@ -387,9 +423,18 @@ def _parse_query_results(results: dict, collection_name: str) -> list[dict]:
 
 
 def _extract_keywords(query: str) -> list[str]:
-    """从查询中提取关键词（简单分词：按标点和空格切分，过滤短词）"""
-    segments = re.split(r"[，。！？、；：\s]+", query)
-    return [s.strip() for s in segments if len(s.strip()) >= 2]
+    """从查询中提取关键词（jieba 分词，过滤停用词和短词）"""
+    import jieba
+    _STOP_WORDS = {
+        "的", "了", "是", "在", "我", "有", "和", "就", "不", "人", "都", "一", "一个",
+        "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好",
+        "自己", "这", "他", "她", "它", "们", "那", "些", "什么", "怎么", "如何", "可以",
+        "能", "把", "被", "让", "给", "对", "从", "以", "而", "但", "还", "与", "或",
+        "如果", "因为", "所以", "虽然", "但是", "然后", "这个", "那个", "这些", "那些",
+        "请", "帮", "想", "需要", "帮我", "一下", "一些",
+    }
+    words = jieba.lcut(query)
+    return [w.strip() for w in words if len(w.strip()) >= 2 and w.strip() not in _STOP_WORDS]
 
 
 def _do_keyword_search(
@@ -415,24 +460,39 @@ def _do_keyword_search(
     return None
 
 
+def _cosine_similarity(a: list[float], b: list[float]) -> float:
+    """计算两个向量的余弦相似度"""
+    import math
+    dot_product = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(x * x for x in b))
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot_product / (norm_a * norm_b)
+
+
 def _rrf_merge(
     vec_results: dict,
     kw_results: dict,
     top_k: int,
     k: int = 60,
+    similarity_threshold: float = 0.95,
 ) -> list[dict]:
-    """Reciprocal Rank Fusion 融合向量检索和关键词检索结果"""
+    """Reciprocal Rank Fusion 融合向量检索和关键词检索结果，用 embedding 余弦相似度去重"""
     scores: dict[str, float] = {}
     doc_map: dict[str, dict] = {}
+    doc_embeddings: dict[str, list[float]] = {}
 
     vec_docs = vec_results.get("documents", [[]])
     vec_metas = vec_results.get("metadatas", [[]])
     vec_dists = vec_results.get("distances", [[]])
+    vec_embeds = vec_results.get("embeddings", [[]])
 
     for rank in range(len(vec_docs[0])):
         doc = vec_docs[0][rank]
         meta = vec_metas[0][rank] if vec_metas and vec_metas[0] and rank < len(vec_metas[0]) else {}
         dist = vec_dists[0][rank] if vec_dists and vec_dists[0] and rank < len(vec_dists[0]) else 0.0
+        embed = vec_embeds[0][rank] if vec_embeds and vec_embeds[0] and rank < len(vec_embeds[0]) else []
         uid = f"vec_{meta.get('doc_id', '')}_{rank}"
         scores[uid] = scores.get(uid, 0) + 1.0 / (k + rank + 1)
         doc_map[uid] = {
@@ -442,21 +502,32 @@ def _rrf_merge(
             "collection": meta.get("collection", ""),
             "distance": dist,
         }
+        if embed:
+            doc_embeddings[uid] = embed
 
     kw_docs = kw_results.get("documents", [[]])
     kw_metas = kw_results.get("metadatas", [[]])
     kw_dists = kw_results.get("distances", [[]])
 
+    # 获取关键词结果的 embedding
+    kw_embed_fn = _get_embedding_function()
+    kw_contents = [kw_docs[0][i] for i in range(len(kw_docs[0]))] if kw_docs and kw_docs[0] else []
+    kw_embeds = kw_embed_fn(kw_contents) if kw_contents else []
+
     for rank in range(len(kw_docs[0])):
         doc = kw_docs[0][rank]
         meta = kw_metas[0][rank] if kw_metas and kw_metas[0] and rank < len(kw_metas[0]) else {}
         dist = kw_dists[0][rank] if kw_dists and kw_dists[0] and rank < len(kw_dists[0]) else 0.0
-        content_key = doc[:80]
+        kw_embed = kw_embeds[rank] if rank < len(kw_embeds) else []
+
+        # 用 embedding 余弦相似度查找重复文档
         existing_uid = None
-        for uid, info in doc_map.items():
-            if info["content"][:80] == content_key:
-                existing_uid = uid
-                break
+        if kw_embed:
+            for uid, vec_embed in doc_embeddings.items():
+                sim = _cosine_similarity(kw_embed, vec_embed)
+                if sim >= similarity_threshold:
+                    existing_uid = uid
+                    break
 
         if existing_uid:
             scores[existing_uid] += 1.0 / (k + rank + 1)
@@ -470,6 +541,8 @@ def _rrf_merge(
                 "collection": meta.get("collection", ""),
                 "distance": dist,
             }
+            if kw_embed:
+                doc_embeddings[uid] = kw_embed
 
     ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [doc_map[uid] for uid, _ in ranked[:top_k]]
