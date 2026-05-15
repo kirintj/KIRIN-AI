@@ -8,4 +8,6 @@ export default {
   getUserMenu: () => request.get('/base/usermenu'),
   getUserApi: () => request.get('/base/userapi'),
   updatePassword: (data = {}) => request.post('/base/update_password', data),
+  getCaptcha: () => request.get('/base/captcha/get', { noNeedToken: true }),
+  verifyCaptcha: (data) => request.post('/base/captcha/verify', data, { noNeedToken: true }),
 }
