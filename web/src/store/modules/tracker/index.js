@@ -4,7 +4,6 @@ import api from '@/api'
 
 export const useTrackerStore = defineStore('tracker', () => {
   const applications = ref([])
-  const stats = ref(null)
   const isLoading = ref(false)
   const viewMode = ref('kanban')
   const searchKeyword = ref('')
@@ -27,6 +26,18 @@ export const useTrackerStore = defineStore('tracker', () => {
     rejected: '#E84026',
   }
 
+  const stats = computed(() => {
+    const byStatus = {}
+    for (const s of STATUS_LIST) byStatus[s] = 0
+    for (const app of applications.value) {
+      if (byStatus[app.status] !== undefined) byStatus[app.status]++
+    }
+    return {
+      total: applications.value.length,
+      by_status: byStatus,
+    }
+  })
+
   const loadApplications = async (status = null) => {
     isLoading.value = true
     try {
@@ -41,21 +52,11 @@ export const useTrackerStore = defineStore('tracker', () => {
     }
   }
 
-  const loadStats = async () => {
-    try {
-      const res = await api.getTrackerStats()
-      stats.value = res.data || null
-    } catch (error) {
-      console.error('加载统计数据失败', error)
-    }
-  }
-
   const createApplication = async (data) => {
     try {
       const res = await api.createTrackerApplication(data)
       const app = res.data
       applications.value.unshift(app)
-      await loadStats()
       return app
     } catch (error) {
       console.error('创建求职记录失败', error)
@@ -68,7 +69,6 @@ export const useTrackerStore = defineStore('tracker', () => {
       await api.updateTrackerApplication({ app_id: appId, ...updates })
       const app = applications.value.find((a) => a.id === appId)
       if (app) Object.assign(app, updates, { updated_at: new Date().toISOString() })
-      await loadStats()
       return true
     } catch (error) {
       console.error('更新求职记录失败', error)
@@ -84,7 +84,6 @@ export const useTrackerStore = defineStore('tracker', () => {
         app.status = newStatus
         app.updated_at = new Date().toISOString()
       }
-      await loadStats()
       return true
     } catch (error) {
       console.error('移动求职记录失败', error)
@@ -96,7 +95,6 @@ export const useTrackerStore = defineStore('tracker', () => {
     try {
       await api.deleteTrackerApplication({ app_id: appId })
       applications.value = applications.value.filter((a) => a.id !== appId)
-      await loadStats()
       return true
     } catch (error) {
       console.error('删除求职记录失败', error)
@@ -133,7 +131,6 @@ export const useTrackerStore = defineStore('tracker', () => {
     STATUS_LABELS,
     STATUS_COLORS,
     loadApplications,
-    loadStats,
     createApplication,
     updateApplication,
     moveApplication,

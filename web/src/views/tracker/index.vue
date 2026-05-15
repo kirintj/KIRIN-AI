@@ -43,7 +43,6 @@ const maxChartValue = computed(() => {
 
 onMounted(async () => {
   await store.loadApplications()
-  await store.loadStats()
 })
 </script>
 

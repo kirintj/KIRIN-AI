@@ -13,8 +13,8 @@ def _get_sync_client() -> OpenAI:
     global _sync_client
     if _sync_client is None:
         _sync_client = OpenAI(
-            api_key=settings.API_KEY,
-            base_url=settings.BASE_URL,
+            api_key=settings.EMBEDDING_API_KEY,
+            base_url=settings.EMBEDDING_BASE_URL,
         )
     return _sync_client
 
@@ -23,8 +23,8 @@ def _get_async_client() -> AsyncOpenAI:
     global _async_client
     if _async_client is None:
         _async_client = AsyncOpenAI(
-            api_key=settings.API_KEY,
-            base_url=settings.BASE_URL,
+            api_key=settings.EMBEDDING_API_KEY,
+            base_url=settings.EMBEDDING_BASE_URL,
             timeout=httpx.Timeout(60.0, connect=10.0),
         )
     return _async_client

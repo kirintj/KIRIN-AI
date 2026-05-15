@@ -23,7 +23,9 @@ class Settings:
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "2000"))
     TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.7"))
 
-    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-v3")
+    EMBEDDING_BASE_URL: str = os.getenv("EMBEDDING_BASE_URL", "http://localhost:11434/v1")
+    EMBEDDING_API_KEY: str = os.getenv("EMBEDDING_API_KEY", "ollama")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "bge-m3")
     EMBEDDING_DIMENSION: int = int(os.getenv("EMBEDDING_DIMENSION", "1024"))
     EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "6"))
 
