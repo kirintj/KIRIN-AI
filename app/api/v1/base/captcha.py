@@ -15,7 +15,7 @@ async def get_captcha():
 
 @router.post("/captcha/verify", summary="验证滑块验证码")
 async def verify_captcha_api(req_in: CaptchaVerifyIn):
-    verified = await verify_captcha(req_in.captcha_id, req_in.x, req_in.y)
+    verified = await verify_captcha(req_in.captcha_id, req_in.x)
     if not verified:
         return Fail(code=400, msg="验证码错误或已过期")
     return Success(data={"verified": True})

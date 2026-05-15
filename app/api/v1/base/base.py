@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 async def login_access_token(credentials: CredentialsSchema):
     from app.core.captcha import verify_captcha
 
-    verified = await verify_captcha(credentials.captcha_id, credentials.x, 0)
+    verified = await verify_captcha(credentials.captcha_id, credentials.x)
     if not verified:
         return Fail(code=400, msg="验证码错误或已过期")
 

@@ -39,17 +39,6 @@
               </template>
             </n-input>
           </div>
-          <div class="hm-captcha-group">
-            <SliderCaptcha
-              v-if="captchaData"
-              :bg="captchaData.bg_image"
-              :slider="captchaData.slider_image"
-              :y="captchaData.y_offset"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-              @refresh="refreshCaptcha"
-            />
-          </div>
           <n-button
             class="hm-btn-primary"
             :loading="loading"
@@ -130,6 +119,31 @@
         </template>
       </div>
     </div>
+
+    <!-- Captcha Modal -->
+    <n-modal
+      v-model:show="showCaptcha"
+      :mask-closable="false"
+      :close-on-esc="false"
+      :auto-focus="false"
+      preset="card"
+      title="请完成安全验证"
+      class="hm-captcha-modal"
+      :bordered="false"
+      :segmented="{ content: true, footer: true }"
+    >
+      <div class="hm-captcha-wrapper">
+        <SlideVerify
+          v-if="captchaData"
+          :offset="captchaData.x"
+          :w="310"
+          :h="155"
+          @success="onCaptchaSuccess"
+          @fail="onCaptchaFail"
+          @refresh="refreshCaptcha"
+        />
+      </div>
+    </n-modal>
   </AppPage>
 </template>
 
@@ -139,7 +153,8 @@ import api from '@/api'
 import { addDynamicRoutes } from '@/router'
 import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
-import SliderCaptcha from '@/components/SliderCaptcha.vue'
+import SlideVerify from 'vue3-slide-verify'
+import 'vue3-slide-verify/dist/style.css'
 
 const router = useRouter()
 const { query } = useRoute()
@@ -147,6 +162,7 @@ const { t } = useI18n({ useScope: 'global' })
 
 const isRegister = ref(false)
 const loading = ref(false)
+const showCaptcha = ref(false)
 
 const loginInfo = ref({
   username: '',
@@ -161,8 +177,6 @@ const registerInfo = ref({
 })
 
 const captchaData = ref(null)
-const captchaVerified = ref(false)
-const captchaToken = ref({ captcha_id: '', x: 0 })
 
 initLoginInfo()
 fetchCaptcha()
@@ -178,21 +192,19 @@ async function fetchCaptcha() {
   try {
     const res = await api.getCaptcha()
     captchaData.value = res.data
-    captchaVerified.value = false
-    captchaToken.value = { captcha_id: '', x: 0 }
   } catch (e) {
     console.error('fetch captcha error', e)
   }
 }
 
-function onCaptchaSuccess({ x }) {
-  captchaVerified.value = true
-  captchaToken.value = { captcha_id: captchaData.value.captcha_id, x }
+function onCaptchaSuccess({ left }) {
+  showCaptcha.value = false
+  doLogin(captchaData.value.captcha_id, Math.round(left))
 }
 
 function onCaptchaFail() {
-  captchaVerified.value = false
-  $message.warning('验证码校验失败，请重试')
+  $message.warning('验证失败，请重试')
+  fetchCaptcha()
 }
 
 function refreshCaptcha() {
@@ -215,18 +227,24 @@ async function handleLogin() {
     $message.warning(t('views.login.message_input_username_password'))
     return
   }
-  if (!captchaVerified.value) {
-    $message.warning('请完成滑块验证')
+  if (!captchaData.value) {
+    $message.warning('验证码加载中，请稍后')
+    fetchCaptcha()
     return
   }
+  showCaptcha.value = true
+}
+
+async function doLogin(captcha_id, x) {
+  const { username, password } = loginInfo.value
   try {
     loading.value = true
     $message.loading(t('views.login.message_verifying'))
     const res = await api.login({
       username,
       password: password.toString(),
-      captcha_id: captchaToken.value.captcha_id,
-      x: captchaToken.value.x,
+      captcha_id,
+      x,
     })
     $message.success(t('views.login.message_login_success'))
     setToken(res.data.access_token)
@@ -241,7 +259,7 @@ async function handleLogin() {
     }
   } catch (e) {
     console.error('login error', e.error)
-    refreshCaptcha()
+    fetchCaptcha()
   }
   loading.value = false
 }
@@ -341,12 +359,6 @@ async function handleRegister() {
   margin-bottom: 16px;
 }
 
-.hm-captcha-group {
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: center;
-}
-
 .hm-input {
   height: 44px;
   border-radius: var(--hm-radius-lg);
@@ -395,6 +407,16 @@ async function handleRegister() {
   transform: translateY(-1px);
 }
 
+.hm-captcha-modal {
+  width: 380px;
+}
+
+.hm-captcha-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
 @media (max-width: 768px) {
   .hm-login-card {
     width: calc(100% - 32px);
@@ -427,6 +449,9 @@ async function handleRegister() {
   .hm-btn-primary {
     height: 40px;
     font-size: 15px;
+  }
+  .hm-captcha-modal {
+    width: calc(100% - 32px);
   }
 }
 </style>
