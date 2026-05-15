@@ -40,7 +40,7 @@
             </n-input>
           </div>
           <div class="hm-captcha-group">
-            <SlideVerify
+            <SliderCaptcha
               v-if="captchaData"
               :bg="captchaData.bg_image"
               :slider="captchaData.slider_image"
@@ -139,8 +139,7 @@ import api from '@/api'
 import { addDynamicRoutes } from '@/router'
 import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
-import SlideVerify from 'vue3-slide-verify'
-import 'vue3-slide-verify/dist/style.css'
+import SliderCaptcha from '@/components/SliderCaptcha.vue'
 
 const router = useRouter()
 const { query } = useRoute()
