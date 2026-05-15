@@ -7,7 +7,9 @@ import KanbanView from './components/KanbanView.vue'
 import ListView from './components/ListView.vue'
 import TimelineView from './components/TimelineView.vue'
 import TrackerModal from './components/TrackerModal.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const store = useTrackerStore()
 
 const {
@@ -22,11 +24,11 @@ const {
   handleEdit,
 } = useTrackerForm()
 
-const viewModes = [
-  { key: 'kanban', label: '看板', icon: 'icon-park-outline:sequence' },
-  { key: 'list', label: '列表', icon: 'icon-park-outline:list' },
-  { key: 'timeline', label: '时间线', icon: 'icon-park-outline:time' },
-]
+const viewModes = computed(() => [
+  { key: 'kanban', label: t('views.tracker.view_kanban'), icon: 'icon-park-outline:sequence' },
+  { key: 'list', label: t('views.tracker.view_list'), icon: 'icon-park-outline:list' },
+  { key: 'timeline', label: t('views.tracker.view_timeline'), icon: 'icon-park-outline:time' },
+])
 
 const statusChartData = computed(() => {
   if (!store.stats) return []
@@ -50,10 +52,10 @@ onMounted(async () => {
   <div class="hm-tracker-layout">
     <div class="hm-sidebar">
       <div class="hm-sidebar-header">
-        <span class="hm-sidebar-title">求职进度</span>
+        <span class="hm-sidebar-title">{{ t('views.tracker.page_title') }}</span>
         <button class="hm-sidebar-new-btn" @click="showAddModal = true">
           <TheIcon icon="icon-park-outline:plus" :size="14" />
-          添加
+          {{ t('views.tracker.btn_add') }}
         </button>
       </div>
 
@@ -69,7 +71,7 @@ onMounted(async () => {
           <span class="hm-tracker-stat-count">{{ store.stats.by_status[status] || 0 }}</span>
         </div>
         <div class="hm-tracker-stat-chip total">
-          <span class="hm-tracker-stat-label">合计</span>
+          <span class="hm-tracker-stat-label">{{ t('views.tracker.stat_total') }}</span>
           <span class="hm-tracker-stat-count">{{ store.stats.total }}</span>
         </div>
       </div>
@@ -100,7 +102,7 @@ onMounted(async () => {
             <input
               v-model="store.searchKeyword"
               class="hm-search-input"
-              placeholder="搜索公司/职位..."
+              :placeholder="t('views.tracker.search_placeholder')"
             />
           </div>
         </div>

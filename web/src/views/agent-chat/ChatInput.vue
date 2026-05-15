@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import TheIcon from '@/components/icon/TheIcon.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: string
@@ -13,10 +16,10 @@ const emit = defineEmits<{
 }>()
 
 const quickChips = [
-  { label: '面试', text: '帮我准备面试' },
-  { label: '薪资', text: '薪资谈判建议' },
-  { label: '攻略', text: '求职攻略' },
-  { label: '待办', text: '帮我创建一个待办' },
+  { label: t('views.agent_chat.cmd_interview'), text: t('views.agent_chat.cmd_interview_text') },
+  { label: t('views.agent_chat.cmd_salary'), text: t('views.agent_chat.cmd_salary_text') },
+  { label: t('views.agent_chat.cmd_guide'), text: t('views.agent_chat.cmd_guide_text') },
+  { label: t('views.agent_chat.cmd_todo'), text: t('views.agent_chat.cmd_todo_text') },
 ]
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -33,7 +36,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       <textarea
         :value="modelValue"
         class="hm-textarea"
-        placeholder="输入消息，Agent 自动识别意图..."
+        :placeholder="t('views.agent_chat.input_placeholder')"
         rows="2"
         @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         @keydown="handleKeydown"

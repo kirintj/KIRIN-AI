@@ -30,6 +30,18 @@ def _get_async_client() -> AsyncOpenAI:
     return _async_client
 
 
+async def _get_embedding_config() -> tuple[str, int, int]:
+    """从 DB 缓存读取 embedding 配置，返回 (model, dimension, batch_size)"""
+    try:
+        from app.services.config import get_cached_ai_config
+        cfg = await get_cached_ai_config()
+        model = cfg.get("embedding_model") or settings.EMBEDDING_MODEL
+        dimension = int(cfg.get("embedding_dimension") or settings.EMBEDDING_DIMENSION)
+        return model, dimension, settings.EMBEDDING_BATCH_SIZE
+    except Exception:
+        return settings.EMBEDDING_MODEL, settings.EMBEDDING_DIMENSION, settings.EMBEDDING_BATCH_SIZE
+
+
 class DashScopeEmbeddingFunction:
     """DashScope 向量模型封装，兼容 ChromaDB EmbeddingFunction 协议"""
 
@@ -80,9 +92,14 @@ async def async_get_embeddings(
     dimension: int | None = None,
 ) -> list[list[float]]:
     """异步获取向量，复用全局 AsyncOpenAI 客户端"""
-    _model = model or settings.EMBEDDING_MODEL
-    _dimension = dimension or settings.EMBEDDING_DIMENSION
-    batch_size = settings.EMBEDDING_BATCH_SIZE
+    if model is None or dimension is None:
+        db_model, db_dimension, batch_size = await _get_embedding_config()
+        _model = model or db_model
+        _dimension = dimension or db_dimension
+    else:
+        _model = model
+        _dimension = dimension
+        batch_size = settings.EMBEDDING_BATCH_SIZE
 
     client = _get_async_client()
 

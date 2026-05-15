@@ -1,5 +1,8 @@
 import { ref, computed } from 'vue'
 import { useTrackerStore } from '@/store/modules/tracker'
+import i18n from '~/i18n'
+
+const t = i18n.global.t
 
 const DEFAULT_FORM = {
   company: '',
@@ -12,18 +15,18 @@ const DEFAULT_FORM = {
   contact: '',
 }
 
-const SOURCE_OPTIONS = [
-  { label: 'Boss直聘', value: 'Boss直聘' },
-  { label: '拉勾', value: '拉勾' },
-  { label: '猎聘', value: '猎聘' },
-  { label: '智联招聘', value: '智联招聘' },
-  { label: '内推', value: '内推' },
-  { label: '官网', value: '官网' },
-  { label: '其他', value: '其他' },
-]
-
 export function useTrackerForm() {
   const store = useTrackerStore()
+
+  const sourceOptions = computed(() => [
+    { label: t('views.tracker.source_boss'), value: 'Boss直聘' },
+    { label: t('views.tracker.source_lagou'), value: '拉勾' },
+    { label: t('views.tracker.source_liepin'), value: '猎聘' },
+    { label: t('views.tracker.source_zhilian'), value: '智联招聘' },
+    { label: t('views.tracker.source_referral'), value: '内推' },
+    { label: t('views.tracker.source_official'), value: '官网' },
+    { label: t('views.tracker.source_other'), value: '其他' },
+  ])
 
   const showAddModal = ref(false)
   const showEditModal = ref(false)
@@ -63,7 +66,7 @@ export function useTrackerForm() {
     editingApp,
     addForm,
     statusOptions,
-    sourceOptions: SOURCE_OPTIONS,
+    sourceOptions,
     resetAddForm,
     handleAdd,
     openEdit,

@@ -1,41 +1,40 @@
 import { isNullOrWhitespace } from '@/utils'
+import i18n from '~/i18n'
+
+const t = i18n.global.t
 
 const ACTIONS = {
-  view: '查看',
-  edit: '编辑',
-  add: '新增',
+  view: () => t('common.actions.view'),
+  edit: () => t('common.actions.edit'),
+  add: () => t('common.actions.add'),
 }
 
 export default function ({ name, initForm = {}, doCreate, doDelete, doUpdate, refresh }) {
   const modalVisible = ref(false)
   const modalAction = ref('')
-  const modalTitle = computed(() => ACTIONS[modalAction.value] + name)
+  const modalTitle = computed(() => (ACTIONS[modalAction.value]?.() ?? '') + name)
   const modalLoading = ref(false)
   const modalFormRef = ref(null)
   const modalForm = ref({ ...initForm })
 
-  /** 新增 */
   function handleAdd() {
     modalAction.value = 'add'
     modalVisible.value = true
     modalForm.value = { ...initForm }
   }
 
-  /** 修改 */
   function handleEdit(row) {
     modalAction.value = 'edit'
     modalVisible.value = true
     modalForm.value = { ...row }
   }
 
-  /** 查看 */
   function handleView(row) {
     modalAction.value = 'view'
     modalVisible.value = true
     modalForm.value = { ...row }
   }
 
-  /** 保存 */
   function handleSave(...callbacks) {
     if (!['edit', 'add'].includes(modalAction.value)) {
       modalVisible.value = false
@@ -49,14 +48,14 @@ export default function ({ name, initForm = {}, doCreate, doDelete, doUpdate, re
           cb: () => {
             callbacks.forEach((callback) => callback && callback())
           },
-          msg: () => $message.success('新增成功'),
+          msg: () => $message.success(t('common.messages.create_success')),
         },
         edit: {
           api: () => doUpdate(modalForm.value),
           cb: () => {
             callbacks.forEach((callback) => callback && callback())
           },
-          msg: () => $message.success('编辑成功'),
+          msg: () => $message.success(t('common.messages.edit_success')),
         },
       }
       const action = actions[modalAction.value]
@@ -74,13 +73,12 @@ export default function ({ name, initForm = {}, doCreate, doDelete, doUpdate, re
     })
   }
 
-  /** 删除 */
   async function handleDelete(params = {}) {
     if (isNullOrWhitespace(params)) return
     try {
       modalLoading.value = true
       const data = await doDelete(params)
-      $message.success('删除成功')
+      $message.success(t('common.messages.delete_success'))
       modalLoading.value = false
       refresh(data)
     } catch (error) {

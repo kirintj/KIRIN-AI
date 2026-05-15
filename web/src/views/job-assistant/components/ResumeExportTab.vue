@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import api from '@/api'
 import { formatShortDate } from '@/utils/common/time'
+
+const { t } = useI18n()
 
 const emit = defineEmits(['feedback'])
 
@@ -19,7 +22,7 @@ const loadTemplates = async () => {
     const res = await api.getResumeTemplates()
     templates.value = res.data || {}
   } catch (error) {
-    console.error('加载模板失败', error)
+    console.error('Failed to load templates', error)
   }
 }
 
@@ -28,13 +31,13 @@ const loadExports = async () => {
     const res = await api.getResumeExports()
     exportList.value = res.data || []
   } catch (error) {
-    console.error('加载导出列表失败', error)
+    console.error('Failed to load exports', error)
   }
 }
 
 const generateResume = async () => {
   if (!resumeInput.value.trim()) {
-    window.$message?.warning('请先输入个人信息')
+    window.$message?.warning(t('views.job_assistant.msg_enter_info'))
     return
   }
   isGenerating.value = true
@@ -44,9 +47,9 @@ const generateResume = async () => {
       template: selectedTemplate.value,
     })
     resumeData.value = res.data
-    window.$message?.success('简历数据生成成功')
+    window.$message?.success(t('views.job_assistant.msg_resume_generated'))
   } catch (error) {
-    window.$message?.error('生成简历数据失败')
+    window.$message?.error(t('views.job_assistant.msg_resume_failed'))
   } finally {
     isGenerating.value = false
   }
@@ -54,7 +57,7 @@ const generateResume = async () => {
 
 const exportDocx = async () => {
   if (!resumeData.value) {
-    window.$message?.warning('请先生成简历数据')
+    window.$message?.warning(t('views.job_assistant.msg_generate_first'))
     return
   }
   isExporting.value = true
@@ -72,10 +75,10 @@ const exportDocx = async () => {
     link.download = `${resumeData.value.name || 'resume'}.docx`
     link.click()
     window.URL.revokeObjectURL(url)
-    window.$message?.success('DOCX 导出成功')
+    window.$message?.success(t('views.job_assistant.msg_docx_success'))
     loadExports()
   } catch (error) {
-    window.$message?.error('导出 DOCX 失败')
+    window.$message?.error(t('views.job_assistant.msg_docx_failed'))
   } finally {
     isExporting.value = false
   }
@@ -83,7 +86,7 @@ const exportDocx = async () => {
 
 const exportText = async () => {
   if (!resumeData.value) {
-    window.$message?.warning('请先生成简历数据')
+    window.$message?.warning(t('views.job_assistant.msg_generate_first'))
     return
   }
   try {
@@ -96,9 +99,9 @@ const exportText = async () => {
     link.download = `${resumeData.value.name || 'resume'}.md`
     link.click()
     window.URL.revokeObjectURL(url)
-    window.$message?.success('Markdown 导出成功')
+    window.$message?.success(t('views.job_assistant.msg_markdown_success'))
   } catch (error) {
-    window.$message?.error('导出文本失败')
+    window.$message?.error(t('views.job_assistant.msg_text_failed'))
   }
 }
 
@@ -115,7 +118,7 @@ const downloadFile = async (filename: string) => {
     link.click()
     window.URL.revokeObjectURL(url)
   } catch (error) {
-    window.$message?.error('下载失败')
+    window.$message?.error(t('views.job_assistant.msg_download_failed'))
   }
 }
 
@@ -137,12 +140,12 @@ onMounted(() => {
         <div class="hm-ex-section-icon" style="background: rgba(10,89,247,0.08)">
           <TheIcon icon="icon-park-outline:edit-name" :size="18" color="#0A59F7" />
         </div>
-        <span class="hm-ex-section-title">输入个人信息</span>
+        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_input_info') }}</span>
       </div>
       <textarea
         v-model="resumeInput"
         class="hm-ex-textarea"
-        placeholder="请输入你的个人信息，如：&#10;姓名：张三&#10;电话：138xxxx&#10;邮箱：xxx@xx.com&#10;求职意向：Python开发工程师&#10;技能：Python, FastAPI, Vue&#10;工作经历：XX公司 - 后端开发 - 2022-2024&#10;教育背景：XX大学 - 计算机科学 - 本科 - 2018-2022"
+        :placeholder="t('views.job_assistant.export_info_placeholder')"
         :disabled="isGenerating"
       ></textarea>
     </div>
@@ -152,7 +155,7 @@ onMounted(() => {
         <div class="hm-ex-section-icon" style="background: rgba(114,46,209,0.08)">
           <TheIcon icon="icon-park-outline:template" :size="18" color="#722ED1" />
         </div>
-        <span class="hm-ex-section-title">选择模板</span>
+        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_select_template') }}</span>
       </div>
       <div class="hm-ex-templates">
         <button
@@ -174,7 +177,7 @@ onMounted(() => {
       >
         <TheIcon v-if="isGenerating" icon="icon-park-outline:loading" :size="16" color="#fff" />
         <TheIcon v-else icon="icon-park-outline:magic" :size="16" color="#fff" />
-        {{ isGenerating ? '生成中...' : 'AI 生成简历' }}
+        {{ isGenerating ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_resume') }}
       </button>
     </div>
 
@@ -183,11 +186,11 @@ onMounted(() => {
         <div class="hm-ex-section-icon" style="background: rgba(100,187,92,0.08)">
           <TheIcon icon="icon-park-outline:preview-open" :size="18" color="#64BB5C" />
         </div>
-        <span class="hm-ex-section-title">简历预览</span>
+        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_preview') }}</span>
       </div>
       <div class="hm-ex-preview">
         <div class="hm-ex-preview-header">
-          <h3 class="hm-ex-preview-name">{{ resumeData.name || '未命名' }}</h3>
+          <h3 class="hm-ex-preview-name">{{ resumeData.name || t('views.job_assistant.unnamed') }}</h3>
           <span v-if="resumeData.title" class="hm-ex-preview-title">{{ resumeData.title }}</span>
         </div>
         <div v-if="resumeData.phone || resumeData.email" class="hm-ex-preview-contact">
@@ -196,17 +199,17 @@ onMounted(() => {
           <span v-if="resumeData.email">{{ resumeData.email }}</span>
         </div>
         <div v-if="resumeData.summary" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">个人简介</div>
+          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_summary') }}</div>
           <p class="hm-ex-preview-text">{{ resumeData.summary }}</p>
         </div>
         <div v-if="resumeData.skills?.length" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">专业技能</div>
+          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_skills') }}</div>
           <div class="hm-ex-preview-tags">
             <span v-for="skill in resumeData.skills" :key="skill" class="hm-ex-tag">{{ skill }}</span>
           </div>
         </div>
         <div v-if="resumeData.experience?.length" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">工作经历</div>
+          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_experience') }}</div>
           <div v-for="(exp, i) in resumeData.experience" :key="i" class="hm-ex-preview-item">
             <div class="hm-ex-preview-item-header">
               <span class="hm-ex-preview-item-title">{{ exp.company }} - {{ exp.position }}</span>
@@ -216,7 +219,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="resumeData.education?.length" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">教育背景</div>
+          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_education') }}</div>
           <div v-for="(edu, i) in resumeData.education" :key="i" class="hm-ex-preview-item">
             <span>{{ edu.school }} | {{ edu.major }} | {{ edu.degree }} <span v-if="edu.period">({{ edu.period }})</span></span>
           </div>
@@ -226,11 +229,11 @@ onMounted(() => {
       <div class="hm-ex-export-actions">
         <button class="hm-ex-btn" :disabled="isExporting" @click="exportDocx">
           <TheIcon icon="icon-park-outline:doc-detail" :size="16" />
-          {{ isExporting ? '导出中...' : '导出 DOCX' }}
+          {{ isExporting ? t('views.job_assistant.btn_exporting') : t('views.job_assistant.btn_export_docx') }}
         </button>
         <button class="hm-ex-btn" @click="exportText">
           <TheIcon icon="icon-park-outline:file-text" :size="16" />
-          导出 Markdown
+          {{ t('views.job_assistant.btn_export_markdown') }}
         </button>
       </div>
     </div>
@@ -240,7 +243,7 @@ onMounted(() => {
         <div class="hm-ex-section-icon" style="background: rgba(237,111,33,0.08)">
           <TheIcon icon="icon-park-outline:folder" :size="18" color="#ED6F21" />
         </div>
-        <span class="hm-ex-section-title">历史导出</span>
+        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_history') }}</span>
       </div>
       <div class="hm-ex-file-list">
         <div

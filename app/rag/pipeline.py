@@ -27,11 +27,25 @@ class PipelineConfig:
     max_context_chars: int = 6000
 
 
+async def load_pipeline_config_from_db() -> PipelineConfig:
+    """从数据库加载 RAG 管线配置，带 5 秒 TTL 缓存"""
+    from app.services.config import get_cached_ai_config
+
+    cfg = await get_cached_ai_config()
+    return PipelineConfig(
+        enable_query_rewrite=cfg.get("rag_enable_query_rewrite", "true") == "true",
+        enable_hybrid_search=cfg.get("rag_enable_hybrid_search", "true") == "true",
+        enable_rerank=cfg.get("rag_enable_rerank", "true") == "true",
+        enable_context_compress=cfg.get("rag_enable_context_compress", "false") == "true",
+    )
+
+
 class AdvancedRAGPipeline:
     """高级 RAG 管线：查询改写 → 混合检索 → 重排 → 压缩"""
 
     def __init__(self, config: PipelineConfig | None = None):
-        self.config = config or PipelineConfig()
+        self.config = config
+        self._config_explicit = config is not None
 
     async def search(
         self,
@@ -42,6 +56,9 @@ class AdvancedRAGPipeline:
         source: str = "",
     ) -> list[dict]:
         """主入口：执行完整高级 RAG 管线"""
+        if not self._config_explicit:
+            self.config = await load_pipeline_config_from_db()
+
         effective_top_k = top_k or self.config.top_k
 
         # 1. 查询改写

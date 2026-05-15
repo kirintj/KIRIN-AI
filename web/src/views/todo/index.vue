@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NButton, NPopconfirm, NEmpty, NInput, NSelect, NTag,
   NModal, NForm, NFormItem, NDatePicker, NSpace, NRadioGroup, NRadio,
@@ -10,8 +11,10 @@ import { formatDateTimeShort, formatDueDate } from '@/utils/common/time'
 
 defineOptions({ name: '待办任务' })
 
+const { t } = useI18n()
+
 interface TodoItem {
-  _index: number
+  id: number
   content: string
   priority: string
   category: string
@@ -33,27 +36,27 @@ const editingIndex = ref(-1)
 const addForm = ref({ content: '', priority: 'medium', category: 'other', due_date: null as string | null })
 const editForm = ref({ content: '', priority: 'medium', category: 'other', due_date: null as string | null })
 
-const priorityOptions = [
-  { label: '高', value: 'high' },
-  { label: '中', value: 'medium' },
-  { label: '低', value: 'low' },
-]
-const categoryOptions = [
-  { label: '工作', value: 'work' },
-  { label: '学习', value: 'study' },
-  { label: '生活', value: 'life' },
-  { label: '求职', value: 'job' },
-  { label: '其他', value: 'other' },
-]
-const filterDoneOptions = [
-  { label: '全部', value: 'all' },
-  { label: '未完成', value: 'undone' },
-  { label: '已完成', value: 'done' },
-]
+const priorityOptions = computed(() => [
+  { label: t('views.todo.priority_high'), value: 'high' },
+  { label: t('views.todo.priority_medium'), value: 'medium' },
+  { label: t('views.todo.priority_low'), value: 'low' },
+])
+const categoryOptions = computed(() => [
+  { label: t('views.todo.category_work'), value: 'work' },
+  { label: t('views.todo.category_study'), value: 'study' },
+  { label: t('views.todo.category_life'), value: 'life' },
+  { label: t('views.todo.category_job'), value: 'job' },
+  { label: t('views.todo.category_other'), value: 'other' },
+])
+const filterDoneOptions = computed(() => [
+  { label: t('views.todo.filter_all'), value: 'all' },
+  { label: t('views.todo.filter_undone'), value: 'undone' },
+  { label: t('views.todo.filter_done'), value: 'done' },
+])
 
 const priorityColor: Record<string, string> = { high: '#E84026', medium: '#ED6F21', low: '#86909C' }
-const priorityLabel: Record<string, string> = { high: '高', medium: '中', low: '低' }
-const categoryLabel: Record<string, string> = { work: '工作', study: '学习', life: '生活', job: '求职', other: '其他' }
+const priorityLabel = computed<Record<string, string>>(() => ({ high: t('views.todo.priority_high'), medium: t('views.todo.priority_medium'), low: t('views.todo.priority_low') }))
+const categoryLabel = computed<Record<string, string>>(() => ({ work: t('views.todo.category_work'), study: t('views.todo.category_study'), life: t('views.todo.category_life'), job: t('views.todo.category_job'), other: t('views.todo.category_other') }))
 const categoryColor: Record<string, string> = { work: '#0A59F7', study: '#722ED1', life: '#64BB5C', job: '#ED6F21', other: '#86909C' }
 
 const getPriorityTagColor = (p: string) => {
@@ -110,7 +113,7 @@ const calendarDays = computed(() => {
 
 const calendarMonth = computed(() => {
   const now = new Date()
-  return `${now.getFullYear()}年${now.getMonth() + 1}月`
+  return t('views.todo.calendar_month', { year: now.getFullYear(), month: now.getMonth() + 1 })
 })
 
 const dragIndex = ref<number | null>(null)
@@ -141,7 +144,7 @@ const onDrop = async (targetIndex: number) => {
     const targetItem = filteredList.value[targetIndex]
     if (targetItem) {
       try {
-        await api.updateTodo({ index: item._index, priority: targetItem.priority })
+        await api.updateTodo({ id: item.id, priority: targetItem.priority })
         await loadTodos()
       } catch (error) {
         console.error('排序失败', error)
@@ -173,7 +176,7 @@ const loadTodos = async () => {
     const res = await api.getTodoList()
     todoList.value = (res.data || []).map((t: any, i: number) => ({
       ...t,
-      _index: t._index ?? i,
+      id: t.id ?? i,
       priority: t.priority || 'medium',
       category: t.category || 'other',
       due_date: t.due_date || '',
@@ -187,7 +190,7 @@ const loadTodos = async () => {
 
 const handleToggle = async (item: TodoItem) => {
   try {
-    await api.toggleTodo({ index: item._index })
+    await api.toggleTodo({ id: item.id })
     await loadTodos()
   } catch (error) {
     console.error('切换状态失败', error)
@@ -196,8 +199,8 @@ const handleToggle = async (item: TodoItem) => {
 
 const handleDelete = async (item: TodoItem) => {
   try {
-    await api.deleteTodo({ index: item._index })
-    window.$message?.success('待办已删除')
+    await api.deleteTodo({ id: item.id })
+    window.$message?.success(t('views.todo.msg_deleted'))
     await loadTodos()
   } catch (error) {
     console.error('删除待办失败', error)
@@ -207,7 +210,7 @@ const handleDelete = async (item: TodoItem) => {
 const handleClearCompleted = async () => {
   try {
     await api.clearCompletedTodos()
-    window.$message?.success('已清除已完成待办')
+    window.$message?.success(t('views.todo.msg_cleared'))
     await loadTodos()
   } catch (error) {
     console.error('清除失败', error)
@@ -224,7 +227,7 @@ const handleAdd = async () => {
   try {
     await api.createTodo(addForm.value)
     showAddModal.value = false
-    window.$message?.success('待办已创建')
+    window.$message?.success(t('views.todo.msg_created'))
     await loadTodos()
   } catch (error) {
     console.error('创建待办失败', error)
@@ -244,16 +247,16 @@ const openEditModal = (item: TodoItem) => {
     category: item.category || 'other',
     due_date: normalizeDueDate(item.due_date),
   }
-  editingIndex.value = item._index
+  editingIndex.value = item.id
   showEditModal.value = true
 }
 
 const handleEdit = async () => {
   if (!editForm.value.content.trim()) return
   try {
-    await api.updateTodo({ index: editingIndex.value, ...editForm.value })
+    await api.updateTodo({ id: editingIndex.value, ...editForm.value })
     showEditModal.value = false
-    window.$message?.success('待办已更新')
+    window.$message?.success(t('views.todo.msg_updated'))
     await loadTodos()
   } catch (error) {
     console.error('更新待办失败', error)
@@ -275,8 +278,8 @@ onMounted(() => {
     <div class="hm-page-container">
     <div class="hm-page-header">
       <div>
-        <h1 class="hm-page-title">待办任务</h1>
-        <p class="hm-page-subtitle">共 {{ stats.total }} 项 · 待完成 {{ stats.undone }} 项</p>
+        <h1 class="hm-page-title">{{ t('views.todo.page_title') }}</h1>
+        <p class="hm-page-subtitle">{{ t('views.todo.total_count', { total: stats.total, undone: stats.undone }) }}</p>
       </div>
       <div class="hm-todo-actions">
         <div class="hm-view-toggle">
@@ -285,19 +288,19 @@ onMounted(() => {
             @click="viewMode = 'list'"
           >
             <TheIcon icon="icon-park-outline:list" :size="14" />
-            列表
+            {{ t('views.todo.list_view') }}
           </button>
           <button
             :class="['hm-view-btn', { active: viewMode === 'calendar' }]"
             @click="viewMode = 'calendar'"
           >
             <TheIcon icon="icon-park-outline:calendar" :size="14" />
-            日历
+            {{ t('views.todo.calendar_view') }}
           </button>
         </div>
         <button class="hm-action-btn primary" @click="openAddModal">
           <TheIcon icon="icon-park-outline:plus" :size="16" color="#fff" />
-          新建
+          {{ t('views.todo.btn_new') }}
         </button>
         <button class="hm-action-btn" @click="loadTodos" :disabled="loading">
           <TheIcon icon="icon-park-outline:refresh" :size="16" />
@@ -312,7 +315,7 @@ onMounted(() => {
         </div>
         <div class="hm-stat-info">
           <div class="hm-stat-value">{{ stats.total }}</div>
-          <div class="hm-stat-label">全部</div>
+          <div class="hm-stat-label">{{ t('views.todo.stat_all') }}</div>
         </div>
       </div>
       <div class="hm-stat-card">
@@ -321,7 +324,7 @@ onMounted(() => {
         </div>
         <div class="hm-stat-info">
           <div class="hm-stat-value" style="color: #ED6F21">{{ stats.undone }}</div>
-          <div class="hm-stat-label">待完成</div>
+          <div class="hm-stat-label">{{ t('views.todo.stat_undone') }}</div>
         </div>
       </div>
       <div class="hm-stat-card">
@@ -330,7 +333,7 @@ onMounted(() => {
         </div>
         <div class="hm-stat-info">
           <div class="hm-stat-value" style="color: #64BB5C">{{ stats.done }}</div>
-          <div class="hm-stat-label">已完成</div>
+          <div class="hm-stat-label">{{ t('views.todo.stat_done') }}</div>
         </div>
       </div>
       <div class="hm-stat-card">
@@ -339,7 +342,7 @@ onMounted(() => {
         </div>
         <div class="hm-stat-info">
           <div class="hm-stat-value" style="color: #E84026">{{ stats.overdue }}</div>
-          <div class="hm-stat-label">已逾期</div>
+          <div class="hm-stat-label">{{ t('views.todo.stat_overdue') }}</div>
         </div>
       </div>
       <div class="hm-progress-card">
@@ -359,7 +362,7 @@ onMounted(() => {
           <span class="hm-progress-num">{{ progressPercent }}</span>
           <span class="hm-progress-unit">%</span>
         </div>
-        <div class="hm-progress-label">完成率</div>
+        <div class="hm-progress-label">{{ t('views.todo.progress_label') }}</div>
       </div>
     </div>
 
@@ -367,7 +370,7 @@ onMounted(() => {
       <NSelect
         v-model:value="filterDone"
         :options="filterDoneOptions"
-        placeholder="状态"
+        :placeholder="t('views.todo.filter_status')"
         clearable
         size="small"
         style="width: 110px"
@@ -375,7 +378,7 @@ onMounted(() => {
       <NSelect
         v-model:value="filterPriority"
         :options="priorityOptions"
-        placeholder="优先级"
+        :placeholder="t('views.todo.filter_priority')"
         clearable
         size="small"
         style="width: 100px"
@@ -383,16 +386,16 @@ onMounted(() => {
       <NSelect
         v-model:value="filterCategory"
         :options="categoryOptions"
-        placeholder="分类"
+        :placeholder="t('views.todo.filter_category')"
         clearable
         size="small"
         style="width: 100px"
       />
       <NPopconfirm v-if="stats.done > 0" @positive-click="handleClearCompleted">
         <template #trigger>
-          <button class="hm-filter-chip danger">清除已完成</button>
+          <button class="hm-filter-chip danger">{{ t('views.todo.btn_clear_done') }}</button>
         </template>
-        确定清除所有已完成的待办？
+        {{ t('views.todo.confirm_clear_done') }}
       </NPopconfirm>
     </div>
 
@@ -401,7 +404,7 @@ onMounted(() => {
         <span class="hm-calendar-month">{{ calendarMonth }}</span>
       </div>
       <div class="hm-calendar-grid">
-        <div class="hm-calendar-weekday" v-for="d in ['日', '一', '二', '三', '四', '五', '六']" :key="d">{{ d }}</div>
+        <div class="hm-calendar-weekday" v-for="d in t('views.todo.weekday_names').split(',')" :key="d">{{ d }}</div>
         <div
           v-for="(day, idx) in calendarDays"
           :key="idx"
@@ -411,7 +414,7 @@ onMounted(() => {
           <div v-if="day.todos.length" class="hm-day-todos">
             <div
               v-for="t in day.todos.slice(0, 2)"
-              :key="t._index"
+              :key="t.id"
               :class="['hm-day-todo', { done: t.done }]"
             >
               {{ t.content.slice(0, 6) }}
@@ -425,16 +428,16 @@ onMounted(() => {
     <div v-else class="hm-todo-list">
       <div v-if="filteredList.length === 0 && !loading" class="hm-todo-empty">
         <TheIcon icon="icon-park-outline:todo" :size="48" color="var(--hm-font-fourth)" />
-        <p>暂无待办任务</p>
+        <p>{{ t('views.todo.empty_title') }}</p>
         <div class="hm-empty-actions">
-          <button class="hm-action-btn primary small" @click="openAddModal">新建待办</button>
-          <button class="hm-action-btn small" @click="$router.push('/agent-chat')">AI 创建</button>
+          <button class="hm-action-btn primary small" @click="openAddModal">{{ t('views.todo.btn_new_todo') }}</button>
+          <button class="hm-action-btn small" @click="$router.push('/agent-chat')">{{ t('views.todo.btn_ai_create') }}</button>
         </div>
       </div>
 
       <div
         v-for="(item, idx) in filteredList"
-        :key="item._index"
+        :key="item.id"
         :class="['hm-todo-item', { done: item.done, overdue: isOverdue(item), dragging: dragIndex === idx, dragover: dragOverIndex === idx }]"
         draggable="true"
         @dragstart="onDragStart(idx)"
@@ -449,13 +452,13 @@ onMounted(() => {
           <div class="hm-todo-content">
             <div class="hm-todo-tags">
               <NTag :color="getPriorityTagColor(item.priority)" size="small" round>
-                {{ priorityLabel[item.priority] || '中' }}
+                {{ priorityLabel[item.priority] || t('views.todo.priority_medium') }}
               </NTag>
               <NTag :color="getCategoryTagColor(item.category)" size="small" round>
-                {{ categoryLabel[item.category] || '其他' }}
+                {{ categoryLabel[item.category] || t('views.todo.category_other') }}
               </NTag>
               <NTag v-if="item.due_date" :type="isOverdue(item) ? 'error' : 'default'" size="small" round>
-                {{ isOverdue(item) ? '已逾期' : formatDueDate(item.due_date) }}
+                {{ isOverdue(item) ? t('views.todo.tag_overdue') : formatDueDate(item.due_date) }}
               </NTag>
             </div>
             <span class="hm-todo-text">{{ item.content }}</span>
@@ -472,53 +475,53 @@ onMounted(() => {
                 <TheIcon icon="icon-park-outline:delete" :size="16" />
               </button>
             </template>
-            确定删除该待办？
+            {{ t('views.todo.confirm_delete') }}
           </NPopconfirm>
         </div>
       </div>
     </div>
 
-    <NModal v-model:show="showAddModal" preset="dialog" title="新建待办" positive-text="创建" negative-text="取消" @positive-click="handleAdd">
+    <NModal v-model:show="showAddModal" preset="dialog" :title="t('views.todo.modal_add_title')" :positive-text="t('views.todo.modal_btn_create')" :negative-text="t('views.todo.modal_btn_cancel')" @positive-click="handleAdd">
       <NForm label-placement="left" label-width="60">
-        <NFormItem label="内容">
-          <NInput v-model:value="addForm.content" placeholder="输入待办内容" />
+        <NFormItem :label="t('views.todo.form_content')">
+          <NInput v-model:value="addForm.content" :placeholder="t('views.todo.form_content_placeholder')" />
         </NFormItem>
-        <NFormItem label="优先级">
+        <NFormItem :label="t('views.todo.form_priority')">
           <NRadioGroup v-model:value="addForm.priority">
             <NSpace>
-              <NRadio value="high">高</NRadio>
-              <NRadio value="medium">中</NRadio>
-              <NRadio value="low">低</NRadio>
+              <NRadio value="high">{{ t('views.todo.priority_high') }}</NRadio>
+              <NRadio value="medium">{{ t('views.todo.priority_medium') }}</NRadio>
+              <NRadio value="low">{{ t('views.todo.priority_low') }}</NRadio>
             </NSpace>
           </NRadioGroup>
         </NFormItem>
-        <NFormItem label="分类">
+        <NFormItem :label="t('views.todo.form_category')">
           <NSelect v-model:value="addForm.category" :options="categoryOptions" />
         </NFormItem>
-        <NFormItem label="截止日期">
+        <NFormItem :label="t('views.todo.form_due_date')">
           <NDatePicker v-model:formatted-value="addForm.due_date" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" clearable style="width: 100%" />
         </NFormItem>
       </NForm>
     </NModal>
 
-    <NModal v-model:show="showEditModal" preset="dialog" title="编辑待办" positive-text="保存" negative-text="取消" @positive-click="handleEdit">
+    <NModal v-model:show="showEditModal" preset="dialog" :title="t('views.todo.modal_edit_title')" :positive-text="t('views.todo.modal_btn_save')" :negative-text="t('views.todo.modal_btn_cancel')" @positive-click="handleEdit">
       <NForm label-placement="left" label-width="60">
-        <NFormItem label="内容">
-          <NInput v-model:value="editForm.content" placeholder="输入待办内容" />
+        <NFormItem :label="t('views.todo.form_content')">
+          <NInput v-model:value="editForm.content" :placeholder="t('views.todo.form_content_placeholder')" />
         </NFormItem>
-        <NFormItem label="优先级">
+        <NFormItem :label="t('views.todo.form_priority')">
           <NRadioGroup v-model:value="editForm.priority">
             <NSpace>
-              <NRadio value="high">高</NRadio>
-              <NRadio value="medium">中</NRadio>
-              <NRadio value="low">低</NRadio>
+              <NRadio value="high">{{ t('views.todo.priority_high') }}</NRadio>
+              <NRadio value="medium">{{ t('views.todo.priority_medium') }}</NRadio>
+              <NRadio value="low">{{ t('views.todo.priority_low') }}</NRadio>
             </NSpace>
           </NRadioGroup>
         </NFormItem>
-        <NFormItem label="分类">
+        <NFormItem :label="t('views.todo.form_category')">
           <NSelect v-model:value="editForm.category" :options="categoryOptions" />
         </NFormItem>
-        <NFormItem label="截止日期">
+        <NFormItem :label="t('views.todo.form_due_date')">
           <NDatePicker v-model:formatted-value="editForm.due_date" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" clearable style="width: 100%" />
         </NFormItem>
       </NForm>

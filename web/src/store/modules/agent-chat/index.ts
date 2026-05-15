@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api'
+import i18n from '~/i18n'
 import type { AgentMessage, Conversation, ConversationGroup } from '@/types/chat'
+
+const t = i18n.global.t
 
 export const useAgentChatStore = defineStore('agent-chat', () => {
   const messages = ref<AgentMessage[]>([])
@@ -26,10 +29,10 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     const weekAgo = new Date(today.getTime() - 6 * 86400000)
 
     const groups: ConversationGroup[] = [
-      { label: '今天', items: [] },
-      { label: '昨天', items: [] },
-      { label: '最近7天', items: [] },
-      { label: '更早', items: [] },
+      { label: t('common.messages.today'), items: [] },
+      { label: t('common.messages.yesterday'), items: [] },
+      { label: t('common.messages.recent_7_days'), items: [] },
+      { label: t('common.messages.earlier'), items: [] },
     ]
 
     for (const conv of filteredConversations.value) {
@@ -60,18 +63,18 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   const loadConversations = async () => {
     try {
       const res = await api.getConversations()
-      conversations.value = res.data || []
+      conversations.value = (res.data || []).map((c: any) => ({ ...c, id: String(c.id) }))
     } catch (error) {
       console.error('加载会话列表失败', error)
     }
   }
 
-  const createConversation = async (title = '新对话') => {
+  const createConversation = async (title?: string) => {
     try {
-      const res = await api.createConversation({ title })
+      const res = await api.createConversation({ title: title || t('common.messages.new_conversation') })
       const conv: Conversation = res.data
       conversations.value.unshift(conv)
-      currentConversationId.value = conv.id
+      currentConversationId.value = String(conv.id)
       messages.value = []
       return conv
     } catch (error) {
@@ -81,8 +84,8 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   }
 
   const switchConversation = async (convId: string) => {
-    if (convId === currentConversationId.value) return
-    currentConversationId.value = convId
+    if (String(convId) === currentConversationId.value) return
+    currentConversationId.value = String(convId)
     try {
       const res = await api.getConversationMessages(convId)
       messages.value = (res.data || []).map((m: any) =>
@@ -148,13 +151,13 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
 
     try {
       const res = await api.agentChat(_buildRequestParams(query))
-      messages.value.push(newMessage('assistant', res.data?.answer || '无返回'))
+      messages.value.push(newMessage('assistant', res.data?.answer || t('common.messages.no_response')))
       if (currentConversationId.value) {
         await loadConversations()
       }
     } catch (error) {
       console.error('Agent 请求失败：', error)
-      messages.value.push(newMessage('assistant', '请求失败，请检查后端服务'))
+      messages.value.push(newMessage('assistant', t('common.messages.request_failed')))
     } finally {
       isLoading.value = false
     }
@@ -178,10 +181,10 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
 
     try {
       const res = await api.agentChat(_buildRequestParams(userMsg.content))
-      messages.value.push(newMessage('assistant', res.data?.answer || '无返回'))
+      messages.value.push(newMessage('assistant', res.data?.answer || t('common.messages.no_response')))
     } catch (error) {
       console.error('重新生成失败：', error)
-      messages.value.push(newMessage('assistant', '重新生成失败，请重试'))
+      messages.value.push(newMessage('assistant', t('common.messages.regenerate_failed')))
     } finally {
       isLoading.value = false
     }

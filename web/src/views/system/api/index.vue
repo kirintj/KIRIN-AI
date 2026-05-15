@@ -1,5 +1,6 @@
 <script setup>
 import { h, onMounted, ref, resolveDirective, withDirectives } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { NButton, NForm, NFormItem, NInput, NPopconfirm } from 'naive-ui'
 
 import CommonPage from '@/components/page/CommonPage.vue'
@@ -12,6 +13,8 @@ import { renderIcon } from '@/utils'
 import { useCRUD } from '@/composables'
 // import { loginTypeMap, loginTypeOptions } from '@/constant/data'
 import api from '@/api'
+
+const { t } = useI18n()
 
 defineOptions({ name: 'API管理' })
 
@@ -44,12 +47,12 @@ onMounted(() => {
 
 async function handleRefreshApi() {
   await $dialog.confirm({
-    title: '提示',
+    title: t('common.messages.hint'),
     type: 'warning',
-    content: '此操作会根据后端 app.routes 进行路由更新，确定继续刷新 API 操作？',
+    content: t('views.system.api.confirm_refresh'),
     async confirm() {
       await api.refreshApi()
-      $message.success('刷新完成')
+      $message.success(t('views.system.api.msg_refresh_done'))
       $table.value?.handleSearch()
     },
   })
@@ -59,28 +62,28 @@ const addAPIRules = {
   path: [
     {
       required: true,
-      message: '请输入API路径',
+      message: t('views.system.api.validate_path'),
       trigger: ['input', 'blur', 'change'],
     },
   ],
   method: [
     {
       required: true,
-      message: '请输入请求方式',
+      message: t('views.system.api.validate_method'),
       trigger: ['input', 'blur', 'change'],
     },
   ],
   summary: [
     {
       required: true,
-      message: '请输入API简介',
+      message: t('views.system.api.validate_desc'),
       trigger: ['input', 'blur', 'change'],
     },
   ],
   tags: [
     {
       required: true,
-      message: '请输入Tags',
+      message: t('views.system.api.validate_tags'),
       trigger: ['input', 'blur', 'change'],
     },
   ],
@@ -88,21 +91,21 @@ const addAPIRules = {
 
 const columns = [
   {
-    title: 'API路径',
+    title: t('views.system.api.col_path'),
     key: 'path',
     width: 'auto',
     align: 'center',
     ellipsis: { tooltip: true },
   },
   {
-    title: '请求方式',
+    title: t('views.system.api.col_method'),
     key: 'method',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: 'API简介',
+    title: t('views.system.api.col_desc'),
     key: 'summary',
     width: 'auto',
     align: 'center',
@@ -116,7 +119,7 @@ const columns = [
     ellipsis: { tooltip: true },
   },
   {
-    title: '操作',
+    title: t('views.system.api.col_actions'),
     key: 'actions',
     width: 140,
     align: 'center',
@@ -133,7 +136,7 @@ const columns = [
                 modalForm.value.roles = row.roles.map((e) => (e = e.id))
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.api.btn_edit')]
           ),
           [[vPermission, 'post/api/v1/api/update']]
         ),
@@ -149,11 +152,11 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.api.btn_delete')]
                 ),
                 [[vPermission, 'delete/api/v1/api/delete']]
               ),
-            default: () => h('div', {}, '确定删除该API吗?'),
+            default: () => h('div', {}, t('views.system.api.confirm_delete')),
           }
         ),
       ]
@@ -164,16 +167,16 @@ const columns = [
 
 <template>
   <!-- 业务页面 -->
-  <CommonPage show-footer title="API列表">
+  <CommonPage show-footer :title="t('views.system.api.page_title')">
     <template #action>
       <div class="hm-action-group">
         <button class="hm-action-btn" v-permission="'post/api/v1/api/refresh'" @click="handleRefreshApi">
           <TheIcon icon="material-symbols:refresh" :size="16" />
-          刷新API
+          {{ t('views.system.api.btn_refresh') }}
         </button>
         <button class="hm-action-btn primary" v-permission="'post/api/v1/api/create'" @click="handleAdd">
           <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
-          新建API
+          {{ t('views.system.api.btn_new') }}
         </button>
       </div>
     </template>
@@ -185,21 +188,21 @@ const columns = [
       :get-data="api.getApis"
     >
       <template #queryBar>
-        <QueryBarItem label="路径" :label-width="40">
+        <QueryBarItem :label="t('views.system.api.label_path')" :label-width="40">
           <NInput
             v-model:value="queryItems.path"
             clearable
             type="text"
-            placeholder="请输入API路径"
+            :placeholder="t('views.system.api.search_path_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="API简介" :label-width="70">
+        <QueryBarItem :label="t('views.system.api.label_desc')" :label-width="70">
           <NInput
             v-model:value="queryItems.summary"
             clearable
             type="text"
-            placeholder="请输入API简介"
+            :placeholder="t('views.system.api.search_desc_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
@@ -208,7 +211,7 @@ const columns = [
             v-model:value="queryItems.tags"
             clearable
             type="text"
-            placeholder="请输入API模块"
+            :placeholder="t('views.system.api.search_module_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
@@ -230,17 +233,17 @@ const columns = [
         :model="modalForm"
         :rules="addAPIRules"
       >
-        <NFormItem label="API名称" path="path">
-          <NInput v-model:value="modalForm.path" clearable placeholder="请输入API路径" />
+        <NFormItem :label="t('views.system.api.form_name')" path="path">
+          <NInput v-model:value="modalForm.path" clearable :placeholder="t('views.system.api.form_name_placeholder')" />
         </NFormItem>
-        <NFormItem label="请求方式" path="method">
-          <NInput v-model:value="modalForm.method" clearable placeholder="请输入请求方式" />
+        <NFormItem :label="t('views.system.api.form_method')" path="method">
+          <NInput v-model:value="modalForm.method" clearable :placeholder="t('views.system.api.form_method_placeholder')" />
         </NFormItem>
-        <NFormItem label="API简介" path="summary">
-          <NInput v-model:value="modalForm.summary" clearable placeholder="请输入API简介" />
+        <NFormItem :label="t('views.system.api.form_desc')" path="summary">
+          <NInput v-model:value="modalForm.summary" clearable :placeholder="t('views.system.api.form_desc_placeholder')" />
         </NFormItem>
         <NFormItem label="Tags" path="tags">
-          <NInput v-model:value="modalForm.tags" clearable placeholder="请输入Tags" />
+          <NInput v-model:value="modalForm.tags" clearable :placeholder="t('views.system.api.form_tags_placeholder')" />
         </NFormItem>
       </NForm>
     </CrudModal>

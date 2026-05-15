@@ -222,6 +222,59 @@ async def delete_all_documents(collection_name: str = "knowledge_base"):
     _collections.pop(collection_name, None)
 
 
+async def delete_document(doc_id: str, collection_name: str = "knowledge_base") -> int:
+    """删除指定文档的所有分块，返回删除数量"""
+    collection = _get_collection(collection_name)
+
+    def _delete():
+        results = collection.get(where={"doc_id": doc_id}, include=[])
+        ids = results.get("ids", [])
+        if ids:
+            collection.delete(ids=ids)
+        return len(ids)
+
+    return await asyncio.to_thread(_delete)
+
+
+async def move_document(
+    doc_id: str,
+    from_collection: str,
+    to_collection: str,
+    new_doc_type: str = "",
+) -> dict:
+    """移动文档到目标集合，可同时修改 doc_type"""
+    src = _get_collection(from_collection)
+
+    def _move():
+        results = src.get(
+            where={"doc_id": doc_id},
+            include=["documents", "metadatas"],
+        )
+        ids = results.get("ids", [])
+        documents = results.get("documents", [])
+        metadatas = results.get("metadatas", [])
+
+        if not ids:
+            return {"moved": 0, "error": "文档不存在"}
+
+        src.delete(ids=ids)
+
+        new_metas = []
+        for meta in metadatas:
+            m = dict(meta) if meta else {}
+            m["collection"] = to_collection
+            if new_doc_type:
+                m["doc_type"] = new_doc_type
+            new_metas.append(m)
+
+        dst = _get_collection(to_collection)
+        dst.add(documents=documents, ids=ids, metadatas=new_metas)
+
+        return {"moved": len(ids), "from": from_collection, "to": to_collection}
+
+    return await asyncio.to_thread(_move)
+
+
 async def rebuild_all_collections() -> dict:
     """迁移工具：用新 embedding 重建所有集合"""
     client = _get_client()

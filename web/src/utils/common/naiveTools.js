@@ -1,4 +1,13 @@
-import { isNullOrUndef } from '@/utils'
+import { isNullOrUndef } from '@/utils/common/is'
+
+let _t = null
+function t(key, params) {
+  if (!_t) {
+    const i18n = window.__kirin_i18n__
+    _t = i18n?.global?.t ?? ((k) => k)
+  }
+  return _t(key, params)
+}
 
 export function setupMessage(NMessage) {
   let loadingMessage = null
@@ -68,8 +77,8 @@ export function setupDialog(NDialog) {
     const showIcon = !isNullOrUndef(option.title)
     return NDialog[option.type || 'warning']({
       showIcon,
-      positiveText: '确定',
-      negativeText: '取消',
+      positiveText: t('common.actions.confirm'),
+      negativeText: t('common.actions.cancel'),
       onPositiveClick: option.confirm,
       onNegativeClick: option.cancel,
       onMaskClick: option.cancel,

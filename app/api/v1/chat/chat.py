@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import logging
 
 from app.settings import settings
-from app.utils.chat import async_client, convert_messages_for_api
+from app.utils.chat import async_client, convert_messages_for_api, get_ai_config
 from app.schemas.chat import ChatResponse, ChatRequest, ChatMessage
 from app.schemas.base import Success, Fail
 from app.core.dependency import DependAuth
@@ -29,9 +29,12 @@ async def chat(
             timestamp=datetime.now(timezone.utc),
         )
 
+        config = await get_ai_config()
+        default_model = config.get("model_name", settings.MODEL_NAME)
+
         api_message = convert_messages_for_api(request.messages)
         response = await async_client.chat.completions.create(
-            model=request.model or settings.MODEL_NAME,
+            model=request.model or default_model,
             messages=api_message,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
@@ -72,17 +75,21 @@ async def get_models(
         current_user: User = DependAuth,
 ):
     try:
+        config = await get_ai_config()
+        default_model = config.get("model_name", settings.MODEL_NAME)
         models = await async_client.models.list()
         data = {
             "models": [model.id for model in models.data],
-            "default_model": settings.MODEL_NAME,
+            "default_model": default_model,
             "user": current_user.username,
         }
         return Success(data=data)
     except Exception:
+        config = await get_ai_config()
+        default_model = config.get("model_name", settings.MODEL_NAME)
         data = {
-            "models": [settings.MODEL_NAME],
-            "default_model": settings.MODEL_NAME,
+            "models": [default_model],
+            "default_model": default_model,
             "user": current_user.username,
         }
         return Success(data=data)

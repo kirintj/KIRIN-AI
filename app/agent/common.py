@@ -11,12 +11,19 @@ from app.core.constants import (
     CONTENT_RAG_PREVIEW_LENGTH,
 )
 
-_recommend_pipeline = AdvancedRAGPipeline(PipelineConfig(
-    enable_query_rewrite=True,
-    enable_rerank=True,
-    enable_context_compress=False,
-    top_k=3,
-))
+_recommend_pipeline: AdvancedRAGPipeline | None = None
+
+
+def _get_recommend_pipeline() -> AdvancedRAGPipeline:
+    global _recommend_pipeline
+    if _recommend_pipeline is None:
+        _recommend_pipeline = AdvancedRAGPipeline(PipelineConfig(
+            enable_query_rewrite=True,
+            enable_rerank=True,
+            enable_context_compress=False,
+            top_k=3,
+        ))
+    return _recommend_pipeline
 
 PREFERENCE_EXTRACT_PROMPT = """你是一个用户画像分析助手。请根据以下用户对话历史，提取用户的求职偏好标签。
 
@@ -106,7 +113,7 @@ async def build_personalized_recommendation(user_id: str, current_query: str = "
     if not search_query:
         return ""
 
-    docs = await _recommend_pipeline.search(search_query)
+    docs = await _get_recommend_pipeline().search(search_query)
     if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
         return ""
 

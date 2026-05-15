@@ -59,7 +59,7 @@ export const basicRoutes = [
         },
       },
     ],
-    meta: { order: 3 },
+    meta: { order: 6 },
   },
   {
     name: '待办任务',
@@ -76,7 +76,7 @@ export const basicRoutes = [
         },
       },
     ],
-    meta: { order: 4 },
+    meta: { order: 7 },
   },
   {
     name: '求职进度',
@@ -110,7 +110,7 @@ export const basicRoutes = [
         },
       },
     ],
-    meta: { order: 6 },
+    meta: { order: 4 },
   },
   {
     name: t('views.profile.label_profile'),

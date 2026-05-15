@@ -1,5 +1,6 @@
 <script setup>
 import { h, onMounted, ref, resolveDirective, withDirectives } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NButton,
   NForm,
@@ -25,6 +26,8 @@ import { formatDate, renderIcon } from '@/utils'
 import { useCRUD } from '@/composables'
 import api from '@/api'
 import TheIcon from '@/components/icon/TheIcon.vue'
+
+const { t } = useI18n()
 
 defineOptions({ name: '角色管理' })
 
@@ -93,7 +96,7 @@ onMounted(() => {
 
 const columns = [
   {
-    title: '角色名',
+    title: t('views.system.role.col_name'),
     key: 'name',
     width: 80,
     align: 'center',
@@ -103,13 +106,13 @@ const columns = [
     },
   },
   {
-    title: '角色描述',
+    title: t('views.system.role.col_desc'),
     key: 'desc',
     width: 80,
     align: 'center',
   },
   {
-    title: '创建日期',
+    title: t('views.system.role.col_created'),
     key: 'created_at',
     width: 60,
     align: 'center',
@@ -118,7 +121,7 @@ const columns = [
     },
   },
   {
-    title: '操作',
+    title: t('views.system.role.col_actions'),
     key: 'actions',
     width: 200,
     align: 'center',
@@ -132,7 +135,7 @@ const columns = [
               class: 'hm-row-btn',
               onClick: () => handleEdit(row),
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.role.btn_edit')]
           ),
           [[vPermission, 'post/api/v1/role/update']]
         ),
@@ -148,11 +151,11 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.role.btn_delete')]
                 ),
                 [[vPermission, 'delete/api/v1/role/delete']]
               ),
-            default: () => h('div', {}, '确定删除该角色吗?'),
+            default: () => h('div', {}, t('views.system.role.confirm_delete')),
           }
         ),
         withDirectives(
@@ -180,7 +183,7 @@ const columns = [
                 }
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), '设置权限']
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), t('views.system.role.btn_set_permission')]
           ),
           [[vPermission, 'get/api/v1/role/authorized']]
         ),
@@ -207,7 +210,7 @@ async function updateRoleAuthorized() {
     api_infos: apiInfos,
   })
   if (code === 200) {
-    $message?.success('设置成功')
+    $message?.success(t('views.system.role.msg_success'))
   } else {
     $message?.error(msg)
   }
@@ -220,11 +223,11 @@ async function updateRoleAuthorized() {
 </script>
 
 <template>
-  <CommonPage show-footer title="角色列表">
+  <CommonPage show-footer :title="t('views.system.role.page_title')">
     <template #action>
       <button class="hm-action-btn primary" v-permission="'post/api/v1/role/create'" @click="handleAdd">
         <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
-        新建角色
+        {{ t('views.system.role.btn_new') }}
       </button>
     </template>
 
@@ -235,14 +238,14 @@ async function updateRoleAuthorized() {
       :get-data="api.getRoleList"
     >
       <template #queryBar>
-        <QueryBarItem label="角色名" :label-width="50">
+        <QueryBarItem :label="t('views.system.role.col_name')" :label-width="50">
           <NInput
             id="query-role-name"
             v-model:value="queryItems.role_name"
             clearable
             type="text"
-            placeholder="请输入角色名"
-            aria-label="角色名"
+            :placeholder="t('views.system.role.search_placeholder')"
+            :aria-label="t('views.system.role.col_name')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
@@ -264,19 +267,19 @@ async function updateRoleAuthorized() {
         :disabled="modalAction === 'view'"
       >
         <NFormItem
-          label="角色名"
+          :label="t('views.system.role.form_name')"
           path="name"
           for="modal-role-name"
           :rule="{
             required: true,
-            message: '请输入角色名称',
+            message: t('views.system.role.validate_name'),
             trigger: ['input', 'blur'],
           }"
         >
-          <NInput id="modal-role-name" v-model:value="modalForm.name" placeholder="请输入角色名称" />
+          <NInput id="modal-role-name" v-model:value="modalForm.name" :placeholder="t('views.system.role.form_name_placeholder')" />
         </NFormItem>
-        <NFormItem label="角色描述" path="desc" for="modal-role-desc">
-          <NInput id="modal-role-desc" v-model:value="modalForm.desc" placeholder="请输入角色描述" />
+        <NFormItem :label="t('views.system.role.form_desc')" path="desc" for="modal-role-desc">
+          <NInput id="modal-role-desc" v-model:value="modalForm.desc" :placeholder="t('views.system.role.form_desc_placeholder')" />
         </NFormItem>
       </NForm>
     </CrudModal>
@@ -289,8 +292,8 @@ async function updateRoleAuthorized() {
               id="drawer-pattern"
               v-model:value="pattern"
               type="text"
-              placeholder="筛选"
-              aria-label="筛选"
+              :placeholder="t('views.system.role.filter_placeholder')"
+              :aria-label="t('views.system.role.filter_placeholder')"
               style="flex-grow: 1"
             ></NInput>
           </NGi>
@@ -299,12 +302,12 @@ async function updateRoleAuthorized() {
               v-permission="'post/api/v1/role/authorized'"
               type="info"
               @click="updateRoleAuthorized"
-              >确定</NButton
+              >{{ t('views.system.role.btn_confirm') }}</NButton
             >
           </NGi>
         </NGrid>
         <NTabs>
-          <NTabPane name="menu" tab="菜单权限" display-directive="show">
+          <NTabPane name="menu" :tab="t('views.system.role.tab_menu')" display-directive="show">
             <!-- TODO：级联 -->
             <NTree
               :data="menuOption"
@@ -320,7 +323,7 @@ async function updateRoleAuthorized() {
               @update:checked-keys="(v) => (menu_ids = v)"
             />
           </NTabPane>
-          <NTabPane name="resource" tab="接口权限" display-directive="show">
+          <NTabPane name="resource" :tab="t('views.system.role.tab_resource')" display-directive="show">
             <NTree
               ref="apiTree"
               :data="apiOption"
@@ -338,7 +341,7 @@ async function updateRoleAuthorized() {
             />
           </NTabPane>
         </NTabs>
-        <template #header> 设置权限 </template>
+        <template #header> {{ t('views.system.role.permission_title') }} </template>
       </NDrawerContent>
     </NDrawer>
   </CommonPage>

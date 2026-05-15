@@ -13,4 +13,9 @@ const i18n = createI18n({
   messages: messages,
 })
 
+// Register globally for lazy access in utils (avoids circular dependency)
+if (typeof window !== 'undefined') {
+  window.__kirin_i18n__ = i18n
+}
+
 export default i18n

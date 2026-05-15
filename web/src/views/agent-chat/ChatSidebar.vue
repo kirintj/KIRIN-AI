@@ -3,6 +3,7 @@ import TheIcon from '@/components/icon/TheIcon.vue'
 import { NPopconfirm, NInput } from 'naive-ui'
 import { formatRelativeTime } from '@/utils/common/time'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Conversation, ConversationGroup } from '@/types/chat'
 
 const props = defineProps<{
@@ -20,6 +21,8 @@ const emit = defineEmits<{
   (e: 'delete', id: string): void
   (e: 'rename', id: string, title: string): void
 }>()
+
+const { t } = useI18n()
 
 const renamingId = ref<string | null>(null)
 const renameValue = ref('')
@@ -44,7 +47,7 @@ const cancelRename = () => {
 <template>
   <div class="hm-sidebar-inner">
     <div class="hm-sidebar-header">
-      <span class="hm-sidebar-title">对话</span>
+      <span class="hm-sidebar-title">{{ t('views.agent_chat.conversations') }}</span>
       <button class="hm-sidebar-new-btn" @click="emit('new')">
         <TheIcon icon="icon-park-outline:plus" :size="16" />
       </button>
@@ -56,7 +59,7 @@ const cancelRename = () => {
         <input
           :value="searchKeyword"
           class="hm-search-input"
-          placeholder="搜索对话..."
+          :placeholder="t('views.agent_chat.search_placeholder')"
           @input="emit('update:searchKeyword', ($event.target as HTMLInputElement).value)"
         />
         <button v-if="searchKeyword" class="hm-search-clear" @click="emit('update:searchKeyword', '')">
@@ -79,7 +82,7 @@ const cancelRename = () => {
             <NInput
               v-model:value="renameValue"
               size="tiny"
-              placeholder="输入新名称"
+              :placeholder="t('views.agent_chat.rename_placeholder')"
               @keyup.enter="confirmRename"
               @keyup.escape="cancelRename"
               @blur="confirmRename"
@@ -87,8 +90,8 @@ const cancelRename = () => {
             />
           </div>
           <div v-else class="hm-conv-info">
-            <div class="hm-conv-title">{{ conv.title || '新对话' }}</div>
-            <div class="hm-conv-meta">{{ conv.message_count || 0 }} 条消息 · {{ formatRelativeTime(conv.updated_at) }}</div>
+            <div class="hm-conv-title">{{ conv.title || t('views.agent_chat.new_conversation') }}</div>
+            <div class="hm-conv-meta">{{ t('views.agent_chat.messages_count', { count: conv.message_count || 0 }) }} · {{ formatRelativeTime(conv.updated_at) }}</div>
           </div>
           <div class="hm-conv-actions" @click.stop>
             <button class="hm-conv-action" @click="startRename(conv.id, conv.title)">
@@ -100,7 +103,7 @@ const cancelRename = () => {
                   <TheIcon icon="icon-park-outline:delete" :size="12" />
                 </button>
               </template>
-              确定删除该对话？
+              {{ t('views.agent_chat.confirm_delete') }}
             </NPopconfirm>
           </div>
         </div>
@@ -108,12 +111,12 @@ const cancelRename = () => {
 
       <div v-if="conversations.length === 0" class="hm-sidebar-empty">
         <TheIcon icon="icon-park-outline:chat" :size="32" color="var(--hm-font-fourth)" />
-        <p>暂无对话</p>
+        <p>{{ t('views.agent_chat.empty_no_conversations') }}</p>
       </div>
 
       <div v-if="conversations.length > 0 && filteredConversations.length === 0" class="hm-sidebar-empty">
         <TheIcon icon="icon-park-outline:search" :size="32" color="var(--hm-font-fourth)" />
-        <p>未找到匹配的对话</p>
+        <p>{{ t('views.agent_chat.empty_no_match') }}</p>
       </div>
     </div>
   </div>

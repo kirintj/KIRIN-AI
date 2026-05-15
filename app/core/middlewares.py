@@ -199,5 +199,5 @@ class HttpAuditLogMiddleware:
             try:
                 return json.loads(v)
             except (ValueError, TypeError):
-                pass
+                return None
         return v

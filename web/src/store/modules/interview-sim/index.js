@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api'
+import i18n from '~/i18n'
+
+const t = i18n.global.t
 
 export const useInterviewStore = defineStore('interview-sim', () => {
   const sessions = ref([])
@@ -9,12 +12,12 @@ export const useInterviewStore = defineStore('interview-sim', () => {
   const isLoading = ref(false)
   const isEvaluating = ref(false)
 
-  const INTERVIEW_TYPES = {
-    tech: '技术面试',
-    hr: 'HR面试',
-    behavior: '行为面试',
-    case: '案例分析',
-  }
+  const INTERVIEW_TYPES = computed(() => ({
+    tech: t('common.interview.type_tech'),
+    hr: t('common.interview.type_hr'),
+    behavior: t('common.interview.type_behavior'),
+    case: t('common.interview.type_case'),
+  }))
 
   const loadSessions = async () => {
     try {
@@ -69,10 +72,10 @@ export const useInterviewStore = defineStore('interview-sim', () => {
         session_id: currentSession.value.id,
         message: text,
       })
-      messages.value.push({ role: 'assistant', content: res.data?.reply || '无回复' })
+      messages.value.push({ role: 'assistant', content: res.data?.reply || t('common.messages.no_reply') })
     } catch (error) {
       console.error('面试对话失败', error)
-      messages.value.push({ role: 'assistant', content: '请求失败，请重试' })
+      messages.value.push({ role: 'assistant', content: t('common.messages.interview_request_failed') })
     } finally {
       isLoading.value = false
     }

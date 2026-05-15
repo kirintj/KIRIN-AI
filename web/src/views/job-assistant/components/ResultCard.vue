@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { useMarkdown } from '@/composables/useMarkdown'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   title: string
@@ -19,10 +22,10 @@ const { formatMarkdown } = useMarkdown()
     </div>
     <div class="hm-markdown" v-html="formatMarkdown(content)"></div>
     <div class="hm-feedback-bar">
-      <span class="hm-feedback-label">{{ feedbackLabel || '对结果满意吗？' }}</span>
+      <span class="hm-feedback-label">{{ feedbackLabel || t('views.job_assistant.result_satisfied') }}</span>
       <button class="hm-feedback-btn" @click="emit('feedback', title, content)">
         <TheIcon icon="icon-park-outline:like" :size="14" />
-        评价反馈
+        {{ t('views.job_assistant.btn_feedback') }}
       </button>
     </div>
   </div>

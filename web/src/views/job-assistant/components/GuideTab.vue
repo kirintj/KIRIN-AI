@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { NInput, NSelect } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
@@ -8,6 +9,8 @@ import LoadingDots from '@/components/common/LoadingDots.vue'
 import ResultCard from './ResultCard.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
+const { t } = useI18n()
+
 const emit = defineEmits<{ feedback: [query: string, answer: string] }>()
 
 const { loading, result, execute } = useJobQuery(job.jobGuide, 'guide')
@@ -15,23 +18,23 @@ const { loading, result, execute } = useJobQuery(job.jobGuide, 'guide')
 const guideScenario = ref('')
 const guideGoal = ref('成功求职')
 
-const scenarioOptions = [
-  { label: '应届生求职', value: '应届生求职' },
-  { label: '跨行业跳槽', value: '跨行业跳槽' },
-  { label: '技术转管理', value: '技术转管理' },
-  { label: '大厂面试', value: '大厂面试' },
-  { label: '职场晋升', value: '职场晋升' },
-  { label: '转行求职', value: '转行求职' },
-  { label: '海归求职', value: '海归求职' },
-  { label: '35+求职', value: '35+求职' },
-]
+const scenarioOptions = computed(() => [
+  { label: t('views.job_assistant.scenario_fresh'), value: '应届生求职' },
+  { label: t('views.job_assistant.scenario_career_change'), value: '跨行业跳槽' },
+  { label: t('views.job_assistant.scenario_tech_to_mgmt'), value: '技术转管理' },
+  { label: t('views.job_assistant.scenario_big_company'), value: '大厂面试' },
+  { label: t('views.job_assistant.scenario_promotion'), value: '职场晋升' },
+  { label: t('views.job_assistant.scenario_switch'), value: '转行求职' },
+  { label: t('views.job_assistant.scenario_returnee'), value: '海归求职' },
+  { label: t('views.job_assistant.scenario_35plus'), value: '35+求职' },
+])
 
 const runGuide = () => {
   if (!guideScenario.value.trim()) {
-    window.$message?.error('请选择或输入求职场景')
+    window.$message?.error(t('views.job_assistant.msg_select_scenario'))
     return
   }
-  execute({ scenario: guideScenario.value, goal: guideGoal.value }, '攻略生成失败')
+  execute({ scenario: guideScenario.value, goal: guideGoal.value }, t('views.job_assistant.msg_guide_failed'))
 }
 </script>
 
@@ -40,18 +43,18 @@ const runGuide = () => {
     <div class="hm-form-card">
       <div class="hm-form-row">
         <div class="hm-form-item">
-          <label class="hm-form-label">求职场景</label>
+          <label class="hm-form-label">{{ t('views.job_assistant.guide_scenario') }}</label>
           <NSelect
             v-model:value="guideScenario"
             :options="scenarioOptions"
-            placeholder="选择或输入场景"
+            :placeholder="t('views.job_assistant.guide_scenario_placeholder')"
             filterable
             tag
           />
         </div>
         <div class="hm-form-item">
-          <label class="hm-form-label">目标</label>
-          <NInput v-model:value="guideGoal" placeholder="如：成功求职、拿到大厂Offer..." />
+          <label class="hm-form-label">{{ t('views.job_assistant.guide_target') }}</label>
+          <NInput v-model:value="guideGoal" :placeholder="t('views.job_assistant.guide_target_placeholder')" />
         </div>
       </div>
       <div class="hm-form-row hm-form-row-submit">
@@ -63,26 +66,26 @@ const runGuide = () => {
           >
             <TheIcon v-if="loading" icon="icon-park-outline:loading" :size="16" color="#fff" class="hm-spin" />
             <TheIcon v-else icon="icon-park-outline:map-draw" :size="16" color="#fff" />
-            {{ loading ? '生成中...' : '生成攻略' }}
+            {{ loading ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_guide') }}
           </button>
         </div>
       </div>
     </div>
 
-    <LoadingDots v-if="loading" text="正在检索求职攻略文档..." />
+    <LoadingDots v-if="loading" :text="t('views.job_assistant.loading_searching_guide')" />
 
     <ResultCard
       v-if="result && !loading"
-      title="求职攻略"
+      :title="t('views.job_assistant.result_guide')"
       :content="result"
-      feedback-label="对攻略满意吗？"
+      :feedback-label="t('views.job_assistant.feedback_guide')"
       @feedback="emit('feedback', $event)"
     />
 
     <EmptyState
       v-if="!result && !loading"
       icon="icon-park-outline:map"
-      text="选择求职场景，AI 将检索攻略文档生成步骤化行动指南"
+      :text="t('views.job_assistant.empty_guide')"
     />
   </div>
 </template>

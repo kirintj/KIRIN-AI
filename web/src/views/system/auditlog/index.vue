@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { NInput, NSelect, NPopover } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 
@@ -8,6 +9,8 @@ import QueryBarItem from '@/components/query-bar/QueryBarItem.vue'
 import CrudTable from '@/components/table/CrudTable.vue'
 
 import api from '@/api'
+
+const { t } = useI18n()
 
 defineOptions({ name: '审计日志' })
 
@@ -85,55 +88,55 @@ function formatJSON(data) {
       ? JSON.stringify(JSON.parse(data), null, 2)
       : JSON.stringify(data, null, 2)
   } catch (e) {
-    return data || '无数据'
+    return data || t('views.system.auditlog.no_data')
   }
 }
 
 const columns = [
   {
-    title: '用户名称',
+    title: t('views.system.auditlog.col_username'),
     key: 'username',
     width: 'auto',
     align: 'center',
     ellipsis: { tooltip: true },
   },
   {
-    title: '接口概要',
+    title: t('views.system.auditlog.col_summary'),
     key: 'summary',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '功能模块',
+    title: t('views.system.auditlog.col_module'),
     key: 'module',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '请求方法',
+    title: t('views.system.auditlog.col_method'),
     key: 'method',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '请求路径',
+    title: t('views.system.auditlog.col_path'),
     key: 'path',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '状态码',
+    title: t('views.system.auditlog.col_status'),
     key: 'status',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '请求体',
+    title: t('views.system.auditlog.col_body'),
     key: 'request_body',
     align: 'center',
     width: 80,
@@ -161,7 +164,7 @@ const columns = [
     },
   },
   {
-    title: '响应体',
+    title: t('views.system.auditlog.col_response'),
     key: 'response_body',
     align: 'center',
     width: 80,
@@ -189,14 +192,14 @@ const columns = [
     },
   },
   {
-    title: '响应时间(s)',
+    title: t('views.system.auditlog.col_duration'),
     key: 'response_time',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '操作时间',
+    title: t('views.system.auditlog.col_time'),
     key: 'created_at',
     align: 'center',
     width: 'auto',
@@ -216,66 +219,66 @@ const columns = [
       :get-data="api.getAuditLogList"
     >
       <template #queryBar>
-        <QueryBarItem label="用户名称" :label-width="70">
+        <QueryBarItem :label="t('views.system.auditlog.search_username')" :label-width="70">
           <NInput
             v-model:value="queryItems.username"
             clearable
             type="text"
-            placeholder="请输入用户名称"
+            :placeholder="t('views.system.auditlog.search_username_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="功能模块" :label-width="70">
+        <QueryBarItem :label="t('views.system.auditlog.search_module')" :label-width="70">
           <NInput
             v-model:value="queryItems.module"
             clearable
             type="text"
-            placeholder="请输入功能模块"
+            :placeholder="t('views.system.auditlog.search_module_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="接口概要" :label-width="70">
+        <QueryBarItem :label="t('views.system.auditlog.search_summary')" :label-width="70">
           <NInput
             v-model:value="queryItems.summary"
             clearable
             type="text"
-            placeholder="请输入接口概要"
+            :placeholder="t('views.system.auditlog.search_summary_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="请求方法" :label-width="70">
+        <QueryBarItem :label="t('views.system.auditlog.search_method')" :label-width="70">
           <NSelect
             v-model:value="queryItems.method"
             style="width: 180px"
             :options="methodOptions"
             clearable
-            placeholder="请选择请求方法"
+            :placeholder="t('views.system.auditlog.search_method_placeholder')"
           />
         </QueryBarItem>
-        <QueryBarItem label="请求路径" :label-width="70">
+        <QueryBarItem :label="t('views.system.auditlog.search_path')" :label-width="70">
           <NInput
             v-model:value="queryItems.path"
             clearable
             type="text"
-            placeholder="请输入请求路径"
+            :placeholder="t('views.system.auditlog.search_path_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="状态码" :label-width="60">
+        <QueryBarItem :label="t('views.system.auditlog.search_status')" :label-width="60">
           <NInput
             v-model:value="queryItems.status"
             clearable
             type="text"
-            placeholder="请输入状态码"
+            :placeholder="t('views.system.auditlog.search_status_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="操作时间" :label-width="70">
+        <QueryBarItem :label="t('views.system.auditlog.search_time')" :label-width="70">
           <NDatePicker
             v-model:value="datetimeRange"
             type="datetimerange"
             clearable
-            placeholder="请选择时间范围"
+            :placeholder="t('views.system.auditlog.search_time_placeholder')"
             @update:value="handleDateRangeChange"
           />
         </QueryBarItem>

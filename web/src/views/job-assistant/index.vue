@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { NButton, NTabs, NTabPane, NModal, NRate, NInput, NSpace } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
@@ -8,6 +9,8 @@ import InterviewTab from './components/InterviewTab.vue'
 import SalaryTab from './components/SalaryTab.vue'
 import GuideTab from './components/GuideTab.vue'
 import ResumeExportTab from './components/ResumeExportTab.vue'
+
+const { t } = useI18n()
 
 defineOptions({ name: '求职助手' })
 
@@ -36,10 +39,10 @@ const submitFeedback = async () => {
       related_query: feedbackRelatedQuery.value,
       related_answer: feedbackRelatedAnswer.value,
     })
-    window.$message?.success('反馈已提交，感谢您的评价！')
+    window.$message?.success(t('views.job_assistant.msg_feedback_success'))
     feedbackVisible.value = false
   } catch (error: any) {
-    window.$message?.error('反馈提交失败')
+    window.$message?.error(t('views.job_assistant.msg_feedback_failed'))
   }
 }
 
@@ -48,13 +51,13 @@ const handleQuickAnalysis = () => {
   pipelineRef.value?.runPipeline()
 }
 
-const tabs = [
-  { name: 'pipeline', label: '简历优化', icon: 'icon-park-outline:clipboard' },
-  { name: 'interview', label: '面试问答', icon: 'icon-park-outline:communication' },
-  { name: 'salary', label: '薪资谈判', icon: 'icon-park-outline:finance' },
-  { name: 'guide', label: '求职攻略', icon: 'icon-park-outline:map-draw' },
-  { name: 'export', label: '简历导出', icon: 'icon-park-outline:export' },
-]
+const tabs = computed(() => [
+  { name: 'pipeline', label: t('views.job_assistant.tab_resume'), icon: 'icon-park-outline:clipboard' },
+  { name: 'interview', label: t('views.job_assistant.tab_interview'), icon: 'icon-park-outline:communication' },
+  { name: 'salary', label: t('views.job_assistant.tab_salary'), icon: 'icon-park-outline:finance' },
+  { name: 'guide', label: t('views.job_assistant.tab_guide'), icon: 'icon-park-outline:map-draw' },
+  { name: 'export', label: t('views.job_assistant.tab_export'), icon: 'icon-park-outline:export' },
+])
 </script>
 
 <template>
@@ -62,8 +65,8 @@ const tabs = [
     <div class="hm-job-page">
     <div class="hm-job-header">
       <div>
-        <h1 class="hm-job-title">AI 求职助手</h1>
-        <p class="hm-job-subtitle">简历优化 · 面试准备 · 薪资谈判 · 求职攻略</p>
+        <h1 class="hm-job-title">{{ t('views.job_assistant.page_title') }}</h1>
+        <p class="hm-job-subtitle">{{ t('views.job_assistant.page_subtitle') }}</p>
       </div>
       <button
         class="hm-action-btn primary"
@@ -71,7 +74,7 @@ const tabs = [
         @click="handleQuickAnalysis"
       >
         <TheIcon icon="icon-park-outline:rocket" :size="16" color="#fff" />
-        一键分析
+        {{ t('views.job_assistant.btn_quick_analysis') }}
       </button>
     </div>
 
@@ -95,26 +98,26 @@ const tabs = [
       <ResumeExportTab v-show="activeTab === 'export'" />
     </div>
 
-    <NModal v-model:show="feedbackVisible" preset="card" title="评价反馈" style="max-width: 480px; border-radius: var(--hm-radius-xl);">
+    <NModal v-model:show="feedbackVisible" preset="card" :title="t('views.job_assistant.feedback_title')" style="max-width: 480px; border-radius: var(--hm-radius-xl);">
       <div class="hm-feedback-form">
         <div class="hm-feedback-row">
-          <label class="hm-feedback-label">评分</label>
+          <label class="hm-feedback-label">{{ t('views.job_assistant.feedback_score') }}</label>
           <NRate v-model:value="feedbackRating" />
         </div>
         <div class="hm-feedback-row">
-          <label class="hm-feedback-label">修改意见</label>
+          <label class="hm-feedback-label">{{ t('views.job_assistant.feedback_opinion') }}</label>
           <NInput
             v-model:value="feedbackComment"
             type="textarea"
-            placeholder="请输入您的建议或修改意见..."
+            :placeholder="t('views.job_assistant.feedback_placeholder')"
             :rows="3"
           />
         </div>
       </div>
       <template #footer>
         <NSpace justify="end">
-          <NButton @click="feedbackVisible = false">取消</NButton>
-          <NButton type="primary" @click="submitFeedback">提交反馈</NButton>
+          <NButton @click="feedbackVisible = false">{{ t('views.job_assistant.btn_cancel') }}</NButton>
+          <NButton type="primary" @click="submitFeedback">{{ t('views.job_assistant.btn_submit_feedback') }}</NButton>
         </NSpace>
       </template>
     </NModal>

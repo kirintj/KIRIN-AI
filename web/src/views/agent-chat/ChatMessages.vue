@@ -5,6 +5,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import { useMarkdown } from '@/composables/useMarkdown'
 import { formatMsgTime, shouldShowTimeDivider } from '@/utils/common/time'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { AgentMessage } from '@/types/chat'
 
 const props = defineProps<{
@@ -17,15 +18,16 @@ const emit = defineEmits<{
   (e: 'quick-send', text: string): void
 }>()
 
+const { t } = useI18n()
 const { formatMessage, scrollToBottom } = useMarkdown()
 const copiedId = ref<string | null>(null)
 const feedbackMap = ref<Record<string, 'like' | 'dislike'>>({})
 
 const quickCommands = [
-  { label: '面试准备', icon: 'icon-park-outline:book-open', text: '帮我准备字节跳动前端开发的面试', color: '#0A59F7' },
-  { label: '薪资谈判', icon: 'icon-park-outline:balance-two', text: '北京互联网行业前端开发3年经验的薪资谈判建议', color: '#ED6F21' },
-  { label: '求职攻略', icon: 'icon-park-outline:map-draw', text: '跨行业跳槽求职攻略', color: '#722ED1' },
-  { label: '创建待办', icon: 'icon-park-outline:doc-add', text: '帮我创建一个待办：明天下午3点准备面试', color: '#64BB5C' },
+  { label: t('views.agent_chat.quick_interview'), icon: 'icon-park-outline:book-open', text: t('views.agent_chat.quick_interview_text'), color: '#0A59F7' },
+  { label: t('views.agent_chat.quick_salary'), icon: 'icon-park-outline:balance-two', text: t('views.agent_chat.quick_salary_text'), color: '#ED6F21' },
+  { label: t('views.agent_chat.quick_guide'), icon: 'icon-park-outline:map-draw', text: t('views.agent_chat.quick_guide_text'), color: '#722ED1' },
+  { label: t('views.agent_chat.quick_todo'), icon: 'icon-park-outline:doc-add', text: t('views.agent_chat.quick_todo_text'), color: '#64BB5C' },
 ]
 
 const copyMessage = async (content: string, id: string) => {
@@ -34,7 +36,7 @@ const copyMessage = async (content: string, id: string) => {
     copiedId.value = id
     setTimeout(() => { copiedId.value = null }, 1500)
   } catch {
-    window.$message?.error('复制失败')
+    window.$message?.error(t('views.agent_chat.msg_copy_failed'))
   }
 }
 
@@ -50,7 +52,7 @@ defineExpose({ scrollToBottom })
     <EmptyState
       v-if="messages.length === 0"
       icon="icon-park-outline:robot"
-      title="开始与 AI Agent 对话"
+      :title="t('views.agent_chat.empty_title')"
     >
       <div class="hm-quick-cmds">
         <button
@@ -83,11 +85,11 @@ defineExpose({ scrollToBottom })
                 :size="12"
                 :color="copiedId === item.id ? '#64BB5C' : 'var(--hm-font-fourth)'"
               />
-              {{ copiedId === item.id ? '已复制' : '复制' }}
+              {{ copiedId === item.id ? t('common.actions.copied') : t('common.actions.copy') }}
             </button>
             <button class="hm-msg-action" @click="emit('regenerate', index)" :disabled="isLoading">
               <TheIcon icon="icon-park-outline:refresh" :size="12" color="var(--hm-font-fourth)" />
-              重新生成
+              {{ t('views.agent_chat.btn_regenerate') }}
             </button>
             <button
               :class="['hm-msg-action', { active: feedbackMap[item.id] === 'like' }]"
@@ -116,7 +118,7 @@ defineExpose({ scrollToBottom })
 
     <div v-if="isLoading" class="hm-msg-item assistant">
       <div class="hm-msg-bubble hm-msg-loading">
-        <LoadingDots text="思考中" />
+        <LoadingDots :text="t('views.agent_chat.thinking')" />
       </div>
     </div>
   </div>

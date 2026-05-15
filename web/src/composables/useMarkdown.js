@@ -3,6 +3,9 @@ import hljs from 'highlight.js'
 import { markedHighlight } from 'marked-highlight'
 import DOMPurify from 'dompurify'
 import { nextTick } from 'vue'
+import i18n from '~/i18n'
+
+const t = i18n.global.t
 
 marked.use(
   markedHighlight({
@@ -26,7 +29,7 @@ const originalCode = renderer.code.bind(renderer)
 renderer.code = function (code, language, escaped) {
   const lang = language || ''
   const langLabel = lang ? `<span class="hm-code-lang">${lang}</span>` : ''
-  const copyBtn = `<button class="hm-code-copy-btn" data-action="copy">复制</button>`
+  const copyBtn = `<button class="hm-code-copy-btn" data-action="copy">${t('common.actions.copy')}</button>`
   const codeHtml = originalCode(code, language, escaped)
   return `<div class="hm-code-block"><div class="hm-code-header">${langLabel}${copyBtn}</div>${codeHtml}</div>`
 }
@@ -46,9 +49,9 @@ function ensureCopyHandler() {
     const code = block?.querySelector('code')
     if (code) {
       navigator.clipboard.writeText(code.textContent).then(() => {
-        btn.textContent = '已复制'
+        btn.textContent = t('common.actions.copied')
         setTimeout(() => {
-          btn.textContent = '复制'
+          btn.textContent = t('common.actions.copy')
         }, 1500)
       })
     }
@@ -86,7 +89,7 @@ export function useMarkdown() {
     try {
       return sanitize(marked(text))
     } catch (e) {
-      console.warn('Markdown渲染失败:', e)
+      console.warn(t('common.messages.markdown_render_failed'), e)
       return sanitize(text.replace(/\n/g, '<br>'))
     }
   }
@@ -96,7 +99,7 @@ export function useMarkdown() {
     try {
       return sanitize(marked(text))
     } catch (e) {
-      console.warn('Markdown渲染失败:', e)
+      console.warn(t('common.messages.markdown_render_failed'), e)
       return sanitize(text.replace(/\n/g, '<br>'))
     }
   }

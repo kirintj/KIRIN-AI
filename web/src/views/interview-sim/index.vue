@@ -8,6 +8,9 @@ import { formatShortDate } from '@/utils/common/time'
 import { NModal, NForm, NFormItem, NInput, NSelect, NPopconfirm, NDrawer, NDrawerContent } from 'naive-ui'
 import { useMarkdown } from '@/composables/useMarkdown'
 import { useBreakpoints } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const breakpoints = reactive(useBreakpoints({ sm: 768 }))
 const isMobile = breakpoints.smaller('sm')
@@ -109,20 +112,20 @@ onMounted(() => {
   <div class="hm-sidebar-layout">
     <template v-if="isMobile">
       <n-drawer v-model:show="mobileDrawerVisible" :width="280" placement="left" :auto-focus="false">
-        <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" title="面试模拟">
+        <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" :title="t('views.interview_sim.page_title')">
           <div class="hm-is-sidebar-drawer">
             <div class="hm-is-stats-row">
               <div class="hm-is-stat">
                 <span class="hm-is-stat-val">{{ sessionStats.total }}</span>
-                <span class="hm-is-stat-label">总场次</span>
+                <span class="hm-is-stat-label">{{ t('views.interview_sim.stat_total') }}</span>
               </div>
               <div class="hm-is-stat">
                 <span class="hm-is-stat-val" style="color: #64BB5C">{{ sessionStats.completed }}</span>
-                <span class="hm-is-stat-label">已完成</span>
+                <span class="hm-is-stat-label">{{ t('views.interview_sim.stat_completed') }}</span>
               </div>
               <div class="hm-is-stat">
                 <span class="hm-is-stat-val" style="color: var(--hm-brand)">{{ sessionStats.avgScore }}</span>
-                <span class="hm-is-stat-label">平均分</span>
+                <span class="hm-is-stat-label">{{ t('views.interview_sim.stat_avg_score') }}</span>
               </div>
             </div>
             <div class="hm-is-session-list">
@@ -134,13 +137,13 @@ onMounted(() => {
               >
                 <div class="hm-is-session-info">
                   <div class="hm-is-session-title">
-                    {{ session.company || '未指定公司' }} - {{ session.position || '未指定岗位' }}
+                    {{ session.company || t('views.interview_sim.unspecified_company') }} - {{ session.position || t('views.interview_sim.unspecified_position') }}
                   </div>
                   <div class="hm-is-session-meta">
                     <span :class="['hm-is-status', session.status]">
-                      {{ session.status === 'completed' ? '已完成' : '进行中' }}
+                      {{ session.status === 'completed' ? t('views.interview_sim.status_completed') : t('views.interview_sim.status_active') }}
                     </span>
-                    <span v-if="session.score" class="hm-is-score">{{ session.score }}分</span>
+                    <span v-if="session.score" class="hm-is-score">{{ session.score }}{{ t('views.interview_sim.score_suffix') }}</span>
                     <span class="hm-is-type">{{ store.INTERVIEW_TYPES[session.interview_type] || session.interview_type }}</span>
                   </div>
                 </div>
@@ -151,16 +154,16 @@ onMounted(() => {
                         <TheIcon icon="icon-park-outline:delete" :size="12" />
                       </button>
                     </template>
-                    确定删除该面试记录？
+                    {{ t('views.interview_sim.confirm_delete') }}
                   </NPopconfirm>
                 </div>
               </div>
               <EmptyState
                 v-if="store.sessions.length === 0"
                 icon="icon-park-outline:people-talk"
-                title="暂无面试记录"
+                :title="t('views.interview_sim.empty_no_records')"
               >
-                <span class="hm-is-empty-action" @click="handleNewSession">开始模拟面试</span>
+                <span class="hm-is-empty-action" @click="handleNewSession">{{ t('views.interview_sim.btn_start') }}</span>
               </EmptyState>
             </div>
           </div>
@@ -170,24 +173,24 @@ onMounted(() => {
     <template v-else>
     <div class="hm-sidebar">
       <div class="hm-sidebar-header">
-        <span class="hm-sidebar-title">面试模拟</span>
+        <span class="hm-sidebar-title">{{ t('views.interview_sim.page_title') }}</span>
         <button class="hm-sidebar-new-btn" @click="handleNewSession">
           <TheIcon icon="icon-park-outline:plus" :size="14" />
-          新面试
+          {{ t('views.interview_sim.btn_new') }}
         </button>
       </div>
       <div class="hm-is-stats-row">
         <div class="hm-is-stat">
           <span class="hm-is-stat-val">{{ sessionStats.total }}</span>
-          <span class="hm-is-stat-label">总场次</span>
+          <span class="hm-is-stat-label">{{ t('views.interview_sim.stat_total') }}</span>
         </div>
         <div class="hm-is-stat">
           <span class="hm-is-stat-val" style="color: #64BB5C">{{ sessionStats.completed }}</span>
-          <span class="hm-is-stat-label">已完成</span>
+          <span class="hm-is-stat-label">{{ t('views.interview_sim.stat_completed') }}</span>
         </div>
         <div class="hm-is-stat">
           <span class="hm-is-stat-val" style="color: var(--hm-brand)">{{ sessionStats.avgScore }}</span>
-          <span class="hm-is-stat-label">平均分</span>
+          <span class="hm-is-stat-label">{{ t('views.interview_sim.stat_avg_score') }}</span>
         </div>
       </div>
       <div class="hm-is-session-list">
@@ -199,13 +202,13 @@ onMounted(() => {
         >
           <div class="hm-is-session-info">
             <div class="hm-is-session-title">
-              {{ session.company || '未指定公司' }} - {{ session.position || '未指定岗位' }}
+              {{ session.company || t('views.interview_sim.unspecified_company') }} - {{ session.position || t('views.interview_sim.unspecified_position') }}
             </div>
             <div class="hm-is-session-meta">
               <span :class="['hm-is-status', session.status]">
-                {{ session.status === 'completed' ? '已完成' : '进行中' }}
+                {{ session.status === 'completed' ? t('views.interview_sim.status_completed') : t('views.interview_sim.status_active') }}
               </span>
-              <span v-if="session.score" class="hm-is-score">{{ session.score }}分</span>
+              <span v-if="session.score" class="hm-is-score">{{ session.score }}{{ t('views.interview_sim.score_suffix') }}</span>
               <span class="hm-is-type">{{ store.INTERVIEW_TYPES[session.interview_type] || session.interview_type }}</span>
             </div>
           </div>
@@ -216,16 +219,16 @@ onMounted(() => {
                   <TheIcon icon="icon-park-outline:delete" :size="12" />
                 </button>
               </template>
-              确定删除该面试记录？
+              {{ t('views.interview_sim.confirm_delete') }}
             </NPopconfirm>
           </div>
         </div>
         <EmptyState
           v-if="store.sessions.length === 0"
           icon="icon-park-outline:people-talk"
-          title="暂无面试记录"
+          :title="t('views.interview_sim.empty_no_records')"
         >
-          <span class="hm-is-empty-action" @click="handleNewSession">开始模拟面试</span>
+          <span class="hm-is-empty-action" @click="handleNewSession">{{ t('views.interview_sim.btn_start') }}</span>
         </EmptyState>
       </div>
     </div>
@@ -235,8 +238,8 @@ onMounted(() => {
       <EmptyState
         v-if="!store.currentSession"
         icon="icon-park-outline:people-talk"
-        title="AI 面试模拟"
-        description="模拟真实面试场景，AI 扮演面试官与你进行多轮对话"
+        :title="t('views.interview_sim.empty_title')"
+        :description="t('views.interview_sim.empty_desc')"
       >
         <div class="hm-is-types">
           <div v-for="(label, key) in store.INTERVIEW_TYPES" :key="key" class="hm-is-type-card" @click="setupForm.interview_type = key; showSetupModal = true">
@@ -251,9 +254,9 @@ onMounted(() => {
             <button v-if="isMobile" class="hm-is-mobile-btn" @click="mobileDrawerVisible = true">
               <TheIcon icon="icon-park-outline:people-talk" :size="16" />
             </button>
-            <span class="hm-is-chat-company">{{ store.currentSession.company || '未指定公司' }}</span>
+            <span class="hm-is-chat-company">{{ store.currentSession.company || t('views.interview_sim.unspecified_company') }}</span>
             <span class="hm-is-chat-divider">·</span>
-            <span class="hm-is-chat-position">{{ store.currentSession.position || '未指定岗位' }}</span>
+            <span class="hm-is-chat-position">{{ store.currentSession.position || t('views.interview_sim.unspecified_position') }}</span>
             <span class="hm-is-chat-type-tag">{{ store.INTERVIEW_TYPES[store.currentSession.interview_type] }}</span>
           </div>
           <div class="hm-toolbar-right">
@@ -264,7 +267,7 @@ onMounted(() => {
               :disabled="store.messages.length < 4 || store.isEvaluating"
             >
               <TheIcon icon="icon-park-outline:score" :size="14" />
-              {{ store.isEvaluating ? '评估中...' : '结束并评估' }}
+              {{ store.isEvaluating ? t('views.interview_sim.btn_evaluating') : t('views.interview_sim.btn_evaluate') }}
             </button>
           </div>
         </div>
@@ -295,7 +298,7 @@ onMounted(() => {
             <textarea
               v-model="message"
               class="hm-textarea"
-              placeholder="输入你的回答..."
+              :placeholder="t('views.interview_sim.input_placeholder')"
               rows="2"
               @keydown.enter.exact.prevent="sendMessage"
             />
@@ -310,34 +313,34 @@ onMounted(() => {
           </div>
         </div>
         <div v-else class="hm-is-completed-bar">
-          <span>面试已结束</span>
-          <span v-if="store.currentSession.score" class="hm-is-final-score">得分：{{ store.currentSession.score }}/10</span>
-          <button class="hm-is-view-eval" @click="evaluationResult = store.currentSession.evaluation; showEvaluation = true">查看评估</button>
+          <span>{{ t('views.interview_sim.interview_ended') }}</span>
+          <span v-if="store.currentSession.score" class="hm-is-final-score">{{ t('views.interview_sim.final_score', { score: store.currentSession.score }) }}</span>
+          <button class="hm-is-view-eval" @click="evaluationResult = store.currentSession.evaluation; showEvaluation = true">{{ t('views.interview_sim.btn_view_eval') }}</button>
         </div>
       </template>
     </div>
 
-    <NModal v-model:show="showSetupModal" preset="card" title="开始面试模拟" style="width: 440px">
+    <NModal v-model:show="showSetupModal" preset="card" :title="t('views.interview_sim.modal_title')" style="width: 440px">
       <NForm label-placement="left" label-width="80">
-        <NFormItem label="面试类型">
+        <NFormItem :label="t('views.interview_sim.form_type')">
           <NSelect v-model:value="setupForm.interview_type" :options="interviewTypeOptions" />
         </NFormItem>
-        <NFormItem label="目标公司">
-          <NInput v-model:value="setupForm.company" placeholder="如 字节跳动（可选）" />
+        <NFormItem :label="t('views.interview_sim.form_company')">
+          <NInput v-model:value="setupForm.company" :placeholder="t('views.interview_sim.form_company_placeholder')" />
         </NFormItem>
-        <NFormItem label="应聘岗位">
-          <NInput v-model:value="setupForm.position" placeholder="如 前端开发工程师" />
+        <NFormItem :label="t('views.interview_sim.form_position')">
+          <NInput v-model:value="setupForm.position" :placeholder="t('views.interview_sim.form_position_placeholder')" />
         </NFormItem>
       </NForm>
       <template #footer>
         <div style="display: flex; justify-content: flex-end; gap: 8px">
-          <button class="hm-modal-btn" @click="showSetupModal = false">取消</button>
-          <button class="hm-modal-btn primary" @click="handleStartInterview">开始面试</button>
+          <button class="hm-modal-btn" @click="showSetupModal = false">{{ t('views.interview_sim.btn_cancel') }}</button>
+          <button class="hm-modal-btn primary" @click="handleStartInterview">{{ t('views.interview_sim.btn_start_interview') }}</button>
         </div>
       </template>
     </NModal>
 
-    <NModal v-model:show="showEvaluation" preset="card" title="面试评估报告" style="width: 560px">
+    <NModal v-model:show="showEvaluation" preset="card" :title="t('views.interview_sim.eval_title')" style="width: 560px">
       <div v-if="evaluationResult" class="hm-is-eval-content">
         <div v-if="evaluationResult.score" class="hm-is-eval-score">
           <span class="hm-is-eval-score-num">{{ evaluationResult.score }}</span>
@@ -357,7 +360,7 @@ onMounted(() => {
         <div class="hm-is-eval-text md-bubble" v-html="formatMarkdown(evaluationResult.evaluation_text || '')"></div>
       </div>
       <template #footer>
-        <button class="hm-modal-btn primary" @click="showEvaluation = false">关闭</button>
+        <button class="hm-modal-btn primary" @click="showEvaluation = false">{{ t('views.interview_sim.btn_close') }}</button>
       </template>
     </NModal>
   </div>

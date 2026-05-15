@@ -1,5 +1,8 @@
 import { ref } from 'vue'
 import api from '@/api'
+import i18n from '~/i18n'
+
+const t = i18n.global.t
 
 const DOCUMENT_EXTENSIONS = [
   '.txt', '.md', '.py', '.js', '.ts', '.html', '.css', '.json', '.xml',
@@ -19,11 +22,11 @@ function getFileExtension(filename) {
 export function validateDocumentFile(file, maxSize = DEFAULT_MAX_SIZE) {
   const ext = getFileExtension(file.name)
   if (!DOCUMENT_EXTENSIONS.includes(ext)) {
-    window.$message?.error('仅支持文本、PDF、DOCX 类型文件')
+    window.$message?.error(t('common.upload.file_type_error'))
     return false
   }
   if (file.size > maxSize) {
-    window.$message?.error('文件大小不能超过 10MB')
+    window.$message?.error(t('common.upload.file_size_error'))
     return false
   }
   return true
@@ -31,16 +34,16 @@ export function validateDocumentFile(file, maxSize = DEFAULT_MAX_SIZE) {
 
 export function validateAvatarFile(file) {
   if (!file.type?.startsWith('image/')) {
-    window.$message?.error('仅支持上传图片文件')
+    window.$message?.error(t('common.upload.image_type_error'))
     return false
   }
   const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!allowed.includes(file.type)) {
-    window.$message?.error('仅支持 JPG/PNG/GIF/WebP 格式')
+    window.$message?.error(t('common.upload.image_format_error'))
     return false
   }
   if (file.size > AVATAR_MAX_SIZE) {
-    window.$message?.error('图片大小不能超过 5MB')
+    window.$message?.error(t('common.upload.image_size_error'))
     return false
   }
   return true
@@ -59,11 +62,11 @@ export function useFileUpload() {
       formData.append('collection', collection)
       formData.append('doc_type', docType)
       const res = await api.uploadDocuments(formData)
-      window.$message?.success(res.data?.message || '文件上传成功')
+      window.$message?.success(res.data?.message || t('common.upload.upload_success'))
       return res.data
     } catch (error) {
       console.error('文件上传失败', error)
-      window.$message?.error('文件上传失败')
+      window.$message?.error(t('common.upload.upload_failed'))
       return null
     } finally {
       uploading.value = false
@@ -80,14 +83,14 @@ export function useFileUpload() {
       const res = await api.parseFile(formData)
       const text = res?.data?.text
       if (text && text.trim()) {
-        window.$message?.success(`文件已解析（${res?.data?.pages || 1} 页）`)
+        window.$message?.success(t('common.upload.parse_success', { pages: res?.data?.pages || 1 }))
         return res.data
       } else {
-        window.$message?.warning('无法提取文件内容，请尝试粘贴文本')
+        window.$message?.warning(t('common.upload.parse_empty'))
         return null
       }
     } catch (err) {
-      const msg = err?.response?.data?.msg || err?.message || '文件解析失败'
+      const msg = err?.response?.data?.msg || err?.message || t('common.upload.parse_failed')
       window.$message?.error(msg)
       return null
     } finally {
@@ -103,10 +106,10 @@ export function useFileUpload() {
       const formData = new FormData()
       formData.append('file', rawFile)
       const res = await api.uploadAvatar(formData)
-      window.$message?.success('头像上传成功')
+      window.$message?.success(t('common.upload.avatar_upload_success'))
       return res.data
     } catch (err) {
-      window.$message?.error('头像上传失败')
+      window.$message?.error(t('common.upload.avatar_upload_failed'))
       return null
     } finally {
       uploading.value = false

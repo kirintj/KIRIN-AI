@@ -149,11 +149,12 @@ async def init_superuser():
 
 
 async def init_menus():
-    job_menu, _ = await Menu.get_or_create(
+    job_menu, _ = await Menu.update_or_create(
+        name="求职助手",
         defaults={
             "menu_type": MenuType.CATALOG,
             "path": "/job-assistant",
-            "order": 1,
+            "order": 3,
             "parent_id": 0,
             "icon": "icon-park-outline:robot",
             "is_hidden": False,
@@ -161,7 +162,6 @@ async def init_menus():
             "keepalive": False,
             "redirect": "",
         },
-        name="求职助手",
     )
     job_submenus = [
         ("简历优化", "pipeline", 1, "icon-park-outline:clipboard", "/job-assistant"),
@@ -170,7 +170,8 @@ async def init_menus():
         ("求职攻略", "guide", 4, "icon-park-outline:map-draw", "/job-assistant"),
     ]
     for name, path, order, icon, component in job_submenus:
-        await Menu.get_or_create(
+        await Menu.update_or_create(
+            name=name,
             defaults={
                 "menu_type": MenuType.MENU,
                 "path": path,
@@ -181,13 +182,13 @@ async def init_menus():
                 "component": component,
                 "keepalive": False,
             },
-            name=name,
         )
-    sys_parent, _ = await Menu.get_or_create(
+    sys_parent, _ = await Menu.update_or_create(
+        name="系统管理",
         defaults={
             "menu_type": MenuType.CATALOG,
             "path": "/system",
-            "order": 2,
+            "order": 8,
             "parent_id": 0,
             "icon": "icon-park-outline:all-application",
             "is_hidden": False,
@@ -195,7 +196,6 @@ async def init_menus():
             "keepalive": False,
             "redirect": "/system/user",
         },
-        name="系统管理",
     )
 
     sys_submenus = [
@@ -209,7 +209,8 @@ async def init_menus():
     ]
 
     for name, path, order, icon, component in sys_submenus:
-        await Menu.get_or_create(
+        await Menu.update_or_create(
+            name=name,
             defaults={
                 "menu_type": MenuType.MENU,
                 "path": path,
@@ -220,7 +221,6 @@ async def init_menus():
                 "component": component,
                 "keepalive": False,
             },
-            name=name,
         )
 
 
@@ -231,25 +231,21 @@ async def init_apis():
 
 
 async def init_roles():
-    roles = await Role.exists()
-    if not roles:
-        admin_role = await Role.create(
-            name="管理员",
-            desc="管理员角色",
-        )
-        user_role = await Role.create(
-            name="普通用户",
-            desc="普通用户角色",
-        )
+    admin_role, _ = await Role.get_or_create(name="管理员", defaults={"desc": "管理员角色"})
+    user_role, _ = await Role.get_or_create(name="普通用户", defaults={"desc": "普通用户角色"})
 
-        all_apis = await Api.all()
-        await admin_role.apis.add(*all_apis)
-        all_menus = await Menu.all()
-        await admin_role.menus.add(*all_menus)
-        await user_role.menus.add(*all_menus)
+    all_apis = await Api.all()
+    await admin_role.apis.add(*all_apis)
+    all_menus = await Menu.all()
+    await admin_role.menus.add(*all_menus)
 
-        basic_apis = await Api.filter(Q(method__in=["GET"]) | Q(tags="基础模块"))
-        await user_role.apis.add(*basic_apis)
+    admin_only_menu_names = {"用户管理", "角色管理", "菜单管理", "API管理", "审计日志"}
+    user_menus = [m for m in all_menus if m.name not in admin_only_menu_names]
+    await user_role.menus.clear()
+    await user_role.menus.add(*user_menus)
+
+    basic_apis = await Api.filter(Q(method__in=["GET"]) | Q(tags="基础模块"))
+    await user_role.apis.add(*basic_apis)
 
 
 async def init_config():

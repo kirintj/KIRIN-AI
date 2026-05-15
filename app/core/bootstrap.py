@@ -39,6 +39,7 @@ def make_middlewares():
                 "/api/v1/base/refresh_token",
                 "/docs",
                 "/openapi.json",
+                "/static",
             ],
         ),
     ]

@@ -27,7 +27,7 @@ const handleAvatarSelect = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    $message.warning('请选择图片文件')
+    $message.warning(t('views.profile.message_select_image'))
     return
   }
   avatarFile.value = file
@@ -52,7 +52,7 @@ async function updateProfile() {
       .updateUser({ ...infoForm.value, id: userStore.userId })
       .then(() => {
         userStore.setUserInfo(infoForm.value)
-        $message.success(t('common.text.update_success'))
+        $message.success(t('common.messages.update_success'))
       })
       .catch(() => {})
       .finally(() => {
@@ -148,7 +148,7 @@ function validatePasswordSame(rule, value) {
     <div class="hm-profile">
       <div class="hm-profile-header">
         <h1 class="hm-profile-title">{{ $t('views.profile.label_modify_information') }}</h1>
-        <p class="hm-profile-subtitle">管理你的账号信息和安全设置</p>
+        <p class="hm-profile-subtitle">{{ t('views.profile.subtitle') }}</p>
       </div>
 
       <div class="hm-profile-tabs">
@@ -188,7 +188,7 @@ function validatePasswordSame(rule, value) {
               </div>
               <div class="hm-avatar-meta">
                 <span class="hm-avatar-name">{{ infoForm.username }}</span>
-                <span class="hm-avatar-tip">点击更换头像</span>
+                <span class="hm-avatar-tip">{{ t('views.profile.avatar_tip') }}</span>
               </div>
               <input
                 ref="avatarInputRef"
@@ -215,7 +215,7 @@ function validatePasswordSame(rule, value) {
           </NFormItem>
           <div class="hm-form-actions">
             <NButton type="primary" :loading="isLoading" @click="updateProfile">
-              {{ $t('common.buttons.update') }}
+              {{ $t('common.actions.save') }}
             </NButton>
           </div>
         </NForm>
@@ -259,7 +259,7 @@ function validatePasswordSame(rule, value) {
           </NFormItem>
           <div class="hm-form-actions">
             <NButton type="primary" :loading="isLoading" @click="updatePassword">
-              {{ $t('common.buttons.update') }}
+              {{ $t('common.actions.save') }}
             </NButton>
           </div>
         </NForm>

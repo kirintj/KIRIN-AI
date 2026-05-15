@@ -69,7 +69,7 @@ class TrackerRepository:
         return count > 0
 
     async def count_by_status(self, user_id: str) -> dict:
-        from tortoise.aggregation import Count
+        from tortoise.functions import Count
         rows = (
             await self.model.filter(user_id=user_id)
             .group_by("status")

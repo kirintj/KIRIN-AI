@@ -7,114 +7,116 @@
             <icon-custom-logo text-40 />
           </div>
           <h1 class="brand-title">{{ $t('app_name') }}</h1>
-          <p class="brand-subtitle">AI Agent 智能助手平台</p>
+          <p class="brand-subtitle">{{ t('views.login.brand_subtitle') }}</p>
         </div>
 
         <template v-if="!isRegister">
-          <div class="hm-form-group">
-            <n-input
-              v-model:value="loginInfo.username"
-              autofocus
-              class="hm-input"
-              placeholder="请输入用户名"
-              :maxlength="20"
+          <form @submit.prevent="handleLogin">
+            <div class="hm-form-group">
+              <n-input
+                v-model:value="loginInfo.username"
+                autofocus
+                class="hm-input"
+                :placeholder="t('views.login.placeholder_username')"
+                :maxlength="20"
+              >
+                <template #prefix>
+                  <TheIcon icon="icon-park-outline:user" :size="18" color="var(--hm-font-tertiary)" />
+                </template>
+              </n-input>
+            </div>
+            <div class="hm-form-group">
+              <n-input
+                v-model:value="loginInfo.password"
+                class="hm-input"
+                type="password"
+                show-password-on="mousedown"
+                :placeholder="t('views.login.placeholder_password')"
+                :maxlength="20"
+              >
+                <template #prefix>
+                  <TheIcon icon="icon-park-outline:lock" :size="18" color="var(--hm-font-tertiary)" />
+                </template>
+              </n-input>
+            </div>
+            <n-button
+              class="hm-btn-primary"
+              :loading="loading"
+              @click="handleLogin"
             >
-              <template #prefix>
-                <TheIcon icon="icon-park-outline:user" :size="18" color="var(--hm-font-tertiary)" />
-              </template>
-            </n-input>
-          </div>
-          <div class="hm-form-group">
-            <n-input
-              v-model:value="loginInfo.password"
-              class="hm-input"
-              type="password"
-              show-password-on="mousedown"
-              placeholder="请输入密码"
-              :maxlength="20"
-              @keypress.enter="handleLogin"
-            >
-              <template #prefix>
-                <TheIcon icon="icon-park-outline:lock" :size="18" color="var(--hm-font-tertiary)" />
-              </template>
-            </n-input>
-          </div>
-          <n-button
-            class="hm-btn-primary"
-            :loading="loading"
-            @click="handleLogin"
-          >
-            {{ $t('views.login.text_login') }}
-          </n-button>
+              {{ $t('views.login.text_login') }}
+            </n-button>
+          </form>
           <div class="hm-switch-link">
-            <span @click="switchToRegister">还没有账号？<em>立即注册</em></span>
+            <span @click="switchToRegister">{{ t('views.login.text_no_account') }}<em>{{ t('views.login.text_register_now') }}</em></span>
           </div>
         </template>
 
         <template v-else>
-          <div class="hm-form-group">
-            <n-input
-              v-model:value="registerInfo.username"
-              autofocus
-              class="hm-input"
-              placeholder="请输入用户名"
-              :maxlength="20"
+          <form @submit.prevent="handleRegister">
+            <div class="hm-form-group">
+              <n-input
+                v-model:value="registerInfo.username"
+                autofocus
+                class="hm-input"
+                :placeholder="t('views.login.placeholder_username')"
+                :maxlength="20"
+              >
+                <template #prefix>
+                  <TheIcon icon="icon-park-outline:user" :size="18" color="var(--hm-font-tertiary)" />
+                </template>
+              </n-input>
+            </div>
+            <div class="hm-form-group">
+              <n-input
+                v-model:value="registerInfo.email"
+                class="hm-input"
+                :placeholder="t('views.login.placeholder_email')"
+                :maxlength="50"
+              >
+                <template #prefix>
+                  <TheIcon icon="icon-park-outline:mail" :size="18" color="var(--hm-font-tertiary)" />
+                </template>
+              </n-input>
+            </div>
+            <div class="hm-form-group">
+              <n-input
+                v-model:value="registerInfo.password"
+                class="hm-input"
+                type="password"
+                show-password-on="mousedown"
+                :placeholder="t('views.login.placeholder_password')"
+                :maxlength="20"
+              >
+                <template #prefix>
+                  <TheIcon icon="icon-park-outline:lock" :size="18" color="var(--hm-font-tertiary)" />
+                </template>
+              </n-input>
+            </div>
+            <div class="hm-form-group">
+              <n-input
+                v-model:value="registerInfo.confirmPassword"
+                class="hm-input"
+                type="password"
+                show-password-on="mousedown"
+                :placeholder="t('views.login.placeholder_confirm_password')"
+                :maxlength="20"
+              >
+                <template #prefix>
+                  <TheIcon icon="icon-park-outline:lock" :size="18" color="var(--hm-font-tertiary)" />
+                </template>
+              </n-input>
+            </div>
+            <n-button
+              class="hm-btn-primary"
+              :loading="loading"
+              @click="handleRegister"
             >
-              <template #prefix>
-                <TheIcon icon="icon-park-outline:user" :size="18" color="var(--hm-font-tertiary)" />
-              </template>
-            </n-input>
-          </div>
-          <div class="hm-form-group">
-            <n-input
-              v-model:value="registerInfo.email"
-              class="hm-input"
-              placeholder="请输入邮箱"
-              :maxlength="50"
-            >
-              <template #prefix>
-                <TheIcon icon="icon-park-outline:mail" :size="18" color="var(--hm-font-tertiary)" />
-              </template>
-            </n-input>
-          </div>
-          <div class="hm-form-group">
-            <n-input
-              v-model:value="registerInfo.password"
-              class="hm-input"
-              type="password"
-              show-password-on="mousedown"
-              placeholder="请输入密码"
-              :maxlength="20"
-            >
-              <template #prefix>
-                <TheIcon icon="icon-park-outline:lock" :size="18" color="var(--hm-font-tertiary)" />
-              </template>
-            </n-input>
-          </div>
-          <div class="hm-form-group">
-            <n-input
-              v-model:value="registerInfo.confirmPassword"
-              class="hm-input"
-              type="password"
-              show-password-on="mousedown"
-              placeholder="请确认密码"
-              :maxlength="20"
-              @keypress.enter="handleRegister"
-            >
-              <template #prefix>
-                <TheIcon icon="icon-park-outline:lock" :size="18" color="var(--hm-font-tertiary)" />
-              </template>
-            </n-input>
-          </div>
-          <n-button
-            class="hm-btn-primary"
-            :loading="loading"
-            @click="handleRegister"
-          >
-            注册
-          </n-button>
+              {{ t('views.login.text_register') }}
+            </n-button>
+          </form>
           <div class="hm-switch-link">
-            <span @click="switchToLogin">已有账号？<em>返回登录</em></span>
+            <span @click="switchToLogin">{{ t('views.login.text_has_account') }}<em>{{ t('views.login.text_back_to_login') }}</em></span>
           </div>
         </template>
       </div>
@@ -127,7 +129,7 @@
       :close-on-esc="false"
       :auto-focus="false"
       preset="card"
-      title="请完成安全验证"
+      :title="t('views.login.captcha_title')"
       :style="{ width: modalWidth }"
       :bordered="false"
       :segmented="{ content: true, footer: true }"
@@ -152,9 +154,15 @@ import { lStorage, setToken, setRefreshToken } from '@/utils'
 import api from '@/api'
 import { addDynamicRoutes } from '@/router'
 import { useI18n } from 'vue-i18n'
+import { defineAsyncComponent } from 'vue'
 import TheIcon from '@/components/icon/TheIcon.vue'
-import SlideVerify from 'vue3-slide-verify'
-import 'vue3-slide-verify/dist/style.css'
+
+const SlideVerify = defineAsyncComponent(() =>
+  import('vue3-slide-verify').then((mod) => {
+    import('vue3-slide-verify/dist/style.css')
+    return mod
+  })
+)
 
 const router = useRouter()
 const { query } = useRoute()
@@ -184,7 +192,6 @@ window.addEventListener('resize', () => {
 })
 
 initLoginInfo()
-fetchCaptcha()
 
 function initLoginInfo() {
   const localLoginInfo = lStorage.get('loginInfo')
@@ -208,7 +215,7 @@ function onCaptchaSuccess({ left }) {
 }
 
 function onCaptchaFail() {
-  $message.warning('验证失败，请重试')
+  $message.warning(t('views.login.message_captcha_failed'))
   fetchCaptcha()
 }
 
@@ -223,7 +230,7 @@ function switchToRegister() {
 
 function switchToLogin() {
   isRegister.value = false
-  fetchCaptcha()
+  captchaData.value = null
 }
 
 async function handleLogin() {
@@ -233,9 +240,7 @@ async function handleLogin() {
     return
   }
   if (!captchaData.value) {
-    $message.warning('验证码加载中，请稍后')
-    fetchCaptcha()
-    return
+    await fetchCaptcha()
   }
   showCaptcha.value = true
 }
@@ -271,14 +276,14 @@ async function doLogin(captcha_id, x) {
 
 async function handleRegister() {
   const { username, email, password, confirmPassword } = registerInfo.value
-  if (!username) { $message.warning('请输入用户名'); return }
-  if (!email) { $message.warning('请输入邮箱'); return }
-  if (!password) { $message.warning('请输入密码'); return }
-  if (password !== confirmPassword) { $message.warning('两次密码输入不一致'); return }
+  if (!username) { $message.warning(t('views.login.message_username_required')); return }
+  if (!email) { $message.warning(t('views.login.message_email_required')); return }
+  if (!password) { $message.warning(t('views.login.message_password_required')); return }
+  if (password !== confirmPassword) { $message.warning(t('views.login.message_password_diff')); return }
   try {
     loading.value = true
     await api.register({ username, email, password })
-    $message.success('注册成功，请登录')
+    $message.success(t('views.login.message_register_success'))
     loginInfo.value.username = username
     loginInfo.value.password = ''
     switchToLogin()

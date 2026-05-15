@@ -1,5 +1,6 @@
 <script setup>
 import { h, onMounted, ref, resolveDirective, withDirectives } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NButton,
   NCheckbox,
@@ -27,6 +28,8 @@ import { useCRUD } from '@/composables'
 import api from '@/api'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { useUserStore } from '@/store'
+
+const { t } = useI18n()
 
 defineOptions({ name: '用户管理' })
 
@@ -64,7 +67,7 @@ const handleAvatarSelect = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
   if (!file.type.startsWith('image/')) {
-    $message.warning('请选择图片文件')
+    $message.warning(t('views.system.user.msg_select_image'))
     return
   }
   avatarFile.value = file
@@ -89,21 +92,21 @@ onMounted(() => {
 
 const columns = [
   {
-    title: '名称',
+    title: t('views.system.user.col_name'),
     key: 'username',
     width: 60,
     align: 'center',
     ellipsis: { tooltip: true },
   },
   {
-    title: '邮箱',
+    title: t('views.system.user.col_email'),
     key: 'email',
     width: 60,
     align: 'center',
     ellipsis: { tooltip: true },
   },
   {
-    title: '用户角色',
+    title: t('views.system.user.col_role'),
     key: 'role',
     width: 60,
     align: 'center',
@@ -118,14 +121,14 @@ const columns = [
     },
   },
   {
-    title: '部门',
+    title: t('views.system.user.col_dept'),
     key: 'dept.name',
     align: 'center',
     width: 40,
     ellipsis: { tooltip: true },
   },
   {
-    title: '超级用户',
+    title: t('views.system.user.col_superuser'),
     key: 'is_superuser',
     align: 'center',
     width: 40,
@@ -133,12 +136,12 @@ const columns = [
       return h(
         NTag,
         { type: 'info', style: { margin: '2px 3px' } },
-        { default: () => (row.is_superuser ? '是' : '否') }
+        { default: () => (row.is_superuser ? t('views.system.user.value_yes') : t('views.system.user.value_no')) }
       )
     },
   },
   {
-    title: '上次登录时间',
+    title: t('views.system.user.col_last_login'),
     key: 'last_login',
     align: 'center',
     width: 80,
@@ -155,7 +158,7 @@ const columns = [
     },
   },
   {
-    title: '禁用',
+    title: t('views.system.user.col_disabled'),
     key: 'is_active',
     width: 50,
     align: 'center',
@@ -172,7 +175,7 @@ const columns = [
     },
   },
   {
-    title: '操作',
+    title: t('views.system.user.col_actions'),
     key: 'actions',
     width: 220,
     align: 'center',
@@ -191,7 +194,7 @@ const columns = [
                 delete modalForm.value.dept
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.user.btn_edit')]
           ),
           [[vPermission, 'post/api/v1/user/update']]
         ),
@@ -207,11 +210,11 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.user.btn_delete')]
                 ),
                 [[vPermission, 'delete/api/v1/user/delete']]
               ),
-            default: () => h('div', {}, '确定删除该用户吗?'),
+            default: () => h('div', {}, t('views.system.user.confirm_delete')),
           }
         ),
         !row.is_superuser && h(
@@ -220,10 +223,10 @@ const columns = [
             onPositiveClick: async () => {
               try {
                 await api.resetPassword({ user_id: row.id });
-                $message.success('密码已成功重置为123456');
+                $message.success(t('views.system.user.msg_reset_success'));
                 await $table.value?.handleSearch();
               } catch (error) {
-                $message.error('重置密码失败: ' + error.message);
+                $message.error(t('views.system.user.msg_reset_failed', { error: error.message }));
               }
             },
             onNegativeClick: () => {},
@@ -234,11 +237,11 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), '重置密码']
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), t('views.system.user.btn_reset_password')]
                 ),
                 [[vPermission, 'post/api/v1/user/reset_password']]
               ),
-            default: () => h('div', {}, '确定重置用户密码为123456吗?'),
+            default: () => h('div', {}, t('views.system.user.confirm_reset')),
           }
         ),
       ]
@@ -251,7 +254,7 @@ async function handleUpdateDisable(row) {
   if (!row.id) return
   const userStore = useUserStore()
   if (userStore.userId === row.id) {
-    $message.error('当前登录用户不可禁用！')
+    $message.error(t('views.system.user.msg_cannot_disable_self'))
     return
   }
   row.publishing = true
@@ -265,7 +268,7 @@ async function handleUpdateDisable(row) {
   row.dept_id = row.dept?.id
   try {
     await api.updateUser(row)
-    $message?.success(row.is_active ? '已取消禁用该用户' : '已禁用该用户')
+    $message?.success(row.is_active ? t('views.system.user.msg_enabled') : t('views.system.user.msg_disabled'))
     $table.value?.handleSearch()
   } catch (err) {
     // 有异常恢复原来的状态
@@ -297,14 +300,14 @@ const validateAddUser = {
   username: [
     {
       required: true,
-      message: '请输入名称',
+      message: t('views.system.user.validate_name'),
       trigger: ['input', 'blur'],
     },
   ],
   email: [
     {
       required: true,
-      message: '请输入邮箱地址',
+      message: t('views.system.user.validate_email'),
       trigger: ['input', 'change'],
     },
     {
@@ -312,7 +315,7 @@ const validateAddUser = {
       validator: (rule, value, callback) => {
         const re = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
         if (!re.test(modalForm.value.email)) {
-          callback('邮箱格式错误')
+          callback(t('views.system.user.validate_email_format'))
           return
         }
         callback()
@@ -322,21 +325,21 @@ const validateAddUser = {
   password: [
     {
       required: true,
-      message: '请输入密码',
+      message: t('views.system.user.validate_password'),
       trigger: ['input', 'blur', 'change'],
     },
   ],
   confirmPassword: [
     {
       required: true,
-      message: '请再次输入密码',
+      message: t('views.system.user.validate_confirm'),
       trigger: ['input'],
     },
     {
       trigger: ['blur'],
       validator: (rule, value, callback) => {
         if (value !== modalForm.value.password) {
-          callback('两次密码输入不一致')
+          callback(t('views.system.user.validate_password_diff'))
           return
         }
         callback()
@@ -347,7 +350,7 @@ const validateAddUser = {
     {
       type: 'array',
       required: true,
-      message: '请至少选择一个角色',
+      message: t('views.system.user.validate_role'),
       trigger: ['blur', 'change'],
     },
   ],
@@ -358,7 +361,7 @@ const validateAddUser = {
   <div class="hm-user-layout">
   <div class="hm-sidebar">
     <div class="hm-sidebar-header">
-      <span class="hm-sidebar-title">部门列表</span>
+      <span class="hm-sidebar-title">{{ t('views.system.user.sidebar_title') }}</span>
     </div>
     <div class="hm-dept-tree-wrap">
       <NTree
@@ -372,11 +375,11 @@ const validateAddUser = {
     </div>
   </div>
   <div class="hm-user-main">
-      <CommonPage show-footer title="用户列表">
+      <CommonPage show-footer :title="t('views.system.user.page_title')">
         <template #action>
           <button class="hm-action-btn primary" v-permission="'post/api/v1/user/create'" @click="handleAdd">
             <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
-            新建用户
+            {{ t('views.system.user.btn_new') }}
           </button>
         </template>
         <!-- 表格 -->
@@ -387,21 +390,21 @@ const validateAddUser = {
           :get-data="api.getUserList"
         >
           <template #queryBar>
-            <QueryBarItem label="名称" :label-width="40">
+            <QueryBarItem :label="t('views.system.user.search_name')" :label-width="40">
               <NInput
                 v-model:value="queryItems.username"
                 clearable
                 type="text"
-                placeholder="请输入用户名称"
+                :placeholder="t('views.system.user.search_name_placeholder')"
                 @keypress.enter="$table?.handleSearch()"
               />
             </QueryBarItem>
-            <QueryBarItem label="邮箱" :label-width="40">
+            <QueryBarItem :label="t('views.system.user.search_email')" :label-width="40">
               <NInput
                 v-model:value="queryItems.email"
                 clearable
                 type="text"
-                placeholder="请输入邮箱"
+                :placeholder="t('views.system.user.search_email_placeholder')"
                 @keypress.enter="$table?.handleSearch()"
               />
             </QueryBarItem>
@@ -436,34 +439,34 @@ const validateAddUser = {
                   style="display: none"
                   @change="handleAvatarSelect"
                 />
-                <span class="avatar-tip">点击上传头像，将自动裁剪为正方形</span>
+                <span class="avatar-tip">{{ t('views.system.user.avatar_tip') }}</span>
               </div>
             </NFormItem>
-            <NFormItem label="用户名称" path="username">
-              <NInput v-model:value="modalForm.username" clearable placeholder="请输入用户名称" />
+            <NFormItem :label="t('views.system.user.form_name')" path="username">
+              <NInput v-model:value="modalForm.username" clearable :placeholder="t('views.system.user.form_name_placeholder')" />
             </NFormItem>
-            <NFormItem label="邮箱" path="email">
-              <NInput v-model:value="modalForm.email" clearable placeholder="请输入邮箱" />
+            <NFormItem :label="t('views.system.user.form_email')" path="email">
+              <NInput v-model:value="modalForm.email" clearable :placeholder="t('views.system.user.form_email_placeholder')" />
             </NFormItem>
-            <NFormItem v-if="modalAction === 'add'" label="密码" path="password">
+            <NFormItem v-if="modalAction === 'add'" :label="t('views.system.user.form_password')" path="password">
               <NInput
                 v-model:value="modalForm.password"
                 show-password-on="mousedown"
                 type="password"
                 clearable
-                placeholder="请输入密码"
+                :placeholder="t('views.system.user.form_password_placeholder')"
               />
             </NFormItem>
-            <NFormItem v-if="modalAction === 'add'" label="确认密码" path="confirmPassword">
+            <NFormItem v-if="modalAction === 'add'" :label="t('views.system.user.form_confirm')" path="confirmPassword">
               <NInput
                 v-model:value="modalForm.confirmPassword"
                 show-password-on="mousedown"
                 type="password"
                 clearable
-                placeholder="请确认密码"
+                :placeholder="t('views.system.user.form_confirm_placeholder')"
               />
             </NFormItem>
-            <NFormItem label="角色" path="role_ids">
+            <NFormItem :label="t('views.system.user.form_role')" path="role_ids">
               <NCheckboxGroup v-model:value="modalForm.role_ids">
                 <NSpace item-style="display: flex;">
                   <NCheckbox
@@ -475,7 +478,7 @@ const validateAddUser = {
                 </NSpace>
               </NCheckboxGroup>
             </NFormItem>
-            <NFormItem label="超级用户" path="is_superuser">
+            <NFormItem :label="t('views.system.user.form_superuser')" path="is_superuser">
               <NSwitch
                 v-model:value="modalForm.is_superuser"
                 size="small"
@@ -483,7 +486,7 @@ const validateAddUser = {
                 :unchecked-value="false"
               ></NSwitch>
             </NFormItem>
-            <NFormItem label="禁用" path="is_active">
+            <NFormItem :label="t('views.system.user.form_disabled')" path="is_active">
               <NSwitch
                 v-model:value="modalForm.is_active"
                 :checked-value="false"
@@ -491,13 +494,13 @@ const validateAddUser = {
                 :default-value="true"
               />
             </NFormItem>
-            <NFormItem label="部门" path="dept_id">
+            <NFormItem :label="t('views.system.user.form_dept')" path="dept_id">
               <NTreeSelect
                 v-model:value="modalForm.dept_id"
                 :options="deptOption"
                 key-field="id"
                 label-field="name"
-                placeholder="请选择部门"
+                :placeholder="t('views.system.user.form_dept_placeholder')"
                 clearable
                 default-expand-all
               ></NTreeSelect>

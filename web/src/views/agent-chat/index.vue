@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useAgentChatStore } from '@/store/modules/agent-chat'
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, watch, ref, reactive } from 'vue'
 import { useMarkdown } from '@/composables/useMarkdown'
+import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { NDrawer, NDrawerContent } from 'naive-ui'
 import { useBreakpoints } from '@vueuse/core'
@@ -9,6 +10,7 @@ import ChatSidebar from './ChatSidebar.vue'
 import ChatMessages from './ChatMessages.vue'
 import ChatInput from './ChatInput.vue'
 
+const { t } = useI18n()
 const agentStore = useAgentChatStore()
 const message = ref('')
 const { scrollToBottom } = useMarkdown()
@@ -70,7 +72,7 @@ watch(() => agentStore.messages.length, () => {
   <div class="hm-sidebar-layout">
     <template v-if="isMobile">
       <n-drawer v-model:show="mobileDrawerVisible" :width="280" placement="left" :auto-focus="false">
-        <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" title="对话">
+        <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" :title="t('views.agent_chat.conversations')">
           <ChatSidebar
             :conversations="agentStore.conversations"
             :filtered-conversations="agentStore.filteredConversations"
@@ -89,7 +91,7 @@ watch(() => agentStore.messages.length, () => {
     <template v-else>
       <div :class="['hm-sidebar', { collapsed: sidebarCollapsed }]">
         <div :class="['hm-sidebar-header', { collapsed: sidebarCollapsed }]">
-          <span v-if="!sidebarCollapsed" class="hm-sidebar-title">对话</span>
+          <span v-if="!sidebarCollapsed" class="hm-sidebar-title">{{ t('views.agent_chat.conversations') }}</span>
           <button v-if="!sidebarCollapsed" class="hm-sidebar-new-btn" @click="agentStore.createConversation">
             <TheIcon icon="icon-park-outline:plus" :size="16" />
           </button>
@@ -121,7 +123,7 @@ watch(() => agentStore.messages.length, () => {
             <TheIcon icon="icon-park-outline:chat" :size="16" />
           </button>
           <span class="hm-chat-title">AI Agent</span>
-          <span v-if="!isMobile" class="hm-chat-badge">智能对话</span>
+          <span v-if="!isMobile" class="hm-chat-badge">{{ t('views.agent_chat.smart_dialog') }}</span>
         </div>
         <div class="hm-toolbar-right">
           <button
@@ -131,7 +133,7 @@ watch(() => agentStore.messages.length, () => {
             @click="agentStore.useLangGraph = !agentStore.useLangGraph"
           >
             <TheIcon icon="icon-park-outline:mindmap-map" :size="14" />
-            {{ agentStore.useLangGraph ? 'LangGraph' : '经典' }}
+            {{ agentStore.useLangGraph ? 'LangGraph' : t('views.agent_chat.mode_classic') }}
           </button>
           <button
             v-if="!isMobile"
@@ -140,11 +142,11 @@ watch(() => agentStore.messages.length, () => {
             @click="agentStore.useLlmRouter = !agentStore.useLlmRouter"
           >
             <TheIcon icon="icon-park-outline:brain" :size="14" />
-            LLM 路由
+            {{ t('views.agent_chat.llm_router') }}
           </button>
           <button class="hm-toolbar-chip danger" @click="handleClearMemory">
             <TheIcon icon="icon-park-outline:delete" :size="14" />
-            <span v-if="!isMobile">清空</span>
+            <span v-if="!isMobile">{{ t('views.agent_chat.btn_clear') }}</span>
           </button>
         </div>
       </div>

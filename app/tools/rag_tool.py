@@ -16,7 +16,6 @@ class RAGTool(BaseTool):
         return answer + source_info
 
     async def run_with_collection(self, query: str, collection_name: str, top_k: int = 5) -> dict:
-        config = PipelineConfig(top_k=top_k)
-        pipeline = AdvancedRAGPipeline(config)
-        result = await pipeline.search_and_generate(query, collection_name=collection_name)
+        pipeline = AdvancedRAGPipeline()
+        result = await pipeline.search_and_generate(query, collection_name=collection_name, top_k=top_k)
         return result

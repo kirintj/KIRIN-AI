@@ -2,10 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import api from '@/api'
 import { formatRelativeTime } from '@/utils/common/time'
 
+const { t } = useI18n()
 const userStore = useUserStore()
 const router = useRouter()
 
@@ -17,17 +19,18 @@ const loading = ref(true)
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 6) return '夜深了'
-  if (hour < 12) return '早上好'
-  if (hour < 14) return '中午好'
-  if (hour < 18) return '下午好'
-  return '晚上好'
+  if (hour < 6) return t('views.workbench.greeting_night')
+  if (hour < 12) return t('views.workbench.greeting_morning')
+  if (hour < 14) return t('views.workbench.greeting_noon')
+  if (hour < 18) return t('views.workbench.greeting_afternoon')
+  return t('views.workbench.greeting_evening')
 })
 
 const todayDate = computed(() => {
   const now = new Date()
-  const weekDay = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()]
-  return `${now.getMonth() + 1}月${now.getDate()}日 星期${weekDay}`
+  const weekDays = t('views.workbench.weekday_names').split(',')
+  const weekDay = weekDays[now.getDay()]
+  return t('views.workbench.date_format', { month: now.getMonth() + 1, day: now.getDate(), weekday: weekDay })
 })
 
 const todoProgress = computed(() => {
@@ -61,7 +64,7 @@ const activityTimeline = computed(() => {
       items.push({
         icon: 'icon-park-outline:sequence',
         color: '#E84026',
-        text: `投递了 ${app.company} - ${app.position}`,
+        text: t('views.workbench.applied_company', { company: app.company, position: app.position }),
         time: formatRelativeTime(app.created_at),
       })
     }
@@ -71,7 +74,7 @@ const activityTimeline = computed(() => {
       items.push({
         icon: 'icon-park-outline:data-arrival',
         color: '#64BB5C',
-        text: todo.done ? `完成待办：${todo.content}` : `新增待办：${todo.content}`,
+        text: todo.done ? t('views.workbench.completed_todo', { content: todo.content }) : t('views.workbench.created_todo', { content: todo.content }),
         time: formatRelativeTime(todo.created_at),
       })
     }
@@ -124,29 +127,29 @@ const goToTracker = () => router.push('/tracker')
 const goToInterviewSim = () => router.push('/interview-sim')
 const goToResumeExport = () => router.push('/job-assistant')
 
-const quickActions = [
-  { label: '面试准备', icon: 'icon-park-outline:book-open', color: '#0A59F7', action: () => router.push('/agent-chat') },
-  { label: '投递记录', icon: 'icon-park-outline:log', color: '#E84026', action: goToTracker },
-  { label: '新建待办', icon: 'icon-park-outline:data-arrival', color: '#64BB5C', action: goToTodo },
-  { label: '简历优化', icon: 'icon-park-outline:redo', color: '#722ED1', action: goToJobAssistant },
-]
+const quickActions = computed(() => [
+  { label: t('views.workbench.quick_interview'), icon: 'icon-park-outline:book-open', color: '#0A59F7', action: () => router.push('/agent-chat') },
+  { label: t('views.workbench.quick_tracker'), icon: 'icon-park-outline:log', color: '#E84026', action: goToTracker },
+  { label: t('views.workbench.quick_todo'), icon: 'icon-park-outline:data-arrival', color: '#64BB5C', action: goToTodo },
+  { label: t('views.workbench.quick_resume'), icon: 'icon-park-outline:redo', color: '#722ED1', action: goToJobAssistant },
+])
 
-const featureGrid = [
-  { label: '智能对话', desc: '意图识别 · 工具调用 · RAG', icon: 'icon-park-outline:topic', color: '#0A59F7', action: goToAIChat },
-  { label: '知识库', desc: '文档管理 · 向量化 · 检索', icon: 'icon-park-outline:data', color: '#722ED1', action: goToKnowledge },
-  { label: '待办任务', desc: 'AI 创建 · 任务管理', icon: 'icon-park-outline:data-arrival', color: '#64BB5C', action: goToTodo },
-  { label: '求职进度', desc: '投递追踪 · 看板管理', icon: 'icon-park-outline:log', color: '#E84026', action: goToTracker },
-  { label: '面试模拟', desc: 'AI 面试官 · 多轮评估', icon: 'icon-park-outline:form-one', color: '#722ED1', action: goToInterviewSim },
-  { label: '求职助手', desc: '简历优化 · 薪资谈判', icon: 'icon-park-outline:robot', color: '#ED6F21', action: goToJobAssistant },
-  { label: '简历导出', desc: 'AI 生成 · DOCX 导出', icon: 'icon-park-outline:export', color: '#0A59F7', action: goToResumeExport },
-  { label: '知识库配置', desc: '文档管理 · 向量存储', icon: 'icon-park-outline:setting-two', color: '#86909C', action: goToSettings },
-]
+const featureGrid = computed(() => [
+  { label: t('views.workbench.feature_chat'), desc: t('views.workbench.feature_chat_desc'), icon: 'icon-park-outline:topic', color: '#0A59F7', action: goToAIChat },
+  { label: t('views.workbench.feature_knowledge'), desc: t('views.workbench.feature_knowledge_desc'), icon: 'icon-park-outline:data', color: '#722ED1', action: goToKnowledge },
+  { label: t('views.workbench.feature_todo'), desc: t('views.workbench.feature_todo_desc'), icon: 'icon-park-outline:data-arrival', color: '#64BB5C', action: goToTodo },
+  { label: t('views.workbench.feature_tracker'), desc: t('views.workbench.feature_tracker_desc'), icon: 'icon-park-outline:log', color: '#E84026', action: goToTracker },
+  { label: t('views.workbench.feature_interview'), desc: t('views.workbench.feature_interview_desc'), icon: 'icon-park-outline:form-one', color: '#722ED1', action: goToInterviewSim },
+  { label: t('views.workbench.feature_job_assistant'), desc: t('views.workbench.feature_job_assistant_desc'), icon: 'icon-park-outline:robot', color: '#ED6F21', action: goToJobAssistant },
+  { label: t('views.workbench.feature_resume_export'), desc: t('views.workbench.feature_resume_export_desc'), icon: 'icon-park-outline:export', color: '#0A59F7', action: goToResumeExport },
+  { label: t('views.workbench.feature_settings'), desc: t('views.workbench.feature_settings_desc'), icon: 'icon-park-outline:setting-two', color: '#86909C', action: goToSettings },
+])
 
-const statCards = ref([
-  { label: '投递总数', key: 'tracker', icon: 'icon-park-outline:share-sys', color: '#0A59F7', getValue: (d: any) => d?.tracker?.total || 0 },
-  { label: '面试中', key: 'interviewing', icon: 'icon-park-outline:push-door', color: '#ED6F21', getValue: (d: any) => d?.tracker?.by_status?.interview || 0 },
-  { label: '已录用', key: 'offer', icon: 'icon-park-outline:check-one', color: '#64BB5C', getValue: (d: any) => d?.tracker?.by_status?.offer || 0 },
-  { label: '待办完成', key: 'todos', icon: 'icon-park-outline:data-arrival', color: '#722ED1', getValue: (d: any) => d?.todos?.done || 0 },
+const statCards = computed(() => [
+  { label: t('views.workbench.stat_total_applications'), key: 'tracker', icon: 'icon-park-outline:share-sys', color: '#0A59F7', getValue: (d: any) => d?.tracker?.total || 0 },
+  { label: t('views.workbench.stat_interviewing'), key: 'interviewing', icon: 'icon-park-outline:push-door', color: '#ED6F21', getValue: (d: any) => d?.tracker?.by_status?.interview || 0 },
+  { label: t('views.workbench.stat_offer'), key: 'offer', icon: 'icon-park-outline:check-one', color: '#64BB5C', getValue: (d: any) => d?.tracker?.by_status?.offer || 0 },
+  { label: t('views.workbench.stat_todo_done'), key: 'todos', icon: 'icon-park-outline:data-arrival', color: '#722ED1', getValue: (d: any) => d?.todos?.done || 0 },
 ])
 
 onMounted(async () => {
@@ -167,8 +170,8 @@ onMounted(async () => {
     <div class="hm-wb-header">
       <div class="hm-wb-header-glow"></div>
       <div class="hm-wb-greeting">
-        <h1 class="hm-wb-title">{{ greeting }}，{{ userInfo?.username || '用户' }}</h1>
-        <p class="hm-wb-subtitle">{{ todayDate }} · AI Agent 智能助手，为你效劳</p>
+        <h1 class="hm-wb-title">{{ greeting }}，{{ userInfo?.username || t('views.workbench.default_user') }}</h1>
+        <p class="hm-wb-subtitle">{{ todayDate }} · {{ t('views.workbench.ai_assistant_subtitle') }}</p>
       </div>
       <div class="hm-wb-header-right">
         <div class="hm-wb-quick-actions">
@@ -203,7 +206,7 @@ onMounted(async () => {
     <template v-else>
       <div v-if="dashboardData" class="hm-wb-section hm-wb-fade-in">
         <div class="hm-wb-section-header">
-          <h2 class="hm-wb-section-title">数据概览</h2>
+          <h2 class="hm-wb-section-title">{{ t('views.workbench.data_overview') }}</h2>
           <div class="hm-wb-progress-ring-wrap">
             <svg class="hm-wb-progress-ring" width="44" height="44" viewBox="0 0 80 80">
               <circle cx="40" cy="40" r="24" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="8" />
@@ -260,7 +263,7 @@ onMounted(async () => {
 
       <div class="hm-wb-two-col hm-wb-fade-in" style="animation-delay: 0.1s">
         <div class="hm-wb-section">
-          <h2 class="hm-wb-section-title">本周活动</h2>
+          <h2 class="hm-wb-section-title">{{ t('views.workbench.weekly_activity') }}</h2>
           <div class="hm-wb-chart-card">
             <div v-if="weeklyChartBars.length > 0" class="hm-wb-chart">
               <div
@@ -282,15 +285,15 @@ onMounted(async () => {
                 <div class="hm-empty-state-icon">
                   <TheIcon icon="icon-park-outline:chart-bar" :size="32" color="var(--hm-font-fourth)" />
                 </div>
-                <div class="hm-empty-state-title">暂无活动数据</div>
-                <div class="hm-empty-state-desc">投递职位后，这里会展示你的周活动趋势</div>
+                <div class="hm-empty-state-title">{{ t('views.workbench.no_activity_data') }}</div>
+                <div class="hm-empty-state-desc">{{ t('views.workbench.no_activity_desc') }}</div>
               </div>
             </div>
           </div>
         </div>
 
         <div class="hm-wb-section">
-          <h2 class="hm-wb-section-title">最近动态</h2>
+          <h2 class="hm-wb-section-title">{{ t('views.workbench.recent_activity') }}</h2>
           <div class="hm-wb-timeline-card">
             <div v-if="activityTimeline.length > 0" class="hm-wb-timeline">
               <div
@@ -314,8 +317,8 @@ onMounted(async () => {
                 <div class="hm-empty-state-icon">
                   <TheIcon icon="icon-park-outline:time" :size="32" color="var(--hm-font-fourth)" />
                 </div>
-                <div class="hm-empty-state-title">暂无动态</div>
-                <div class="hm-empty-state-desc">投递职位或完成待办后，动态会在这里展示</div>
+                <div class="hm-empty-state-title">{{ t('views.workbench.no_activity') }}</div>
+                <div class="hm-empty-state-desc">{{ t('views.workbench.no_activity_desc2') }}</div>
               </div>
             </div>
           </div>
@@ -323,7 +326,7 @@ onMounted(async () => {
       </div>
 
       <div class="hm-wb-section hm-wb-fade-in" style="animation-delay: 0.2s">
-        <h2 class="hm-wb-section-title">功能中心</h2>
+        <h2 class="hm-wb-section-title">{{ t('views.workbench.feature_center') }}</h2>
         <div class="hm-wb-feature-grid">
           <div
             v-for="item in featureGrid"
@@ -343,20 +346,20 @@ onMounted(async () => {
 
       <div class="hm-wb-section hm-wb-fade-in" style="animation-delay: 0.3s">
         <div class="hm-wb-section-header">
-          <h2 class="hm-wb-section-title">最近对话</h2>
-          <button class="hm-wb-view-all" @click="goToAIChat">查看全部</button>
+          <h2 class="hm-wb-section-title">{{ t('views.workbench.recent_conversations') }}</h2>
+          <button class="hm-wb-view-all" @click="goToAIChat">{{ t('views.workbench.view_all') }}</button>
         </div>
         <div class="hm-wb-history-card">
           <div v-if="recentConversations.length === 0" class="hm-empty-state">
             <div class="hm-empty-state-icon">
               <TheIcon icon="icon-park-outline:history" :size="32" color="var(--hm-font-fourth)" />
             </div>
-            <div class="hm-empty-state-title">暂无对话记录</div>
-            <div class="hm-empty-state-desc">与 AI 助手对话，获取求职建议和面试指导</div>
+            <div class="hm-empty-state-title">{{ t('views.workbench.no_conversations') }}</div>
+            <div class="hm-empty-state-desc">{{ t('views.workbench.no_conversations_desc') }}</div>
             <div class="hm-empty-state-action">
               <button class="hm-action-btn primary" @click="goToAIChat">
                 <TheIcon icon="icon-park-outline:chat" :size="14" color="#fff" />
-                开始对话
+                {{ t('views.workbench.start_conversation') }}
               </button>
             </div>
           </div>
@@ -371,8 +374,8 @@ onMounted(async () => {
                 <TheIcon icon="icon-park-outline:chat" :size="18" color="var(--hm-brand)" />
               </div>
               <div class="hm-wb-conv-info">
-                <div class="hm-wb-conv-title">{{ conv.title || '新对话' }}</div>
-                <div class="hm-wb-conv-meta">{{ conv.message_count || 0 }} 条消息</div>
+                <div class="hm-wb-conv-title">{{ conv.title || t('views.workbench.new_conversation') }}</div>
+                <div class="hm-wb-conv-meta">{{ t('views.workbench.messages_count', { count: conv.message_count || 0 }) }}</div>
               </div>
               <div class="hm-wb-conv-time">{{ formatRelativeTime(conv.updated_at) }}</div>
             </div>

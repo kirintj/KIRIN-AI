@@ -5,9 +5,19 @@ import {
   setRefreshToken,
   removeToken,
   removeRefreshToken,
-} from '@/utils'
+} from '@/utils/auth/token'
 import { resolveResError } from './helpers'
 import { useUserStore } from '@/store'
+
+let _t = null
+function t(key, params) {
+  if (!_t) {
+    // Lazy: avoids circular dependency at module load time
+    const i18n = window.__kirin_i18n__
+    _t = i18n?.global?.t ?? ((k) => k)
+  }
+  return _t(key, params)
+}
 
 let isRefreshing = false
 let pendingRequests = []
@@ -64,7 +74,7 @@ export async function resReject(error) {
     const refreshToken = getRefreshToken()
     if (!refreshToken) {
       forceLogout()
-      return Promise.reject({ code: 401, message: '登录已过期', error })
+      return Promise.reject({ code: 401, message: t('common.http.unauthorized'), error })
     }
 
     if (isRefreshing) {
@@ -77,7 +87,7 @@ export async function resReject(error) {
               .then(resolve, reject)
           } else {
             forceLogout()
-            reject({ code: 401, message: '登录已过期', error })
+            reject({ code: 401, message: t('common.http.unauthorized'), error })
           }
         })
       })
@@ -92,7 +102,7 @@ export async function resReject(error) {
       const res = await axios.post(`${baseURL}/base/refresh_token`, { refresh_token: refreshToken })
       const { access_token, refresh_token: newRefreshToken } = res.data?.data || {}
       if (!access_token) {
-        throw new Error('刷新令牌返回为空')
+        throw new Error(t('common.http.refresh_token_empty'))
       }
       setToken(access_token)
       setRefreshToken(newRefreshToken || refreshToken)
@@ -106,7 +116,7 @@ export async function resReject(error) {
       onRefreshFailed()
       isRefreshing = false
       forceLogout()
-      return Promise.reject({ code: 401, message: '登录已过期', error: refreshError })
+      return Promise.reject({ code: 401, message: t('common.http.unauthorized'), error: refreshError })
     }
   }
 

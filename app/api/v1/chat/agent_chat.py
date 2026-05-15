@@ -9,7 +9,8 @@ from app.schemas.business import AgentChatRequest, AddDocumentRequest
 from app.agent.executor import AgentExecutor
 from app.agent.langgraph_graph import get_graph
 from app.rag.chromadb_client import (
-    add_documents, delete_all_documents, get_collection_stats, list_documents, get_document_chunks,
+    add_documents, delete_all_documents, delete_document, move_document,
+    get_collection_stats, list_documents, get_document_chunks,
     search_chromadb, search_with_filter, hybrid_search, rebuild_all_collections, COLLECTION_NAMES,
 )
 from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
@@ -151,6 +152,49 @@ async def get_document_detail(
     except Exception:
         _logger.exception("获取文档详情失败")
         return Fail(code=500, msg="获取文档详情失败")
+
+
+@router.delete("/documents/{doc_id}")
+async def delete_single_document(
+    doc_id: str,
+    collection_name: str = "knowledge_base",
+    current_user: User = DependAuth,
+):
+    try:
+        count = await delete_document(doc_id, collection_name)
+        if count == 0:
+            return Fail(code=404, msg="文档不存在")
+        return Success(data={"message": f"已删除文档 {doc_id}", "deleted_chunks": count})
+    except Exception:
+        _logger.exception("删除文档失败")
+        return Fail(code=500, msg="删除文档失败")
+
+
+class MoveDocumentInput(BaseModel):
+    doc_id: str
+    from_collection: str
+    to_collection: str
+    doc_type: str = ""
+
+
+@router.post("/documents/move")
+async def move_document_endpoint(
+    data: MoveDocumentInput,
+    current_user: User = DependAuth,
+):
+    try:
+        result = await move_document(
+            doc_id=data.doc_id,
+            from_collection=data.from_collection,
+            to_collection=data.to_collection,
+            new_doc_type=data.doc_type,
+        )
+        if result.get("error"):
+            return Fail(code=404, msg=result["error"])
+        return Success(data=result)
+    except Exception:
+        _logger.exception("移动文档失败")
+        return Fail(code=500, msg="移动文档失败")
 
 
 class SearchInput(BaseModel):

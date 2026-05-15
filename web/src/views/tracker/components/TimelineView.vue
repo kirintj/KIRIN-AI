@@ -2,7 +2,9 @@
 import { useTrackerStore } from '@/store/modules/tracker'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { NPopconfirm } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const store = useTrackerStore()
 
 const emit = defineEmits<{
@@ -24,8 +26,8 @@ const formatDate = (dateStr: string) => {
   <div class="hm-timeline-view">
     <div v-if="store.timelineApplications.length === 0" class="hm-list-empty">
       <TheIcon icon="icon-park-outline:time" :size="48" color="var(--hm-font-fourth)" />
-      <p>暂无求职记录</p>
-      <span @click="emit('add')">添加第一条记录</span>
+      <p>{{ t('views.tracker.empty_no_applications') }}</p>
+      <span @click="emit('add')">{{ t('views.tracker.btn_add_first') }}</span>
     </div>
     <div v-else class="hm-timeline-list">
       <div
@@ -52,12 +54,12 @@ const formatDate = (dateStr: string) => {
             <span>{{ formatDate(app.created_at) }}</span>
           </div>
           <div class="hm-timeline-actions">
-            <button class="hm-timeline-btn" @click="emit('edit', app)">编辑</button>
+            <button class="hm-timeline-btn" @click="emit('edit', app)">{{ t('views.tracker.btn_edit') }}</button>
             <NPopconfirm @positive-click="handleDelete(app.id)">
               <template #trigger>
-                <button class="hm-timeline-btn danger">删除</button>
+                <button class="hm-timeline-btn danger">{{ t('views.tracker.btn_delete') }}</button>
               </template>
-              确定删除？
+              {{ t('views.tracker.confirm_delete_short') }}
             </NPopconfirm>
           </div>
         </div>

@@ -3,7 +3,9 @@ import { useTrackerStore } from '@/store/modules/tracker'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { NPopconfirm } from 'naive-ui'
 import { useTrackerDrag } from '../composables/useTrackerDrag'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const store = useTrackerStore()
 
 const emit = defineEmits<{
@@ -69,7 +71,7 @@ const formatDate = (dateStr: string) => {
                     <TheIcon icon="icon-park-outline:delete" :size="12" />
                   </button>
                 </template>
-                确定删除该记录？
+                {{ t('views.tracker.confirm_delete') }}
               </NPopconfirm>
             </div>
           </div>
@@ -96,12 +98,12 @@ const formatDate = (dateStr: string) => {
             </select>
             <button class="hm-app-edit-btn" @click="emit('edit', app)">
               <TheIcon icon="icon-park-outline:edit" :size="12" />
-              编辑
+              {{ t('views.tracker.btn_edit') }}
             </button>
           </div>
         </div>
         <div v-if="store.getApplicationsByStatus(status).length === 0" class="hm-kanban-empty">
-          暂无记录
+          {{ t('views.tracker.empty_no_records') }}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 <script setup>
 import { h, onMounted, ref, resolveDirective, withDirectives } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { NButton, NForm, NFormItem, NInput, NPopconfirm, NSelect, NDatePicker } from 'naive-ui'
 
 import CommonPage from '@/components/page/CommonPage.vue'
@@ -12,6 +13,8 @@ import { formatDate, renderIcon } from '@/utils'
 import { useCRUD } from '@/composables'
 import api from '@/api'
 
+const { t } = useI18n()
+
 defineOptions({ name: '对话管理' })
 
 const $table = ref(null)
@@ -22,9 +25,9 @@ const queryItems = ref({
 const vPermission = resolveDirective('permission')
 
 const roleOptions = [
-  { label: '用户', value: 'user' },
-  { label: '助手', value: 'assistant' },
-  { label: '系统', value: 'system' },
+  { label: t('views.system.chathistory.role_user'), value: 'user' },
+  { label: t('views.system.chathistory.role_assistant'), value: 'assistant' },
+  { label: t('views.system.chathistory.role_system'), value: 'system' },
 ]
 
 const formatValidDate = (date) => {
@@ -68,27 +71,27 @@ onMounted(() => {
 })
 
 const addChatRules = {
-  username: [{ required: true, message: '请输入用户名称', trigger: 'blur' }],
-  role: [{ required: true, message: '请选择角色', trigger: 'blur' }],
-  content: [{ required: true, message: '请输入消息内容', trigger: 'blur' }],
+  username: [{ required: true, message: t('views.system.chathistory.validate_username'), trigger: 'blur' }],
+  role: [{ required: true, message: t('views.system.chathistory.validate_role'), trigger: 'blur' }],
+  content: [{ required: true, message: t('views.system.chathistory.validate_content'), trigger: 'blur' }],
 }
 
 const columns = [
   { title: 'ID', key: 'id', align: 'center', width: 60 },
-  { title: '用户名称', key: 'username', align: 'center', width: 100 },
+  { title: t('views.system.chathistory.col_username'), key: 'username', align: 'center', width: 100 },
   {
-    title: '角色',
+    title: t('views.system.chathistory.col_role'),
     key: 'role',
     align: 'center',
     width: 80,
     render(row) {
-      const map = { user: '用户', assistant: '助手', system: '系统' }
+      const map = { user: t('views.system.chathistory.role_user'), assistant: t('views.system.chathistory.role_assistant'), system: t('views.system.chathistory.role_system') }
       return map[row.role] || row.role
     },
   },
-  { title: '消息内容', key: 'content', align: 'left', ellipsis: { tooltip: true } },
+  { title: t('views.system.chathistory.col_content'), key: 'content', align: 'left', ellipsis: { tooltip: true } },
   {
-    title: '创建时间',
+    title: t('views.system.chathistory.col_created'),
     key: 'timestamp',
     align: 'center',
     width: 180,
@@ -97,7 +100,7 @@ const columns = [
     },
   },
   {
-    title: '操作',
+    title: t('views.system.chathistory.col_actions'),
     key: 'actions',
     align: 'center',
     width: 140,
@@ -110,7 +113,7 @@ const columns = [
             class: 'hm-row-btn',
             onClick: () => editHandle(row),
           },
-          [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
+          [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.chathistory.btn_edit')]
         ),
         h(
           NPopconfirm,
@@ -122,9 +125,9 @@ const columns = [
               h(
                 'button',
                 { class: 'hm-row-btn danger' },
-                [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
+                [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.chathistory.btn_delete')]
               ),
-            default: () => '确定删除该记录？',
+            default: () => t('views.system.chathistory.confirm_delete'),
           }
         ),
       ]
@@ -134,11 +137,11 @@ const columns = [
 </script>
 
 <template>
-  <CommonPage show-footer title="对话记录列表">
+  <CommonPage show-footer :title="t('views.system.chathistory.page_title')">
     <template #action>
       <button class="hm-action-btn primary" @click="handleAdd">
         <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
-        新建记录
+        {{ t('views.system.chathistory.btn_new') }}
       </button>
     </template>
 
@@ -149,10 +152,10 @@ const columns = [
       :get-data="api.getChatHistoryList"
     >
       <template #queryBar>
-        <QueryBarItem label="用户名" :label-width="60">
-          <NInput v-model:value="queryItems.username" clearable placeholder="用户名" />
+        <QueryBarItem :label="t('views.system.chathistory.search_username')" :label-width="60">
+          <NInput v-model:value="queryItems.username" clearable :placeholder="t('views.system.chathistory.search_username_placeholder')" />
         </QueryBarItem>
-        <QueryBarItem label="角色" :label-width="40">
+        <QueryBarItem :label="t('views.system.chathistory.search_role')" :label-width="40">
           <NSelect v-model:value="queryItems.role" clearable :options="roleOptions" />
         </QueryBarItem>
       </template>
@@ -165,13 +168,13 @@ const columns = [
       @save="handleSave"
     >
       <NForm ref="modalFormRef" :model="modalForm" :rules="addChatRules" label-width="80">
-        <NFormItem label="用户名称" path="username">
+        <NFormItem :label="t('views.system.chathistory.form_username')" path="username">
           <NInput v-model:value="modalForm.username" clearable />
         </NFormItem>
-        <NFormItem label="角色" path="role">
+        <NFormItem :label="t('views.system.chathistory.form_role')" path="role">
           <NSelect v-model:value="modalForm.role" :options="roleOptions" clearable />
         </NFormItem>
-        <NFormItem label="内容" path="content">
+        <NFormItem :label="t('views.system.chathistory.form_content')" path="content">
           <NInput v-model:value="modalForm.content" type="textarea" :rows="4" />
         </NFormItem>
       </NForm>

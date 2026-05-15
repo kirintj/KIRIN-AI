@@ -1,5 +1,6 @@
 <script setup>
 import { h, onMounted, ref, resolveDirective, withDirectives } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { NButton, NForm, NFormItem, NInput, NInputNumber, NPopconfirm, NTreeSelect } from 'naive-ui'
 
 import CommonPage from '@/components/page/CommonPage.vue'
@@ -12,6 +13,8 @@ import { renderIcon } from '@/utils'
 import { useCRUD } from '@/composables'
 // import { loginTypeMap, loginTypeOptions } from '@/constant/data'
 import api from '@/api'
+
+const { t } = useI18n()
 
 defineOptions({ name: '部门管理' })
 
@@ -50,7 +53,7 @@ const deptRules = {
   name: [
     {
       required: true,
-      message: '请输入部门名称',
+      message: t('views.system.dept.validate_name'),
       trigger: ['input', 'blur', 'change'],
     },
   ],
@@ -63,21 +66,21 @@ async function addDepts() {
 
 const columns = [
   {
-    title: '部门名称',
+    title: t('views.system.dept.col_name'),
     key: 'name',
     width: 'auto',
     align: 'center',
     ellipsis: { tooltip: true },
   },
   {
-    title: '备注',
+    title: t('views.system.dept.col_remark'),
     key: 'desc',
     align: 'center',
     width: 'auto',
     ellipsis: { tooltip: true },
   },
   {
-    title: '操作',
+    title: t('views.system.dept.col_actions'),
     key: 'actions',
     width: 140,
     align: 'center',
@@ -98,7 +101,7 @@ const columns = [
                 handleEdit(row)
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), '编辑']
+            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.dept.btn_edit')]
           ),
           [[vPermission, 'post/api/v1/dept/update']]
         ),
@@ -114,11 +117,11 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), '删除']
+                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.dept.btn_delete')]
                 ),
                 [[vPermission, 'delete/api/v1/dept/delete']]
               ),
-            default: () => h('div', {}, '确定删除该部门吗?'),
+            default: () => h('div', {}, t('views.system.dept.confirm_delete')),
           }
         ),
       ]
@@ -129,12 +132,12 @@ const columns = [
 
 <template>
   <!-- 业务页面 -->
-  <CommonPage show-footer title="部门列表">
+  <CommonPage show-footer :title="t('views.system.dept.page_title')">
     <template #action>
       <div>
         <button class="hm-action-btn primary" v-permission="'post/api/v1/dept/create'" @click="addDepts">
           <TheIcon icon="material-symbols:add" :size="16" color="#fff" />
-          新建部门
+          {{ t('views.system.dept.btn_new') }}
         </button>
       </div>
     </template>
@@ -146,12 +149,12 @@ const columns = [
       :get-data="api.getDepts"
     >
       <template #queryBar>
-        <QueryBarItem label="部门名称" :label-width="80">
+        <QueryBarItem :label="t('views.system.dept.search_placeholder')" :label-width="80">
           <NInput
             v-model:value="queryItems.name"
             clearable
             type="text"
-            placeholder="请输入部门名称"
+            :placeholder="t('views.system.dept.search_placeholder')"
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
@@ -173,25 +176,25 @@ const columns = [
         :model="modalForm"
         :rules="deptRules"
       >
-        <NFormItem label="父级部门" path="parent_id">
+        <NFormItem :label="t('views.system.dept.form_parent')" path="parent_id">
           <NTreeSelect
             v-model:value="modalForm.parent_id"
             :options="deptOption"
             key-field="id"
             label-field="name"
-            placeholder="请选择父级部门"
+            :placeholder="t('views.system.dept.form_parent_placeholder')"
             clearable
             default-expand-all
             :disabled="isDisabled"
           ></NTreeSelect>
         </NFormItem>
-        <NFormItem label="部门名称" path="name">
-          <NInput v-model:value="modalForm.name" clearable placeholder="请输入部门名称" />
+        <NFormItem :label="t('views.system.dept.form_name')" path="name">
+          <NInput v-model:value="modalForm.name" clearable :placeholder="t('views.system.dept.form_name_placeholder')" />
         </NFormItem>
-        <NFormItem label="备注" path="desc">
+        <NFormItem :label="t('views.system.dept.form_remark')" path="desc">
           <NInput v-model:value="modalForm.desc" type="textarea" clearable />
         </NFormItem>
-        <NFormItem label="排序" path="order">
+        <NFormItem :label="t('views.system.dept.form_sort')" path="order">
           <NInputNumber v-model:value="modalForm.order" min="0"></NInputNumber>
         </NFormItem>
       </NForm>

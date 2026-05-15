@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api'
+import i18n from '~/i18n'
+
+const t = i18n.global.t
 
 export const useTrackerStore = defineStore('tracker', () => {
   const applications = ref([])
@@ -9,14 +12,14 @@ export const useTrackerStore = defineStore('tracker', () => {
   const searchKeyword = ref('')
 
   const STATUS_LIST = ['wishlist', 'applied', 'screening', 'interview', 'offer', 'rejected']
-  const STATUS_LABELS = {
-    wishlist: '意向',
-    applied: '已投递',
-    screening: '筛选中',
-    interview: '面试中',
-    offer: '已录用',
-    rejected: '已拒绝',
-  }
+  const STATUS_LABELS = computed(() => ({
+    wishlist: t('common.tracker.status_wishlist'),
+    applied: t('common.tracker.status_applied'),
+    screening: t('common.tracker.status_screening'),
+    interview: t('common.tracker.status_interview'),
+    offer: t('common.tracker.status_offer'),
+    rejected: t('common.tracker.status_rejected'),
+  }))
   const STATUS_COLORS = {
     wishlist: '#86909C',
     applied: '#0A59F7',
