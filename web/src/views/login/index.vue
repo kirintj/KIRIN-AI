@@ -128,7 +128,7 @@
       :auto-focus="false"
       preset="card"
       title="请完成安全验证"
-      class="hm-captcha-modal"
+      :style="{ width: modalWidth }"
       :bordered="false"
       :segmented="{ content: true, footer: true }"
     >
@@ -177,6 +177,11 @@ const registerInfo = ref({
 })
 
 const captchaData = ref(null)
+
+const modalWidth = ref(window.innerWidth <= 480 ? 'calc(100vw - 32px)' : '380px')
+window.addEventListener('resize', () => {
+  modalWidth.value = window.innerWidth <= 480 ? 'calc(100vw - 32px)' : '380px'
+})
 
 initLoginInfo()
 fetchCaptcha()
@@ -407,10 +412,6 @@ async function handleRegister() {
   transform: translateY(-1px);
 }
 
-.hm-captcha-modal {
-  width: 380px;
-}
-
 .hm-captcha-wrapper {
   display: flex;
   justify-content: center;
@@ -449,9 +450,6 @@ async function handleRegister() {
   .hm-btn-primary {
     height: 40px;
     font-size: 15px;
-  }
-  .hm-captcha-modal {
-    width: calc(100% - 32px);
   }
 }
 </style>

@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import { NButton, NForm, NFormItem, NInput, NTabPane, NTabs } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import CommonPage from '@/components/page/CommonPage.vue'
 import AvatarCropper from '@/components/avatar/AvatarCropper.vue'
@@ -11,6 +10,7 @@ import api from '@/api'
 const { t } = useI18n()
 const userStore = useUserStore()
 const isLoading = ref(false)
+const activeTab = ref('info')
 
 const infoFormRef = ref(null)
 const infoForm = ref({
@@ -145,63 +145,91 @@ function validatePasswordSame(rule, value) {
 
 <template>
   <CommonPage :show-header="false">
-    <NTabs type="line" animated>
-      <NTabPane name="website" :tab="$t('views.profile.label_modify_information')">
-        <div class="m-30 flex items-center">
-          <NForm
-            ref="infoFormRef"
-            label-placement="left"
-            label-align="left"
-            label-width="100"
-            :model="infoForm"
-            :rules="infoFormRules"
-            class="w-400"
-          >
-            <NFormItem :label="$t('views.profile.label_avatar')" path="avatar">
-              <div class="profile-avatar-item">
-                <div class="profile-avatar-box" @click="triggerAvatarSelect">
-                  <img v-if="infoForm.avatar" :src="infoForm.avatar" class="profile-avatar-img" />
-                  <TheIcon v-else icon="material-symbols:add-a-photo" :size="32" color="#c0c4cc" />
-                </div>
-                <input
-                  ref="avatarInputRef"
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  style="display: none"
-                  @change="handleAvatarSelect"
-                />
-                <span class="profile-avatar-tip">点击更换头像</span>
+    <div class="hm-profile">
+      <div class="hm-profile-header">
+        <h1 class="hm-profile-title">{{ $t('views.profile.label_modify_information') }}</h1>
+        <p class="hm-profile-subtitle">管理你的账号信息和安全设置</p>
+      </div>
+
+      <div class="hm-profile-tabs">
+        <button
+          class="hm-tab-btn"
+          :class="{ active: activeTab === 'info' }"
+          @click="activeTab = 'info'"
+        >
+          <TheIcon icon="icon-park-outline:user" :size="16" />
+          {{ $t('views.profile.label_modify_information') }}
+        </button>
+        <button
+          class="hm-tab-btn"
+          :class="{ active: activeTab === 'password' }"
+          @click="activeTab = 'password'"
+        >
+          <TheIcon icon="icon-park-outline:lock" :size="16" />
+          {{ $t('views.profile.label_change_password') }}
+        </button>
+      </div>
+
+      <!-- Info Card -->
+      <div v-show="activeTab === 'info'" class="hm-profile-card">
+        <NForm
+          ref="infoFormRef"
+          label-placement="left"
+          label-align="left"
+          label-width="100"
+          :model="infoForm"
+          :rules="infoFormRules"
+        >
+          <NFormItem :label="$t('views.profile.label_avatar')" path="avatar">
+            <div class="hm-avatar-section">
+              <div class="hm-avatar-box" @click="triggerAvatarSelect">
+                <img v-if="infoForm.avatar" :src="infoForm.avatar" class="hm-avatar-img" />
+                <TheIcon v-else icon="material-symbols:add-a-photo" :size="32" color="var(--hm-font-tertiary)" />
               </div>
-            </NFormItem>
-            <NFormItem :label="$t('views.profile.label_username')" path="username">
-              <NInput
-                v-model:value="infoForm.username"
-                type="text"
-                :placeholder="$t('views.profile.placeholder_username')"
+              <div class="hm-avatar-meta">
+                <span class="hm-avatar-name">{{ infoForm.username }}</span>
+                <span class="hm-avatar-tip">点击更换头像</span>
+              </div>
+              <input
+                ref="avatarInputRef"
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                style="display: none"
+                @change="handleAvatarSelect"
               />
-            </NFormItem>
-            <NFormItem :label="$t('views.profile.label_email')" path="email">
-              <NInput
-                v-model:value="infoForm.email"
-                type="text"
-                :placeholder="$t('views.profile.placeholder_email')"
-              />
-            </NFormItem>
+            </div>
+          </NFormItem>
+          <NFormItem :label="$t('views.profile.label_username')" path="username">
+            <NInput
+              v-model:value="infoForm.username"
+              type="text"
+              :placeholder="$t('views.profile.placeholder_username')"
+            />
+          </NFormItem>
+          <NFormItem :label="$t('views.profile.label_email')" path="email">
+            <NInput
+              v-model:value="infoForm.email"
+              type="text"
+              :placeholder="$t('views.profile.placeholder_email')"
+            />
+          </NFormItem>
+          <div class="hm-form-actions">
             <NButton type="primary" :loading="isLoading" @click="updateProfile">
               {{ $t('common.buttons.update') }}
             </NButton>
-          </NForm>
-        </div>
-      </NTabPane>
-      <NTabPane name="contact" :tab="$t('views.profile.label_change_password')">
+          </div>
+        </NForm>
+      </div>
+
+      <!-- Password Card -->
+      <div v-show="activeTab === 'password'" class="hm-profile-card">
         <NForm
           ref="passwordFormRef"
           label-placement="left"
           label-align="left"
+          label-width="120"
           :model="passwordForm"
-          label-width="200"
           :rules="passwordFormRules"
-          class="m-30 w-500"
         >
           <NFormItem :label="$t('views.profile.label_old_password')" path="old_password">
             <NInput
@@ -229,12 +257,14 @@ function validatePasswordSame(rule, value) {
               :placeholder="$t('views.profile.placeholder_confirm_password')"
             />
           </NFormItem>
-          <NButton type="primary" :loading="isLoading" @click="updatePassword">
-            {{ $t('common.buttons.update') }}
-          </NButton>
+          <div class="hm-form-actions">
+            <NButton type="primary" :loading="isLoading" @click="updatePassword">
+              {{ $t('common.buttons.update') }}
+            </NButton>
+          </div>
         </NForm>
-      </NTabPane>
-    </NTabs>
+      </div>
+    </div>
 
     <AvatarCropper
       v-model:show="cropperVisible"
@@ -245,16 +275,89 @@ function validatePasswordSame(rule, value) {
 </template>
 
 <style scoped>
-.profile-avatar-item {
+.hm-profile {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.hm-profile-header {
+  margin-bottom: 28px;
+}
+
+.hm-profile-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--hm-font-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.hm-profile-subtitle {
+  font-size: 14px;
+  color: var(--hm-font-tertiary);
+}
+
+.hm-profile-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.4));
+  backdrop-filter: blur(8px);
+  border-radius: var(--hm-radius-lg, 12px);
+  padding: 4px;
+  border: 1px solid var(--hm-border-glass, rgba(255, 255, 255, 0.3));
+}
+
+.hm-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--hm-radius-md, 8px);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--hm-font-secondary);
+  cursor: pointer;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-tab-btn:hover {
+  color: var(--hm-font-primary);
+  background: rgba(10, 89, 247, 0.04);
+}
+
+.hm-tab-btn.active {
+  color: var(--hm-brand, #0A59F7);
+  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.8));
+  box-shadow: 0 2px 8px rgba(10, 89, 247, 0.1);
+}
+
+.hm-profile-card {
+  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.6));
+  backdrop-filter: var(--hm-blur-glass-strong, blur(12px));
+  -webkit-backdrop-filter: var(--hm-blur-glass-strong, blur(12px));
+  border-radius: var(--hm-radius-xl, 16px);
+  border: 1px solid var(--hm-border-glass, rgba(255, 255, 255, 0.3));
+  padding: 32px;
+  box-shadow: var(--hm-shadow-layered, 0 4px 24px rgba(0, 0, 0, 0.06));
+}
+
+.hm-avatar-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
-.profile-avatar-box {
-  width: 80px;
-  height: 80px;
+
+.hm-avatar-box {
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  border: 2px dashed var(--hm-border);
+  border: 2px dashed var(--hm-border, #dcdfe6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -262,22 +365,59 @@ function validatePasswordSame(rule, value) {
   overflow: hidden;
   transition: all 0.3s var(--hm-spring);
   flex-shrink: 0;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
+  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.4));
+  backdrop-filter: blur(8px);
 }
-.profile-avatar-box:hover {
-  border-color: var(--hm-brand);
+
+.hm-avatar-box:hover {
+  border-color: var(--hm-brand, #0A59F7);
   box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
   transform: scale(1.05);
 }
-.profile-avatar-img {
+
+.hm-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.profile-avatar-tip {
+
+.hm-avatar-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hm-avatar-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--hm-font-primary);
+}
+
+.hm-avatar-tip {
   font-size: 12px;
   color: var(--hm-font-tertiary);
-  transition: color 0.25s var(--hm-spring);
+}
+
+.hm-form-actions {
+  padding-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .hm-profile {
+    padding: 16px 8px;
+  }
+
+  .hm-profile-card {
+    padding: 20px 16px;
+  }
+
+  .hm-profile-title {
+    font-size: 20px;
+  }
+
+  .hm-avatar-box {
+    width: 56px;
+    height: 56px;
+  }
 }
 </style>
