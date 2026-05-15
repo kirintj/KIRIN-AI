@@ -30,7 +30,6 @@ const showDocDetail = ref(false)
 const docDetailData = ref<any>(null)
 const docDetailLoading = ref(false)
 const currentChunkPage = ref(1)
-const uploadSuccess = ref(false)
 const { uploading: uploadLoading, uploadToKnowledgeBase } = useFileUpload()
 const { formatMarkdown } = useMarkdown()
 
@@ -123,15 +122,10 @@ const handleUpload = async ({ file, onFinish, onError }: any) => {
     onError()
     return false
   }
-  uploadSuccess.value = false
   const result = await uploadToKnowledgeBase(nativeFile, selectedCollection.value, selectedDocType.value)
   if (result) {
-    uploadSuccess.value = true
     debouncedLoadStats()
-    setTimeout(() => {
-      uploadSuccess.value = false
-      onFinish()
-    }, 1500)
+    onFinish()
     return true
   }
   onError()
@@ -435,29 +429,15 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
               </div>
             </div>
 
-          <h3 class="hm-sub-title">上传文件</h3>
+        <h3 class="hm-sub-title">上传文件</h3>
             <div class="hm-upload-form">
-              <div class="hm-upload-wrapper">
-                <NUpload v-model:file-list="fileList" :before-upload="handleBeforeUpload" :custom-request="handleUpload"
-                  :max="5" :multiple="true" :disabled="uploadLoading">
-                  <button class="hm-upload-btn" :class="{ 'is-loading': uploadLoading }">
-                    <TheIcon v-if="!uploadLoading" icon="material-symbols:upload" :size="20" color="var(--hm-brand)" />
-                    <div v-else class="hm-upload-spinner"></div>
-                    <span>{{ uploadLoading ? '上传中...' : '选择文件上传' }}</span>
-                  </button>
-                </NUpload>
-                <div v-if="uploadLoading || uploadSuccess" class="hm-upload-overlay" :class="{ 'is-success': uploadSuccess }">
-                  <div class="hm-upload-loading-content">
-                    <div v-if="!uploadSuccess" class="hm-upload-loading-spinner"></div>
-                    <div v-else class="hm-upload-success-icon">
-                      <TheIcon icon="icon-park-outline:check-one" :size="36" color="#64BB5C" />
-                    </div>
-                    <div class="hm-upload-loading-text" :class="{ 'success': uploadSuccess }">
-                      {{ uploadSuccess ? '上传成功!' : '正在上传并处理文件...' }}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <NUpload v-model:file-list="fileList" :before-upload="handleBeforeUpload" :custom-request="handleUpload"
+                :max="5" :multiple="true" :disabled="uploadLoading">
+                <button class="hm-upload-btn">
+                  <TheIcon icon="material-symbols:upload" :size="20" color="var(--hm-brand)" />
+                  <span>选择文件上传</span>
+                </button>
+              </NUpload>
               <p class="hm-upload-tip">
                 支持 PDF、DOCX、TXT、MD 等文件，单个不超过 10MB，上传到 [{{ getCollectionLabel(selectedCollection) }}] 集合
               </p>
@@ -1183,94 +1163,6 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
-}
-
-.hm-upload-wrapper {
-  position: relative;
-}
-
-.hm-upload-btn.is-loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.hm-upload-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--hm-brand);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.hm-upload-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  border-radius: var(--hm-radius-xl);
-  z-index: 10;
-  transition: all 0.3s ease;
-}
-
-.hm-upload-overlay.is-success {
-  background: rgba(100, 187, 92, 0.1);
-  border: 2px solid rgba(100, 187, 92, 0.3);
-}
-
-.hm-upload-loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.hm-upload-loading-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--hm-border);
-  border-top-color: var(--hm-brand);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.hm-upload-loading-text {
-  font-size: 14px;
-  color: var(--hm-font-secondary);
-  font-weight: 500;
-}
-
-.hm-upload-loading-text.success {
-  color: #64BB5C;
-  font-weight: 600;
-}
-
-.hm-upload-success-icon {
-  animation: bounceIn 0.5s ease;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes bounceIn {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
 .hm-upload-btn {
