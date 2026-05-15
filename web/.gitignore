@@ -24,3 +24,8 @@ stats.html
 *.njsproj
 *.sln
 *.sw?
+
+# Build
+web/build
+.eslintcache
+.prettiercache

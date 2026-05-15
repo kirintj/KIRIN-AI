@@ -6,7 +6,23 @@
       "Bash(npx vite *)",
       "Bash(grep -A5 '\"eslintConfig\"' package.json)",
       "Bash(ls -la .eslint*)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/api/test_captcha.py -v)",
+      "Bash(ls .venv/Scripts/pytest*)",
+      "Bash(which pytest *)",
+      "Bash(where python *)",
+      "Bash(.venv/Scripts/python.exe -m pytest tests/api/test_captcha.py -v)",
+      "Bash(pip show *)",
+      "Bash(python -m pytest --version)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(pytest tests/ -v)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm build *)",
+      "Bash(python *)"
     ]
   }
 }
