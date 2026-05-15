@@ -39,6 +39,17 @@
               </template>
             </n-input>
           </div>
+          <div class="hm-captcha-group">
+            <SlideVerify
+              v-if="captchaData"
+              :bg="captchaData.bg_image"
+              :slider="captchaData.slider_image"
+              :y="captchaData.y_offset"
+              @success="onCaptchaSuccess"
+              @fail="onCaptchaFail"
+              @refresh="refreshCaptcha"
+            />
+          </div>
           <n-button
             class="hm-btn-primary"
             :loading="loading"
@@ -128,6 +139,8 @@ import api from '@/api'
 import { addDynamicRoutes } from '@/router'
 import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
+import SlideVerify from 'vue3-slide-verify'
+import 'vue3-slide-verify/dist/style.css'
 
 const router = useRouter()
 const { query } = useRoute()
@@ -148,13 +161,43 @@ const registerInfo = ref({
   confirmPassword: '',
 })
 
+const captchaData = ref(null)
+const captchaVerified = ref(false)
+const captchaToken = ref({ captcha_id: '', x: 0 })
+
 initLoginInfo()
+fetchCaptcha()
 
 function initLoginInfo() {
   const localLoginInfo = lStorage.get('loginInfo')
   if (localLoginInfo) {
     loginInfo.value.username = localLoginInfo.username || ''
   }
+}
+
+async function fetchCaptcha() {
+  try {
+    const res = await api.getCaptcha()
+    captchaData.value = res.data
+    captchaVerified.value = false
+    captchaToken.value = { captcha_id: '', x: 0 }
+  } catch (e) {
+    console.error('fetch captcha error', e)
+  }
+}
+
+function onCaptchaSuccess({ x }) {
+  captchaVerified.value = true
+  captchaToken.value = { captcha_id: captchaData.value.captcha_id, x }
+}
+
+function onCaptchaFail() {
+  captchaVerified.value = false
+  $message.warning('验证码校验失败，请重试')
+}
+
+function refreshCaptcha() {
+  fetchCaptcha()
 }
 
 function switchToRegister() {
@@ -164,6 +207,7 @@ function switchToRegister() {
 
 function switchToLogin() {
   isRegister.value = false
+  fetchCaptcha()
 }
 
 async function handleLogin() {
@@ -172,10 +216,19 @@ async function handleLogin() {
     $message.warning(t('views.login.message_input_username_password'))
     return
   }
+  if (!captchaVerified.value) {
+    $message.warning('请完成滑块验证')
+    return
+  }
   try {
     loading.value = true
     $message.loading(t('views.login.message_verifying'))
-    const res = await api.login({ username, password: password.toString() })
+    const res = await api.login({
+      username,
+      password: password.toString(),
+      captcha_id: captchaToken.value.captcha_id,
+      x: captchaToken.value.x,
+    })
     $message.success(t('views.login.message_login_success'))
     setToken(res.data.access_token)
     setRefreshToken(res.data.refresh_token)
@@ -189,6 +242,7 @@ async function handleLogin() {
     }
   } catch (e) {
     console.error('login error', e.error)
+    refreshCaptcha()
   }
   loading.value = false
 }
@@ -286,6 +340,12 @@ async function handleRegister() {
 
 .hm-form-group {
   margin-bottom: 16px;
+}
+
+.hm-captcha-group {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
 }
 
 .hm-input {
