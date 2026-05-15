@@ -95,6 +95,9 @@ importers:
       vue-router:
         specifier: ^4.2.4
         version: 4.4.0(vue@3.4.34(typescript@5.5.4))
+      vue3-slide-verify:
+        specifier: ^1.0.0
+        version: 1.1.8(typescript@5.5.4)
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^4.2.3
@@ -2494,6 +2497,9 @@ packages:
     resolution: {integrity: sha512-HB+t2p611aIZraV2aPSRNXf0Z/oLZFrlygJm+sZbdJaW6lcFqEDQwnzUBXn+DApw+/QzDU/I9TeWx9izEjTmsA==}
     peerDependencies:
       vue: ^3.2.0
+
+  vue3-slide-verify@1.1.8:
+    resolution: {integrity: sha512-qsGXM0w0pkPnI10p58neHQNAkMiGdX8ijGkvRo6eIYbFn3+6fQE05t8afdQsCY9llgG1chDrRD7H0XxV3Ts9Cw==}
 
   vue@3.4.34:
     resolution: {integrity: sha512-VZze05HWlA3ItreQ/ka7Sx7PoD0/3St8FEiSlSTVgb6l4hL+RjtP2/8g5WQBzZgyf8WG2f+g1bXzC7zggLhAJA==}
@@ -5225,6 +5231,12 @@ snapshots:
     dependencies:
       '@vue/devtools-api': 6.6.3
       vue: 3.4.34(typescript@5.5.4)
+
+  vue3-slide-verify@1.1.8(typescript@5.5.4):
+    dependencies:
+      vue: 3.4.34(typescript@5.5.4)
+    transitivePeerDependencies:
+      - typescript
 
   vue@3.4.34(typescript@5.5.4):
     dependencies:
