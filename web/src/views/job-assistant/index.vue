@@ -140,7 +140,7 @@ const tabs = [
   backdrop-filter: var(--hm-blur-glass-strong);
   -webkit-backdrop-filter: var(--hm-blur-glass-strong);
   border: 1px solid var(--hm-border-glass);
-  box-shadow: var(--hm-shadow-layered), 0 8px 24px rgba(10, 89, 247, 0.06);
+  box-shadow: var(--hm-shadow-layered), 0 8px 24px var(--hm-brand-bg-light);
 }
 
 .hm-job-title {
@@ -185,7 +185,7 @@ const tabs = [
 
 .hm-tab-item:hover {
   color: var(--hm-font-primary);
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--hm-hover-bg);
 }
 
 .hm-tab-item.active {

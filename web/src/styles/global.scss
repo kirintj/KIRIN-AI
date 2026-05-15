@@ -21,6 +21,8 @@
   --hm-border: rgba(0, 0, 0, 0.08);
   --hm-border-strong: rgba(0, 0, 0, 0.15);
   --hm-border-glass: rgba(255, 255, 255, 0.6);
+  --hm-hover-bg: rgba(0, 0, 0, 0.02);
+  --hm-pressed-bg: rgba(0, 0, 0, 0.06);
 
   --hm-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.04);
   --hm-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -42,6 +44,12 @@
   --hm-confirm: #64BB5C;
   --hm-alert: #ED6F21;
 
+  --hm-brand-gradient: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  --hm-brand-shadow-hover: 0 6px 20px rgba(10, 89, 247, 0.35);
+  --hm-brand-bg-light: rgba(10, 89, 247, 0.08);
+  --hm-focus-ring: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  --hm-danger-hover-bg: rgba(232, 64, 38, 0.06);
+
   --hm-sidebar-width: 220px;
   --hm-sidebar-collapsed: 64px;
   --hm-header-height: 56px;
@@ -50,6 +58,42 @@
   --hm-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
   --hm-blur-glass: blur(16px) saturate(1.6);
   --hm-blur-glass-strong: blur(20px) saturate(1.8);
+}
+
+html.dark {
+  --hm-brand-light: #1a2a4a;
+
+  --hm-bg-primary: #121212;
+  --hm-bg-secondary: #1e1e1e;
+  --hm-bg-container: #242424;
+  --hm-bg-container-secondary: #2a2a2a;
+  --hm-bg-container-tertiary: #303030;
+  --hm-bg-glass: rgba(30, 30, 30, 0.72);
+
+  --hm-font-primary: rgba(255, 255, 255, 0.9);
+  --hm-font-secondary: rgba(255, 255, 255, 0.6);
+  --hm-font-tertiary: rgba(255, 255, 255, 0.38);
+  --hm-font-fourth: rgba(255, 255, 255, 0.26);
+  --hm-font-on-brand: #FFFFFF;
+
+  --hm-divider: rgba(255, 255, 255, 0.06);
+  --hm-border: rgba(255, 255, 255, 0.08);
+  --hm-border-strong: rgba(255, 255, 255, 0.15);
+  --hm-border-glass: rgba(30, 30, 30, 0.6);
+  --hm-hover-bg: rgba(255, 255, 255, 0.04);
+  --hm-pressed-bg: rgba(255, 255, 255, 0.08);
+
+  --hm-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.2);
+  --hm-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --hm-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --hm-shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --hm-shadow-layered: 0 1px 3px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2);
+  --hm-shadow-layered-hover: 0 4px 8px rgba(0,0,0,0.2), 0 12px 28px rgba(0,0,0,0.25);
+  --hm-shadow-brand: 0 4px 12px rgba(10, 89, 247, 0.35);
+  --hm-brand-shadow-hover: 0 6px 20px rgba(10, 89, 247, 0.45);
+  --hm-brand-bg-light: rgba(10, 89, 247, 0.15);
+  --hm-focus-ring: 0 0 0 3px rgba(10, 89, 247, 0.15);
+  --hm-danger-hover-bg: rgba(232, 64, 38, 0.12);
 }
 
 html, body {
@@ -109,6 +153,10 @@ body {
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   animation: hm-skeleton-wave 1.6s ease-in-out infinite;
+}
+
+html.dark .hm-skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
 }
 
 @keyframes hm-skeleton-wave {
@@ -216,6 +264,16 @@ body {
   }
 }
 
+html.dark .cus-scroll,
+html.dark .cus-scroll-x,
+html.dark .cus-scroll-y {
+  &:hover {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
 .hm-action-group {
   display: flex;
   gap: 8px;
@@ -239,7 +297,7 @@ body {
   border-color: var(--hm-brand);
   color: var(--hm-brand);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+  box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-action-btn:active {
@@ -248,14 +306,14 @@ body {
 }
 
 .hm-action-btn.primary {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
   border-color: transparent;
   color: #fff;
   box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-action-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  box-shadow: var(--hm-brand-shadow-hover);
   transform: translateY(-2px);
 }
 
@@ -273,7 +331,7 @@ body {
 }
 
 .hm-action-btn.danger:hover {
-  background: rgba(232, 64, 38, 0.06);
+  background: var(--hm-danger-hover-bg);
   border-color: var(--hm-error);
   color: var(--hm-error);
 }
@@ -431,7 +489,7 @@ body {
 
 .hm-tab-item:hover {
   color: var(--hm-font-primary);
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--hm-hover-bg);
 }
 
 .hm-tab-item.active {
@@ -499,7 +557,7 @@ body {
 .hm-sidebar-new-btn:hover {
   background: var(--hm-brand-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+  box-shadow: var(--hm-shadow-brand);
 }
 
 /* ── 表格行内操作按钮 ── */
@@ -522,7 +580,7 @@ body {
 .hm-row-btn:hover {
   background: var(--hm-brand-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+  box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-row-btn.danger {
@@ -531,7 +589,7 @@ body {
 }
 
 .hm-row-btn.danger:hover {
-  background: rgba(232, 64, 38, 0.06);
+  background: var(--hm-danger-hover-bg);
   box-shadow: 0 4px 12px rgba(232, 64, 38, 0.12);
 }
 
@@ -575,7 +633,7 @@ body {
 
 .hm-search-box:focus-within {
   border-color: var(--hm-brand);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  box-shadow: var(--hm-focus-ring);
 }
 
 .hm-search-input {
@@ -647,7 +705,7 @@ body {
 
 .hm-input-box:focus-within {
   border-color: var(--hm-brand);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  box-shadow: var(--hm-focus-ring);
 }
 
 .hm-textarea {
@@ -681,12 +739,12 @@ body {
 }
 
 .hm-send-btn.active {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
   box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-send-btn.active:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  box-shadow: var(--hm-brand-shadow-hover);
   transform: translateY(-2px);
 }
 
@@ -703,14 +761,14 @@ body {
 }
 
 .hm-modal-btn.primary {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
   border-color: transparent;
   color: #fff;
   box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-modal-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  box-shadow: var(--hm-brand-shadow-hover);
   transform: translateY(-1px);
 }
 
@@ -735,9 +793,17 @@ body {
   transform: scale(1.1);
 }
 
+html.dark .hm-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .hm-icon-btn.danger:hover {
-  background: rgba(232, 64, 38, 0.06);
+  background: var(--hm-danger-hover-bg);
   color: #E84026;
+}
+
+html.dark .hm-icon-btn.danger:hover {
+  background: rgba(232, 64, 38, 0.12);
 }
 
 /* ── 过滤标签 ── */
@@ -808,7 +874,7 @@ body {
 }
 
 .hm-view-all:hover {
-  background: rgba(10, 89, 247, 0.08);
+  background: var(--hm-brand-bg-light);
   transform: translateX(2px);
 }
 

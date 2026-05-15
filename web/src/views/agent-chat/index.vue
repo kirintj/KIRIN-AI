@@ -246,7 +246,7 @@ watch(() => agentStore.messages.length, () => {
 
 .hm-sidebar-toggle:hover {
   color: var(--hm-font-secondary);
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hm-hover-bg);
 }
 
 .hm-sidebar-body {

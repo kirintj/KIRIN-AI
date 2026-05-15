@@ -400,10 +400,10 @@ onMounted(async () => {
   margin-bottom: 32px;
   padding: 24px 28px;
   border-radius: var(--hm-radius-xl);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(20px) saturate(1.8);
   -webkit-backdrop-filter: blur(20px) saturate(1.8);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--hm-border-glass);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.04),
     0 8px 24px rgba(10, 89, 247, 0.06);
@@ -468,9 +468,9 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--hm-divider);
   border-radius: var(--hm-radius-full);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(8px);
   font-size: 12px;
   color: var(--hm-font-secondary);
@@ -493,11 +493,11 @@ onMounted(async () => {
   border-color: rgba(10, 89, 247, 0.2);
   color: var(--hm-brand);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.1);
+  box-shadow: var(--hm-brand-shadow-hover);
 }
 
 .hm-wb-quick-btn:hover::after {
-  background: rgba(10, 89, 247, 0.04);
+  background: var(--hm-brand-bg-light);
 }
 
 .hm-wb-quick-btn:active {
@@ -518,12 +518,12 @@ onMounted(async () => {
   width: 48px;
   height: 48px;
   border-radius: var(--hm-radius-full);
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.25);
+  box-shadow: var(--hm-shadow-brand);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -567,7 +567,7 @@ onMounted(async () => {
 }
 
 .hm-wb-view-all:hover {
-  background: rgba(10, 89, 247, 0.08);
+  background: var(--hm-brand-bg-light);
   transform: translateX(2px);
 }
 
@@ -600,15 +600,13 @@ onMounted(async () => {
 
 .hm-wb-stat-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   border-radius: var(--hm-radius-xl);
   padding: 20px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered);
   text-align: center;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
@@ -740,23 +738,19 @@ onMounted(async () => {
 
 /* ── 图表卡片 ── */
 .hm-wb-chart-card {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   border-radius: var(--hm-radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered);
   padding: 22px;
   min-height: 180px;
   transition: box-shadow 0.3s;
 }
 
 .hm-wb-chart-card:hover {
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.04),
-    0 12px 28px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--hm-shadow-layered-hover);
 }
 
 .hm-wb-chart {
@@ -826,23 +820,19 @@ onMounted(async () => {
 
 /* ── 时间线卡片 ── */
 .hm-wb-timeline-card {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   border-radius: var(--hm-radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered);
   padding: 22px;
   min-height: 180px;
   transition: box-shadow 0.3s;
 }
 
 .hm-wb-timeline-card:hover {
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.04),
-    0 12px 28px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--hm-shadow-layered-hover);
 }
 
 .hm-wb-timeline {
@@ -911,7 +901,7 @@ onMounted(async () => {
 }
 
 .hm-wb-timeline-content:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--hm-hover-bg);
 }
 
 .hm-wb-timeline-icon {
@@ -955,14 +945,12 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   padding: 24px 14px 20px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   border-radius: var(--hm-radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered);
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   text-align: center;
@@ -1034,14 +1022,12 @@ onMounted(async () => {
 
 /* ── 最近对话 ── */
 .hm-wb-history-card {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   border-radius: var(--hm-radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.03),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--hm-border-glass);
+  box-shadow: var(--hm-shadow-layered);
   padding: 18px;
 }
 
@@ -1076,7 +1062,7 @@ onMounted(async () => {
 }
 
 .hm-wb-conv-item:hover {
-  background: rgba(10, 89, 247, 0.04);
+  background: var(--hm-brand-bg-light);
   padding-left: 20px;
 }
 
@@ -1088,7 +1074,7 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border-radius: var(--hm-radius-md);
-  background: linear-gradient(135deg, var(--hm-brand-light) 0%, rgba(10, 89, 247, 0.08) 100%);
+  background: linear-gradient(135deg, var(--hm-brand-light) 0%, var(--hm-brand-bg-light) 100%);
   display: flex;
   align-items: center;
   justify-content: center;

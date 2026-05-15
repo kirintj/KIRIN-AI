@@ -113,7 +113,7 @@ defineExpose({
 <style lang="scss" scoped>
 .wrapper {
   display: flex;
-  background-color: #fff;
+  background-color: var(--hm-bg-secondary);
 
   z-index: 9;
   overflow: hidden;
@@ -131,7 +131,7 @@ defineExpose({
   }
   .left,
   .right {
-    background-color: #fff;
+    background-color: var(--hm-bg-secondary);
     position: absolute;
     top: 0;
     bottom: 0;
@@ -144,7 +144,7 @@ defineExpose({
     justify-content: center;
 
     font-size: 18px;
-    border: 1px solid #e0e0e6;
+    border: 1px solid var(--hm-border);
     border-radius: 2px;
 
     z-index: 2;

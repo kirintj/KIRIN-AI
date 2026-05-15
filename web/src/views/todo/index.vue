@@ -646,7 +646,7 @@ onMounted(() => {
 
 .hm-calendar-day.today {
   background: var(--hm-brand-light);
-  border: 1px solid rgba(10, 89, 247, 0.2);
+  border: 1px solid color-mix(in srgb, var(--hm-brand) 20%, transparent);
 }
 
 .hm-day-num {
@@ -671,7 +671,7 @@ onMounted(() => {
   font-size: 10px;
   padding: 1px 4px;
   border-radius: 4px;
-  background: rgba(10, 89, 247, 0.08);
+  background: var(--hm-brand-bg-light);
   color: var(--hm-font-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -763,7 +763,7 @@ onMounted(() => {
 }
 
 .hm-todo-item.overdue {
-  background: rgba(232, 64, 38, 0.06);
+  background: var(--hm-danger-hover-bg);
   border-color: rgba(232, 64, 38, 0.15);
 }
 
@@ -789,7 +789,7 @@ onMounted(() => {
 }
 
 .hm-checkbox.checked {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
   border-color: transparent;
   box-shadow: var(--hm-shadow-brand);
 }

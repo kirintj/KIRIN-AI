@@ -42,7 +42,7 @@ const props = defineProps({
   },
   emptyDesc: { type: String, default: '暂无数据' },
   iconClass: { type: String, default: 'text-320px text-primary' },
-  descClass: { type: String, default: 'text-16px text-#666' },
+  descClass: { type: String, default: 'text-16px text-[var(--hm-font-secondary)]' },
   showNetworkReload: { type: Boolean, default: false },
 })
 

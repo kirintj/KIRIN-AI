@@ -302,11 +302,11 @@ function validatePasswordSame(rule, value) {
   display: flex;
   gap: 4px;
   margin-bottom: 20px;
-  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.4));
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(8px);
   border-radius: var(--hm-radius-lg, 12px);
   padding: 4px;
-  border: 1px solid var(--hm-border-glass, rgba(255, 255, 255, 0.3));
+  border: 1px solid var(--hm-border-glass);
 }
 
 .hm-tab-btn {
@@ -328,21 +328,21 @@ function validatePasswordSame(rule, value) {
 
 .hm-tab-btn:hover {
   color: var(--hm-font-primary);
-  background: rgba(10, 89, 247, 0.04);
+  background: var(--hm-brand-bg-light);
 }
 
 .hm-tab-btn.active {
-  color: var(--hm-brand, #0A59F7);
-  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.8));
+  color: var(--hm-brand);
+  background: var(--hm-bg-glass);
   box-shadow: 0 2px 8px rgba(10, 89, 247, 0.1);
 }
 
 .hm-profile-card {
-  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.6));
+  background: var(--hm-bg-glass);
   backdrop-filter: var(--hm-blur-glass-strong, blur(12px));
   -webkit-backdrop-filter: var(--hm-blur-glass-strong, blur(12px));
   border-radius: var(--hm-radius-xl, 16px);
-  border: 1px solid var(--hm-border-glass, rgba(255, 255, 255, 0.3));
+  border: 1px solid var(--hm-border-glass);
   padding: 32px;
   box-shadow: var(--hm-shadow-layered, 0 4px 24px rgba(0, 0, 0, 0.06));
 }
@@ -357,7 +357,7 @@ function validatePasswordSame(rule, value) {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  border: 2px dashed var(--hm-border, #dcdfe6);
+  border: 2px dashed var(--hm-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -365,13 +365,13 @@ function validatePasswordSame(rule, value) {
   overflow: hidden;
   transition: all 0.3s var(--hm-spring);
   flex-shrink: 0;
-  background: var(--hm-bg-glass, rgba(255, 255, 255, 0.4));
+  background: var(--hm-bg-glass);
   backdrop-filter: blur(8px);
 }
 
 .hm-avatar-box:hover {
-  border-color: var(--hm-brand, #0A59F7);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  border-color: var(--hm-brand);
+  box-shadow: 0 0 0 3px var(--hm-focus-ring);
   transform: scale(1.05);
 }
 

@@ -55,7 +55,7 @@ const handleKeydown = (e: KeyboardEvent) => {
           :disabled="!modelValue.trim() || isLoading"
           @click="emit('send')"
         >
-          <TheIcon icon="icon-park-outline:up-small" :size="18" color="#fff" />
+          <TheIcon icon="icon-park-outline:up-small" :size="18" color="var(--hm-font-on-brand)" />
         </button>
       </div>
     </div>

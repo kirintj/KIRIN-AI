@@ -27,7 +27,7 @@
 }
 
 @mixin brand-gradient {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
 }
 
 @mixin thin-scrollbar($direction: vertical) {
@@ -54,7 +54,7 @@
   }
 
   &:hover::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.12);
+    background: var(--hm-pressed-bg);
   }
 
   &::-webkit-scrollbar-thumb:hover {
@@ -98,7 +98,7 @@
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--hm-shadow-sm);
   }
 
   &.total {
@@ -111,7 +111,7 @@
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--hm-shadow-sm);
 }
 
 .hm-tracker-stat-label {
@@ -149,7 +149,7 @@
   flex: 1;
   height: 6px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hm-hover-bg);
   overflow: hidden;
 }
 
@@ -226,7 +226,7 @@
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--hm-shadow-sm);
 }
 
 .hm-kanban-col-title {
@@ -239,7 +239,7 @@
 .hm-kanban-col-count {
   font-size: 12px;
   color: var(--hm-font-fourth);
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hm-hover-bg);
   padding: 1px 8px;
   border-radius: var(--hm-radius-full);
 }
@@ -310,8 +310,8 @@
   @include spring-transition;
 
   &:hover {
-    background: rgba(232, 64, 38, 0.08);
-    color: #E84026;
+    background: var(--hm-danger-hover-bg);
+    color: var(--hm-error);
     transform: scale(1.1);
   }
 }
@@ -437,7 +437,7 @@
 .hm-list-header {
   display: flex;
   padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--hm-hover-bg);
   border-bottom: 1px solid var(--hm-divider);
   font-size: 12px;
   font-weight: 500;
@@ -456,7 +456,7 @@
   }
 
   &:hover {
-    background: rgba(10, 89, 247, 0.02);
+    background: var(--hm-brand-bg-light);
   }
 }
 
@@ -532,7 +532,7 @@
   margin-top: 6px;
   position: relative;
   z-index: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--hm-shadow-sm);
 }
 
 .hm-timeline-line {

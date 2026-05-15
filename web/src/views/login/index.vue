@@ -378,13 +378,14 @@ async function handleRegister() {
   font-size: 16px;
   font-weight: 500;
   margin-top: 8px;
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%) !important;
+  background: var(--hm-brand-gradient) !important;
+  color: var(--hm-font-on-brand);
   box-shadow: var(--hm-shadow-brand);
   transition: all 0.3s var(--hm-spring);
 }
 
 .hm-btn-primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35) !important;
+  box-shadow: var(--hm-brand-shadow-hover) !important;
   transform: translateY(-2px);
 }
 

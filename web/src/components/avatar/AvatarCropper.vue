@@ -65,8 +65,8 @@ async function handleConfirm() {
   height: 180px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px dashed #e5e6eb;
-  background: #f5f5f5;
+  border: 2px dashed var(--hm-border);
+  background: var(--hm-bg-container-secondary);
   display: flex;
   align-items: center;
   justify-content: center;

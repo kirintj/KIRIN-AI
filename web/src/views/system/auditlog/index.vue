@@ -152,7 +152,7 @@ const columns = [
               'pre',
               {
                 style:
-                  'max-height: 400px; overflow: auto; background-color: #f5f5f5; padding: 8px; border-radius: 4px;',
+                  'max-height: 400px; overflow: auto; background-color: var(--hm-bg-container-secondary); padding: 8px; border-radius: 4px;',
               },
               formatJSON(row.request_args)
             ),
@@ -180,7 +180,7 @@ const columns = [
               'pre',
               {
                 style:
-                  'max-height: 400px; overflow: auto; background-color: #f5f5f5; padding: 8px; border-radius: 4px;',
+                  'max-height: 400px; overflow: auto; background-color: var(--hm-bg-container-secondary); padding: 8px; border-radius: 4px;',
               },
               formatJSON(row.response_body)
             ),

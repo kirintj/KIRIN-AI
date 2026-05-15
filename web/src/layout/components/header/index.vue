@@ -54,7 +54,7 @@ defineEmits(['toggle-drawer'])
 }
 
 .hm-mobile-menu-btn:active {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hm-pressed-bg, rgba(0, 0, 0, 0.06));
   transform: scale(0.92);
 }
 </style>

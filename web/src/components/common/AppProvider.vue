@@ -4,7 +4,7 @@
     :locale="zhCN"
     :date-locale="dateZhCN"
     :theme="appStore.isDark ? darkTheme : undefined"
-    :theme-overrides="naiveThemeOverrides"
+    :theme-overrides="activeThemeOverrides"
   >
     <n-loading-bar-provider>
       <n-dialog-provider>
@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { defineComponent, h } from 'vue'
+import { computed, defineComponent, h } from 'vue'
 import {
   zhCN,
   dateZhCN,
@@ -37,6 +37,25 @@ import { naiveThemeOverrides } from '~/settings'
 import { useAppStore } from '@/store'
 
 const appStore = useAppStore()
+
+const DARK_MODE_SKIP_KEYS = new Set([
+  'cardColor', 'modalColor', 'popoverColor', 'tableColor',
+  'inputColor', 'actionColor', 'bodyColor',
+  'textColorBase', 'textColor1', 'textColor2', 'textColor3', 'textColorDisabled',
+  'dividerColor', 'borderColor', 'hoverColor', 'pressedColor',
+  'boxShadow1', 'boxShadow2', 'boxShadow3',
+])
+
+const activeThemeOverrides = computed(() => {
+  if (!appStore.isDark) return naiveThemeOverrides
+  const common = {}
+  for (const key in naiveThemeOverrides.common) {
+    if (!DARK_MODE_SKIP_KEYS.has(key)) {
+      common[key] = naiveThemeOverrides.common[key]
+    }
+  }
+  return { ...naiveThemeOverrides, common }
+})
 
 function setupCssVar() {
   const common = naiveThemeOverrides.common

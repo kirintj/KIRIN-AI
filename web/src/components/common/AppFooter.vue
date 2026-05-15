@@ -1,3 +1,3 @@
 <template>
-  <footer f-c-c flex-col text-14 color="#6a6a6a"></footer>
+  <footer f-c-c flex-col text-14 class="text-[var(--hm-font-tertiary)]"></footer>
 </template>

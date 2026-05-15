@@ -416,7 +416,7 @@ onMounted(() => {
 }
 
 .hm-is-session-item:hover {
-  background: rgba(10, 89, 247, 0.04);
+  background: var(--hm-brand-bg-light);
   transform: translateX(2px);
 }
 
@@ -452,13 +452,13 @@ onMounted(() => {
 }
 
 .hm-is-status.active {
-  background: rgba(10, 89, 247, 0.1);
+  background: var(--hm-brand-bg-light);
   color: var(--hm-brand);
 }
 
 .hm-is-status.completed {
   background: rgba(100, 187, 92, 0.1);
-  color: #64BB5C;
+  color: var(--hm-success);
 }
 
 .hm-is-score {
@@ -493,8 +493,8 @@ onMounted(() => {
 }
 
 .hm-is-session-action:hover {
-  color: #E84026;
-  background: rgba(232, 64, 38, 0.08);
+  color: var(--hm-error);
+  background: var(--hm-danger-hover-bg);
   transform: scale(1.1);
 }
 
@@ -586,8 +586,8 @@ onMounted(() => {
 }
 
 .hm-is-evaluate-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  color: #fff;
+  background: var(--hm-brand-gradient);
+  color: var(--hm-font-on-brand);
   border-color: transparent;
   box-shadow: var(--hm-shadow-brand);
   transform: translateY(-1px);
@@ -655,8 +655,8 @@ onMounted(() => {
 }
 
 .user .hm-is-msg-bubble {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
-  color: #fff;
+  background: var(--hm-brand-gradient);
+  color: var(--hm-font-on-brand);
   box-shadow: var(--hm-shadow-brand);
 }
 
@@ -678,7 +678,7 @@ onMounted(() => {
 
 .hm-is-input-box:focus-within {
   border-color: var(--hm-brand);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  box-shadow: var(--hm-focus-ring);
 }
 
 .hm-is-completed-bar {
@@ -781,7 +781,7 @@ onMounted(() => {
 .hm-is-dim-track {
   height: 6px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hm-pressed-bg);
   overflow: hidden;
 }
 
@@ -796,7 +796,7 @@ onMounted(() => {
   padding: 2px 6px;
   margin: 0 4px;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hm-pressed-bg);
   font-weight: bold;
   font-size: 13px;
 }

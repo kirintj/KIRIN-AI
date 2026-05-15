@@ -127,3 +127,36 @@
 
 .md-bubble tr:nth-child(even) td { background: #fafbfc; }
 .md-bubble tr:hover td { background: #e6f0ff; }
+
+/* ── Dark mode overrides ── */
+html.dark .md-bubble :not(pre) > code {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .md-bubble blockquote {
+  border-left-color: #64748b;
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+html.dark .md-bubble a { color: #337BF7; }
+
+html.dark .md-bubble hr {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .md-bubble table {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .md-bubble th {
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .md-bubble td {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+html.dark .md-bubble tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
+html.dark .md-bubble tr:hover td { background: rgba(10, 89, 247, 0.12); }

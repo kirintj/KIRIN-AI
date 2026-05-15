@@ -409,7 +409,7 @@ defineExpose({ resumeText, jdText, pipelineRunning, runPipeline })
 }
 
 .hm-toggle-chip.active {
-  background: var(--hm-brand-light);
+  background: var(--hm-brand-bg-light);
   border-color: var(--hm-brand);
   color: var(--hm-brand);
 }

@@ -211,7 +211,7 @@ const cancelRename = () => {
 }
 
 .hm-search-clear:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hm-pressed-bg);
   color: var(--hm-font-primary);
   transform: scale(1.1);
 }
@@ -246,7 +246,7 @@ const cancelRename = () => {
 }
 
 .hm-sidebar-item:hover {
-  background: rgba(10, 89, 247, 0.04);
+  background: var(--hm-brand-bg-light);
   transform: translateX(2px);
 }
 
@@ -322,13 +322,13 @@ const cancelRename = () => {
 }
 
 .hm-conv-action:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hm-pressed-bg);
   color: var(--hm-font-primary);
   transform: scale(1.1);
 }
 
 .hm-conv-action.danger:hover {
-  background: rgba(232, 64, 38, 0.08);
+  background: var(--hm-danger-hover-bg);
   color: #E84026;
 }
 

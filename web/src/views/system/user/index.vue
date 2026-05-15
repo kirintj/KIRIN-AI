@@ -544,7 +544,7 @@ const validateAddUser = {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  border: 2px dashed #dcdfe6;
+  border: 2px dashed var(--hm-border);
   display: flex;
   align-items: center;
   justify-content: center;

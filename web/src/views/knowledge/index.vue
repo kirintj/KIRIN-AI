@@ -590,7 +590,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   backdrop-filter: var(--hm-blur-glass-strong);
   -webkit-backdrop-filter: var(--hm-blur-glass-strong);
   border: 1px solid var(--hm-border-glass);
-  box-shadow: var(--hm-shadow-layered), 0 8px 24px rgba(10, 89, 247, 0.06);
+  box-shadow: var(--hm-shadow-layered), 0 8px 24px var(--hm-brand-bg-light);
 }
 
 .hm-kn-title {
@@ -692,7 +692,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 
 .hm-search-input-box:focus-within {
   border-color: var(--hm-brand);
-  box-shadow: 0 0 0 3px rgba(10, 89, 247, 0.08);
+  box-shadow: var(--hm-focus-ring);
 }
 
 .hm-search-field {
@@ -724,7 +724,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 }
 
 .hm-search-clear:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hm-pressed-bg);
 }
 
 .hm-main-layout {
@@ -781,7 +781,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 }
 
 .hm-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hm-hover-bg);
   color: var(--hm-font-primary);
   transform: scale(1.1);
 }
@@ -792,8 +792,8 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 }
 
 .hm-icon-btn.danger:hover {
-  background: rgba(232, 64, 38, 0.06);
-  color: #E84026;
+  background: var(--hm-danger-hover-bg);
+  color: var(--hm-error);
 }
 
 .hm-collection-grid {
@@ -868,7 +868,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 }
 
 .hm-collection-preview:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hm-hover-bg);
   transform: scale(1.1);
 }
 
@@ -934,7 +934,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
 }
 
 .hm-doc-item:hover {
-  background: rgba(10, 89, 247, 0.04);
+  background: var(--hm-brand-bg-light);
   transform: translateX(2px);
 }
 
@@ -1028,7 +1028,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   border-color: var(--hm-brand);
   color: var(--hm-brand);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.12);
+  box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-page-btn:disabled {
@@ -1186,7 +1186,7 @@ watch(collectionStats, () => updateStatItems(), { deep: true })
   border-color: var(--hm-brand);
   background: var(--hm-brand-light);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(10, 89, 247, 0.08);
+  box-shadow: var(--hm-shadow-brand);
 }
 
 .hm-upload-tip {

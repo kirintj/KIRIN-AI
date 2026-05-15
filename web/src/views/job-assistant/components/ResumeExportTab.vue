@@ -346,7 +346,7 @@ onMounted(() => {
 .hm-ex-template-chip.active {
   background: var(--hm-brand);
   border-color: var(--hm-brand);
-  color: #fff;
+  color: var(--hm-font-on-brand);
 }
 
 .hm-ex-actions {
@@ -381,7 +381,7 @@ onMounted(() => {
 .hm-ex-btn.primary {
   background: var(--hm-brand);
   border-color: var(--hm-brand);
-  color: #fff;
+  color: var(--hm-font-on-brand);
 }
 
 .hm-ex-btn.primary:hover {
@@ -445,7 +445,7 @@ onMounted(() => {
 
 .hm-ex-tag {
   padding: 2px 10px;
-  background: rgba(10, 89, 247, 0.06);
+  background: var(--hm-brand-bg-light);
   border-radius: var(--hm-radius-full);
   font-size: 12px;
   color: var(--hm-brand);
@@ -496,7 +496,7 @@ onMounted(() => {
 }
 
 .hm-ex-file-item:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--hm-hover-bg);
 }
 
 .hm-ex-file-info {

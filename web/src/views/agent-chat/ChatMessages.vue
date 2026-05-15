@@ -223,7 +223,7 @@ defineExpose({ scrollToBottom })
 }
 
 .user .hm-msg-bubble {
-  background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
+  background: var(--hm-brand-gradient);
   color: var(--hm-font-on-brand);
   max-width: 100%;
   box-shadow: var(--hm-shadow-brand);
@@ -256,13 +256,13 @@ defineExpose({ scrollToBottom })
 }
 
 .hm-msg-action:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--hm-hover-bg);
   color: var(--hm-font-secondary);
   transform: translateY(-1px);
 }
 
 .hm-msg-action.active {
-  background: rgba(10, 89, 247, 0.06);
+  background: var(--hm-brand-bg-light);
 }
 
 .hm-msg-action:disabled {

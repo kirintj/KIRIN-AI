@@ -22,6 +22,10 @@
 </template>
 
 <script setup>
+import { useAppStore } from '@/store'
+
+const appStore = useAppStore()
+
 const props = defineProps({
   remote: {
     type: Boolean,
@@ -61,15 +65,15 @@ const props = defineProps({
   },
 })
 
-const tableThemeOverrides = {
+const tableThemeOverrides = computed(() => ({
   borderRadius: '12px',
-  thColor: 'rgba(0, 0, 0, 0.02)',
+  thColor: appStore.isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
   thTextColor: 'var(--hm-font-tertiary)',
   tdColor: 'transparent',
   tdTextColor: 'var(--hm-font-primary)',
   borderColor: 'var(--hm-divider)',
   thFontWeight: '500',
-}
+}))
 
 const emit = defineEmits(['update:queryItems', 'onChecked', 'onDataChange'])
 const loading = ref(false)
