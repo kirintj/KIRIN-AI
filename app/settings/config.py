@@ -43,6 +43,9 @@ class Settings:
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", os.getenv("JWT_ACCESS_EXPIRE_MINUTES", str(30))))
     JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 7)))
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    CAPTCHA_TOLERANCE: int = int(os.getenv("CAPTCHA_TOLERANCE", "5"))
+    CAPTCHA_TTL: int = int(os.getenv("CAPTCHA_TTL", "120"))
 
     def __init__(self):
         if not self.SECRET_KEY:
