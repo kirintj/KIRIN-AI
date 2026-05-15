@@ -20,6 +20,12 @@ _logger = logging.getLogger(__name__)
 
 @router.post("/access_token", summary="获取token")
 async def login_access_token(credentials: CredentialsSchema):
+    from app.core.captcha import verify_captcha
+
+    verified = await verify_captcha(credentials.captcha_id, credentials.x, 0)
+    if not verified:
+        return Fail(code=400, msg="验证码错误或已过期")
+
     user: User = await user_service.authenticate(credentials)
     await user_service.update_last_login(user.id)
 
