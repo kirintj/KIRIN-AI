@@ -101,6 +101,106 @@ async def add_documents(
         await asyncio.to_thread(_add)
 
 
+async def add_documents_v2(
+    chunks: list,
+    collection_name: str = "knowledge_base",
+    user_id: int = 0,
+):
+    """存储结构化 Chunk 对象到 ChromaDB"""
+    collection = _get_collection(collection_name)
+    all_texts: list[str] = []
+    all_ids: list[str] = []
+    all_metadatas: list[dict] = []
+
+    for chunk in chunks:
+        all_texts.append(chunk.text)
+        all_ids.append(chunk.chunk_id)
+        meta = dict(chunk.metadata)
+        meta["chunk_type"] = chunk.chunk_type
+        meta["parent_id"] = chunk.parent_id or ""
+        meta["user_id"] = user_id
+        all_metadatas.append(meta)
+
+    if all_texts:
+        def _add():
+            collection.add(documents=all_texts, ids=all_ids, metadatas=all_metadatas)
+        await asyncio.to_thread(_add)
+
+
+async def fetch_parent_chunks(
+    parent_ids: set[str],
+    collection_name: str = "knowledge_base",
+    user_id: int = 0,
+) -> list[dict]:
+    """批量获取 parent chunks"""
+    if not parent_ids:
+        return []
+
+    collection = _get_collection(collection_name)
+
+    def _get():
+        return collection.get(
+            ids=list(parent_ids),
+            include=["documents", "metadatas"],
+        )
+
+    results = await asyncio.to_thread(_get)
+    docs = results.get("documents", [])
+    metas = results.get("metadatas", [])
+    ids = results.get("ids", [])
+
+    items = []
+    for i, doc in enumerate(docs):
+        meta = metas[i] if i < len(metas) and metas[i] else {}
+        items.append({
+            "chunk_id": ids[i] if i < len(ids) else "",
+            "content": doc,
+            "section_title": meta.get("section_title", ""),
+            "section_path": meta.get("section_path", ""),
+            "source": meta.get("source", ""),
+            "doc_type": meta.get("doc_type", ""),
+        })
+    return items
+
+
+async def search_with_parent_context(
+    query: str,
+    top_k: int = TOP_K,
+    collection_name: str = "knowledge_base",
+    user_id: int = 0,
+) -> list[dict]:
+    """检索 child chunks 并补充 parent 上下文"""
+    collection = _get_collection(collection_name)
+
+    def _query():
+        if collection.count() == 0:
+            return None
+        return collection.query(
+            query_texts=[query],
+            n_results=min(top_k, collection.count()),
+            where={"$and": [{"user_id": user_id}, {"chunk_type": "child"}]},
+        )
+
+    results = await asyncio.to_thread(_query)
+    if results is None:
+        return await search_chromadb(query, top_k=top_k, collection_name=collection_name, user_id=user_id)
+
+    docs = _parse_query_results(results, collection_name)
+
+    parent_ids = {d.get("parent_id") for d in docs if d.get("parent_id")}
+    if parent_ids:
+        parent_map_results = await fetch_parent_chunks(parent_ids, collection_name, user_id)
+        parent_map = {p["chunk_id"]: p for p in parent_map_results}
+        for doc in docs:
+            pid = doc.get("parent_id")
+            if pid and pid in parent_map:
+                doc["parent_content"] = parent_map[pid].get("content", "")
+                doc["section_title"] = parent_map[pid].get("section_title", "")
+                doc["section_path"] = parent_map[pid].get("section_path", "")
+
+    return docs
+
+
 async def search_chromadb(
     query: str,
     top_k: int = TOP_K,
@@ -241,7 +341,7 @@ async def delete_document(doc_id: str, collection_name: str = "knowledge_base", 
     collection = _get_collection(collection_name)
 
     def _delete():
-        results = collection.get(where={"doc_id": doc_id, "user_id": user_id}, include=[])
+        results = collection.get(where={"$and": [{"doc_id": doc_id}, {"user_id": user_id}]}, include=[])
         ids = results.get("ids", [])
         if ids:
             collection.delete(ids=ids)
@@ -262,7 +362,7 @@ async def move_document(
 
     def _move():
         results = src.get(
-            where={"doc_id": doc_id, "user_id": user_id},
+            where={"$and": [{"doc_id": doc_id}, {"user_id": user_id}]},
             include=["documents", "metadatas"],
         )
         ids = results.get("ids", [])
@@ -344,21 +444,34 @@ async def rebuild_all_collections() -> dict:
                 count = 0
                 for doc_id, group in doc_groups.items():
                     full_text = "\n\n".join(group["chunks"])
-                    chunks = semantic_chunk(full_text, max_size=CHUNK_SIZE)
-                    chunk_ids = [f"{doc_id}_chunk_{j}" for j in range(len(chunks))]
-                    metas = [
-                        {
-                            "doc_id": doc_id,
-                            "chunk_index": j,
-                            "source": group["source"],
-                            "doc_type": group["doc_type"],
-                            "collection": name,
-                            "user_id": group["user_id"],
-                        }
-                        for j in range(len(chunks))
-                    ]
+
+                    from app.rag.structural_chunker import chunk_tree as _chunk_tree
+                    from app.rag.parsers import get_parser as _get_parser
+                    from app.rag.doc_type_detector import detect_doc_type as _detect
+
+                    detected_type = group["doc_type"] or _detect(full_text)
+                    parser = _get_parser(detected_type)
+                    tree = parser.parse(full_text)
+                    chunks = _chunk_tree(
+                        tree,
+                        doc_id=doc_id,
+                        doc_type=detected_type,
+                        source=group["source"],
+                        collection_name=name,
+                        user_id=group["user_id"],
+                    )
+
                     if chunks:
-                        new_collection.add(documents=chunks, ids=chunk_ids, metadatas=metas)
+                        texts = [c.text for c in chunks]
+                        ids = [c.chunk_id for c in chunks]
+                        metas = []
+                        for c in chunks:
+                            m = dict(c.metadata)
+                            m["chunk_type"] = c.chunk_type
+                            m["parent_id"] = c.parent_id or ""
+                            m["user_id"] = group["user_id"]
+                            metas.append(m)
+                        new_collection.add(documents=texts, ids=ids, metadatas=metas)
                         count += len(chunks)
 
                 migrated[name] = count
@@ -474,7 +587,7 @@ async def get_document_chunks(
 
     def _get_chunks():
         results = collection.get(
-            where={"doc_id": doc_id, "user_id": user_id},
+            where={"$and": [{"doc_id": doc_id}, {"user_id": user_id}]},
             include=["documents", "metadatas"],
         )
 
@@ -515,6 +628,10 @@ def _parse_query_results(results: dict, collection_name: str) -> list[dict]:
             "doc_type": meta.get("doc_type", ""),
             "collection": meta.get("collection", collection_name),
             "distance": distance,
+            "chunk_type": meta.get("chunk_type", ""),
+            "parent_id": meta.get("parent_id", ""),
+            "section_title": meta.get("section_title", ""),
+            "section_path": meta.get("section_path", ""),
         })
     return items
 

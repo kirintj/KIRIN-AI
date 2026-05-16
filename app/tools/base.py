@@ -7,10 +7,21 @@ from app.utils.chat import call_llm
 
 
 def build_rag_context(docs: list[dict], empty_msg: str = "暂无相关文档。") -> tuple[str, list[str]]:
-    """将 RAG 检索结果格式化为上下文文本和来源列表。"""
+    """将 RAG 检索结果格式化为上下文文本和来源列表。支持 parent 上下文展示。"""
     if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
         return empty_msg, []
-    context_parts = [f"[文档{i+1}] {d['content']}" for i, d in enumerate(docs) if d.get("content")]
+    context_parts = []
+    for i, d in enumerate(docs):
+        if not d.get("content"):
+            continue
+        content = d["content"]
+        parent = d.get("parent_content", "")
+        section = d.get("section_title", "")
+        if parent and parent != content:
+            prefix = f"[文档{i+1}] 【{section}】\n" if section else f"[文档{i+1}] "
+            context_parts.append(f"{prefix}{parent}\n  ↳ 匹配段落: {content}")
+        else:
+            context_parts.append(f"[文档{i+1}] {content}")
     sources = list(set(d.get("source", "") for d in docs if d.get("source")))
     return "\n\n".join(context_parts), sources
 

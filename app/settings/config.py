@@ -37,6 +37,9 @@ class Settings:
     RAG_ENABLE_RERANK: bool = os.getenv("RAG_ENABLE_RERANK", "true").lower() == "true"
     RAG_ENABLE_HYBRID_SEARCH: bool = os.getenv("RAG_ENABLE_HYBRID_SEARCH", "true").lower() == "true"
     RAG_ENABLE_CONTEXT_COMPRESS: bool = os.getenv("RAG_ENABLE_CONTEXT_COMPRESS", "false").lower() == "true"
+    CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "500"))
+    CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "80"))
+    ENABLE_STRUCTURAL_CHUNKING: bool = os.getenv("ENABLE_STRUCTURAL_CHUNKING", "true").lower() == "true"
 
     DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
 

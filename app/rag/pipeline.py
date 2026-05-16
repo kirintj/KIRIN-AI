@@ -79,6 +79,9 @@ class AdvancedRAGPipeline:
         if not documents:
             return []
 
+        # 2.5 补充 parent 上下文
+        documents = await self._enrich_with_parent_context(documents, collection_name, user_id)
+
         # 3. 去重
         documents = await self._deduplicate(documents)
 
@@ -169,6 +172,28 @@ class AdvancedRAGPipeline:
             all_docs.extend(docs)
 
         return all_docs
+
+    async def _enrich_with_parent_context(
+        self, documents: list[dict], collection_name: str, user_id: int
+    ) -> list[dict]:
+        """对检索结果补充 parent 上下文"""
+        parent_ids = {d.get("parent_id") for d in documents if d.get("parent_id")}
+        if not parent_ids:
+            return documents
+
+        from app.rag.chromadb_client import fetch_parent_chunks
+
+        parent_chunks = await fetch_parent_chunks(parent_ids, collection_name, user_id)
+        parent_map = {p["chunk_id"]: p for p in parent_chunks}
+
+        for doc in documents:
+            pid = doc.get("parent_id")
+            if pid and pid in parent_map:
+                doc["parent_content"] = parent_map[pid].get("content", "")
+                doc["section_title"] = parent_map[pid].get("section_title", "")
+                doc["section_path"] = parent_map[pid].get("section_path", "")
+
+        return documents
 
     async def _rerank(self, query: str, documents: list[dict], top_n: int) -> list[dict]:
         """DashScope gte-rerank 模型重排"""

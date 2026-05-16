@@ -10,6 +10,8 @@ from app.core.dependency import DependAuth
 from app.models.admin import User
 from app.schemas.base import Success, Fail
 from app.rag.chromadb_client import add_documents
+from app.settings import settings
+from app.rag.doc_type_detector import detect_doc_type
 from app.services.upload_service import (
     extract_text_from_file,
     save_uploaded_file,
@@ -82,14 +84,41 @@ async def upload_documents(
 
     try:
         source = f"upload_{current_user.username}"
-        await add_documents(
-            all_documents,
-            doc_ids=all_doc_ids,
-            collection_name=collection_name,
-            source=source,
-            doc_type=doc_type,
-            user_id=current_user.id,
-        )
+        if settings.ENABLE_STRUCTURAL_CHUNKING:
+            from app.rag.parsers import get_parser_for_file
+            from app.rag.structural_chunker import chunk_tree
+            from app.rag.chromadb_client import add_documents_v2
+
+            all_chunks = []
+            for i, doc_text in enumerate(all_documents):
+                doc_id = all_doc_ids[i]
+                filename = files[i].filename if i < len(files) else ""
+                parser = get_parser_for_file(doc_text, filename)
+                tree = parser.parse(doc_text)
+                detected_type = doc_type or detect_doc_type(doc_text)
+                doc_chunks = chunk_tree(
+                    tree,
+                    doc_id=doc_id,
+                    doc_type=detected_type,
+                    source=source,
+                    collection_name=collection_name,
+                    user_id=current_user.id,
+                    max_size=settings.CHUNK_SIZE,
+                    overlap=settings.CHUNK_OVERLAP,
+                )
+                all_chunks.extend(doc_chunks)
+
+            if all_chunks:
+                await add_documents_v2(all_chunks, collection_name=collection_name, user_id=current_user.id)
+        else:
+            await add_documents(
+                all_documents,
+                doc_ids=all_doc_ids,
+                collection_name=collection_name,
+                source=source,
+                doc_type=doc_type,
+                user_id=current_user.id,
+            )
         return Success(data={
             "message": f"成功上传 {valid_count} 个文件到知识库集合 [{collection_name}]",
             "count": valid_count,
