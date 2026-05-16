@@ -87,8 +87,9 @@ class RAGToolBase(BaseTool):
         """从 kwargs 构造 prompt 模板变量（不含 doc_context）"""
 
     async def run(self, query: str = "", **kwargs) -> str:
+        user_id = int(kwargs.get("user_id", 0))
         search_query = self.build_search_query(query, **kwargs)
-        docs = await self._pipeline.search(search_query, collection_name=self.COLLECTION_NAME)
+        docs = await self._pipeline.search(search_query, collection_name=self.COLLECTION_NAME, user_id=user_id)
 
         doc_context, sources = self.build_rag_context(docs, self.empty_msg)
 
