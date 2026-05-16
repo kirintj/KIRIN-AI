@@ -6,10 +6,17 @@ from app.settings import settings
 
 AI_CONFIG_DEFAULTS = {
     "model_name": settings.MODEL_NAME,
+    "api_key": settings.API_KEY or "",
+    "base_url": settings.BASE_URL or "",
     "max_tokens": str(settings.MAX_TOKENS),
     "temperature": str(settings.TEMPERATURE),
     "embedding_model": settings.EMBEDDING_MODEL,
     "embedding_dimension": str(settings.EMBEDDING_DIMENSION),
+    "embedding_api_key": settings.EMBEDDING_API_KEY or "",
+    "embedding_base_url": settings.EMBEDDING_BASE_URL or "",
+    "rerank_api_key": settings.RERANK_API_KEY or "",
+    "rerank_base_url": settings.RERANK_BASE_URL or "",
+    "rerank_model": settings.RERANK_MODEL or "",
     "rag_enable_query_rewrite": str(settings.RAG_ENABLE_QUERY_REWRITE).lower(),
     "rag_enable_rerank": str(settings.RAG_ENABLE_RERANK).lower(),
     "rag_enable_hybrid_search": str(settings.RAG_ENABLE_HYBRID_SEARCH).lower(),

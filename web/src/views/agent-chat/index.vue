@@ -39,13 +39,6 @@ const handleSwitchConversation = (convId: string) => {
   mobileDrawerVisible.value = false
 }
 
-const handleClearMemory = async () => {
-  await agentStore.clearMemory()
-  if (agentStore.currentConversationId) {
-    await agentStore.deleteConversation(agentStore.currentConversationId)
-  }
-}
-
 const safeScrollToBottom = () => {
   setTimeout(() => scrollToBottom('.hm-msg-list'), 30)
 }
@@ -115,31 +108,9 @@ watch(() => agentStore.messages.length, () => {
     </template>
 
     <div class="hm-chat-page">
-      <div class="hm-toolbar">
-        <div class="hm-toolbar-left">
-          <button v-if="isMobile" class="hm-mobile-conv-btn" @click="mobileDrawerVisible = true">
-            <TheIcon icon="icon-park-outline:chat" :size="16" />
-          </button>
-          <span class="hm-chat-title">AI Agent</span>
-          <span v-if="!isMobile" class="hm-chat-badge">{{ t('views.agent_chat.smart_dialog') }}</span>
-        </div>
-        <div class="hm-toolbar-right">
-          <button
-            v-if="!isMobile"
-            class="hm-toolbar-chip"
-            :class="{ active: agentStore.useLlmRouter }"
-            @click="agentStore.useLlmRouter = !agentStore.useLlmRouter"
-          >
-            <TheIcon icon="icon-park-outline:brain" :size="14" />
-            {{ t('views.agent_chat.llm_router') }}
-          </button>
-          <button class="hm-toolbar-chip danger" @click="handleClearMemory">
-            <TheIcon icon="icon-park-outline:delete" :size="14" />
-            <span v-if="!isMobile">{{ t('views.agent_chat.btn_clear') }}</span>
-          </button>
-        </div>
-      </div>
-
+      <button v-if="isMobile" class="hm-mobile-conv-btn" @click="mobileDrawerVisible = true">
+        <TheIcon icon="icon-park-outline:chat" :size="16" />
+      </button>
       <div class="hm-chat-body">
         <ChatMessages
           :messages="agentStore.messages"
@@ -151,6 +122,8 @@ watch(() => agentStore.messages.length, () => {
       <ChatInput
         v-model="message"
         :is-loading="agentStore.isLoading"
+        :use-llm-router="agentStore.useLlmRouter"
+        @update:use-llm-router="agentStore.useLlmRouter = $event"
         @send="sendMessage"
       />
     </div>
@@ -250,22 +223,7 @@ watch(() => agentStore.messages.length, () => {
   background: var(--hm-bg-primary);
   overflow: hidden;
   min-width: 0;
-}
-
-.hm-chat-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--hm-font-primary);
-  letter-spacing: -0.2px;
-}
-
-.hm-chat-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-brand-light);
-  color: var(--hm-brand);
-  font-weight: 500;
+  position: relative;
 }
 
 .hm-chat-body {
@@ -274,11 +232,16 @@ watch(() => agentStore.messages.length, () => {
 }
 
 .hm-mobile-conv-btn {
-  width: 32px;
-  height: 32px;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--hm-border);
   border-radius: var(--hm-radius-sm);
-  background: transparent;
+  background: var(--hm-bg-glass);
+  backdrop-filter: var(--hm-blur-glass);
   display: flex;
   align-items: center;
   justify-content: center;

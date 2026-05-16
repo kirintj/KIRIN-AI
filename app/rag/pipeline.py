@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import math
 from dataclasses import dataclass, field
@@ -26,6 +27,9 @@ class PipelineConfig:
     top_k: int = 5
     rerank_top_n: int = 3
     max_context_chars: int = 6000
+    rerank_api_key: str = ""
+    rerank_base_url: str = ""
+    rerank_model: str = ""
 
 
 async def load_pipeline_config_from_db() -> PipelineConfig:
@@ -38,6 +42,9 @@ async def load_pipeline_config_from_db() -> PipelineConfig:
         enable_hybrid_search=cfg.get("rag_enable_hybrid_search", "true") == "true",
         enable_rerank=cfg.get("rag_enable_rerank", "true") == "true",
         enable_context_compress=cfg.get("rag_enable_context_compress", "false") == "true",
+        rerank_api_key=cfg.get("rerank_api_key", ""),
+        rerank_base_url=cfg.get("rerank_base_url", ""),
+        rerank_model=cfg.get("rerank_model", ""),
     )
 
 
@@ -72,7 +79,7 @@ class AdvancedRAGPipeline:
             return []
 
         # 3. 去重
-        documents = self._deduplicate(documents)
+        documents = await self._deduplicate(documents)
 
         # 4. 重排
         if self.config.enable_rerank and len(documents) > self.config.rerank_top_n:
@@ -168,22 +175,24 @@ class AdvancedRAGPipeline:
         try:
             import httpx
 
-            api_key = settings.API_KEY
+            api_key = self.config.rerank_api_key or settings.RERANK_API_KEY
             if not api_key:
-                _logger.warning("DASHSCOPE_API_KEY 未配置，使用 LLM 重排")
+                _logger.warning("RERANK_API_KEY 未配置，使用 LLM 重排")
                 return await self._rerank_with_llm(query, documents, top_n)
 
+            base_url = self.config.rerank_base_url or settings.RERANK_BASE_URL
+            model = self.config.rerank_model or settings.RERANK_MODEL
             docs_text = [d["content"][:500] for d in documents]
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    "https://dashscope.aliyuncs.com/api/v1/services/reranking/text-reranking/text-reranking",
+                    base_url,
                     headers={
                         "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json",
                     },
                     json={
-                        "model": "gte-rerank",
+                        "model": model,
                         "input": {"query": query, "documents": docs_text},
                         "parameters": {"top_n": top_n, "return_documents": False},
                     },
@@ -273,14 +282,14 @@ class AdvancedRAGPipeline:
         return dot_product / (norm_a * norm_b)
 
     @staticmethod
-    def _deduplicate(documents: list[dict], similarity_threshold: float = 0.95) -> list[dict]:
+    async def _deduplicate(documents: list[dict], similarity_threshold: float = 0.95) -> list[dict]:
         """用 embedding 余弦相似度去重，阈值 0.95"""
         if not documents:
             return documents
 
         embed_fn = _get_embedding_function()
         contents = [d.get("content", "") for d in documents]
-        embeddings = embed_fn(contents)
+        embeddings = await asyncio.to_thread(embed_fn, contents)
 
         unique_indices: list[int] = []
         unique_embeddings: list[list[float]] = []

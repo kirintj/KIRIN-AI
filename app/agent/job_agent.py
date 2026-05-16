@@ -8,7 +8,7 @@ from app.tools.jd_tool import JDTool
 from app.tools.match_tool import MatchTool
 from app.tools.optimize_tool import OptimizeTool
 from app.tools.plan_tool import PlanTool
-from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
+from app.rag.pipeline import AdvancedRAGPipeline
 from app.utils.chat import call_llm
 
 RESUME_SUMMARY_PROMPT = """请将以下结构化简历数据，用 200 字以内概括核心信息（技能、经验亮点、教育背景）：
@@ -59,12 +59,7 @@ class JobAgent(AgentExecutor):
         self.match_tool = MatchTool()
         self.optimize_tool = OptimizeTool()
         self.plan_tool = PlanTool()
-        self._resume_pipeline = AdvancedRAGPipeline(PipelineConfig(
-            enable_query_rewrite=True,
-            enable_rerank=True,
-            enable_context_compress=False,
-            top_k=3,
-        ))
+        self._resume_pipeline = AdvancedRAGPipeline()
 
     async def analyze_resume(self, resume_text: str) -> dict:
         result = await self.resume_tool.run(resume_text=resume_text)

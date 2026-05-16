@@ -102,7 +102,7 @@ defineExpose({ scrollToBottom })
 
 <style scoped>
 .hm-msg-list {
-  max-width: 720px;
+  max-width: 70%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -145,6 +145,8 @@ defineExpose({ scrollToBottom })
   display: inline-flex;
   align-items: flex-end;
   gap: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .hm-msg-bubble {
@@ -153,6 +155,8 @@ defineExpose({ scrollToBottom })
   font-size: 14px;
   line-height: 1.6;
   word-break: break-word;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .assistant .hm-msg-bubble {
@@ -215,5 +219,13 @@ defineExpose({ scrollToBottom })
 @keyframes hm-msg-in {
   from { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(2px); }
   to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@media (max-width: 768px) {
+  .hm-msg-list {
+    max-width: 100%;
+    padding: 12px;
+    gap: 12px;
+  }
 }
 </style>

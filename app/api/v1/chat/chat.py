@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import logging
 
 from app.settings import settings
-from app.utils.chat import async_client, convert_messages_for_api, get_ai_config
+from app.utils.chat import _get_client, convert_messages_for_api, get_ai_config
 from app.schemas.chat import ChatResponse, ChatRequest, ChatMessage
 from app.schemas.base import Success, Fail
 from app.core.dependency import DependAuth
@@ -31,9 +31,10 @@ async def chat(
 
         config = await get_ai_config()
         default_model = config.get("model_name", settings.MODEL_NAME)
+        client = _get_client(config.get("api_key") or settings.API_KEY or "", config.get("base_url") or settings.BASE_URL or "")
 
         api_message = convert_messages_for_api(request.messages)
-        response = await async_client.chat.completions.create(
+        response = await client.chat.completions.create(
             model=request.model or default_model,
             messages=api_message,
             max_tokens=request.max_tokens,
@@ -77,7 +78,8 @@ async def get_models(
     try:
         config = await get_ai_config()
         default_model = config.get("model_name", settings.MODEL_NAME)
-        models = await async_client.models.list()
+        client = _get_client(config.get("api_key") or settings.API_KEY or "", config.get("base_url") or settings.BASE_URL or "")
+        models = await client.models.list()
         data = {
             "models": [model.id for model in models.data],
             "default_model": default_model,

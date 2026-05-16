@@ -29,6 +29,10 @@ class Settings:
     EMBEDDING_DIMENSION: int = int(os.getenv("EMBEDDING_DIMENSION", "1024"))
     EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "6"))
 
+    RERANK_API_KEY: str = os.getenv("RERANK_API_KEY", "")
+    RERANK_BASE_URL: str = os.getenv("RERANK_BASE_URL", "https://dashscope.aliyuncs.com/api/v1/services/reranking/text-reranking/text-reranking")
+    RERANK_MODEL: str = os.getenv("RERANK_MODEL", "gte-rerank")
+
     RAG_ENABLE_QUERY_REWRITE: bool = os.getenv("RAG_ENABLE_QUERY_REWRITE", "true").lower() == "true"
     RAG_ENABLE_RERANK: bool = os.getenv("RAG_ENABLE_RERANK", "true").lower() == "true"
     RAG_ENABLE_HYBRID_SEARCH: bool = os.getenv("RAG_ENABLE_HYBRID_SEARCH", "true").lower() == "true"

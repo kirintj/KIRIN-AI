@@ -3,7 +3,7 @@ import json
 from app.utils.chat import call_llm
 from app.services.business import memory_service
 from app.tools.base import BaseTool
-from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
+from app.rag.pipeline import AdvancedRAGPipeline
 from app.core.constants import (
     MEMORY_HISTORY_THRESHOLD,
     MEMORY_HISTORY_SLICE,
@@ -17,12 +17,7 @@ _recommend_pipeline: AdvancedRAGPipeline | None = None
 def _get_recommend_pipeline() -> AdvancedRAGPipeline:
     global _recommend_pipeline
     if _recommend_pipeline is None:
-        _recommend_pipeline = AdvancedRAGPipeline(PipelineConfig(
-            enable_query_rewrite=True,
-            enable_rerank=True,
-            enable_context_compress=False,
-            top_k=3,
-        ))
+        _recommend_pipeline = AdvancedRAGPipeline()
     return _recommend_pipeline
 
 PREFERENCE_EXTRACT_PROMPT = """你是一个用户画像分析助手。请根据以下用户对话历史，提取用户的求职偏好标签。

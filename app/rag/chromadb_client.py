@@ -19,14 +19,11 @@ COLLECTION_NAMES = ("knowledge_base", "resume", "activity-source", "salary", "ma
 
 _client: Optional[chromadb.ClientAPI] = None
 _collections: dict[str, chromadb.Collection] = {}
-_embedding_fn: Optional[DashScopeEmbeddingFunction] = None
 
 
 def _get_embedding_function() -> DashScopeEmbeddingFunction:
-    global _embedding_fn
-    if _embedding_fn is None:
-        _embedding_fn = DashScopeEmbeddingFunction()
-    return _embedding_fn
+    """每次创建新实例，确保能响应DB配置变更（构造函数轻量，无HTTP调用）"""
+    return DashScopeEmbeddingFunction()
 
 
 def _get_client() -> chromadb.ClientAPI:
@@ -48,13 +45,22 @@ def _get_collection(name: str = "knowledge_base") -> chromadb.Collection:
             )
         except ValueError as e:
             if "Embedding function conflict" in str(e):
-                _logger.warning("集合 [%s] embedding 函数冲突，删除旧集合并重建: %s", name, e)
+                try:
+                    old = client.get_collection(name=name)
+                    old_count = old.count()
+                except Exception:
+                    old_count = -1
+                _logger.error(
+                    "集合 [%s] embedding 函数冲突 (文档数: %d)，删除旧集合并重建: %s",
+                    name, old_count, e,
+                )
                 client.delete_collection(name)
                 _collections[name] = client.get_or_create_collection(
                     name=name,
                     metadata={"hnsw:space": "cosine"},
                     embedding_function=embed_fn,
                 )
+                _logger.warning("集合 [%s] 已重建，原有 %d 个文档已丢失", name, old_count)
             else:
                 raise
     return _collections[name]
@@ -268,7 +274,16 @@ async def move_document(
             new_metas.append(m)
 
         dst = _get_collection(to_collection)
-        dst.add(documents=documents, ids=ids, metadatas=new_metas)
+        try:
+            dst.add(documents=documents, ids=ids, metadatas=new_metas)
+        except Exception as e:
+            _logger.error("目标集合 [%s] 写入失败，回滚源集合 [%s]: %s", to_collection, from_collection, e)
+            try:
+                src.add(documents=documents, ids=ids, metadatas=metadatas)
+                _logger.info("回滚成功，%d 个文档已恢复到 [%s]", len(ids), from_collection)
+            except Exception as rollback_err:
+                _logger.critical("回滚失败，文档可能丢失: %s", rollback_err)
+            raise
 
         return {"moved": len(ids), "from": from_collection, "to": to_collection}
 

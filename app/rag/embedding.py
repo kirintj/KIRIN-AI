@@ -5,41 +5,59 @@ from app.settings import settings
 
 _logger = logging.getLogger(__name__)
 
+# 同步客户端缓存
 _sync_client: OpenAI | None = None
+_sync_api_key: str = ""
+_sync_base_url: str = ""
+
+# 异步客户端缓存
 _async_client: AsyncOpenAI | None = None
+_async_api_key: str = ""
+_async_base_url: str = ""
 
 
-def _get_sync_client() -> OpenAI:
-    global _sync_client
-    if _sync_client is None:
-        _sync_client = OpenAI(
-            api_key=settings.EMBEDDING_API_KEY,
-            base_url=settings.EMBEDDING_BASE_URL,
-        )
+def _get_sync_client(api_key: str, base_url: str) -> OpenAI:
+    global _sync_client, _sync_api_key, _sync_base_url
+    if _sync_client is None or api_key != _sync_api_key or base_url != _sync_base_url:
+        _sync_client = OpenAI(api_key=api_key, base_url=base_url)
+        _sync_api_key = api_key
+        _sync_base_url = base_url
     return _sync_client
 
 
-def _get_async_client() -> AsyncOpenAI:
-    global _async_client
-    if _async_client is None:
+def _get_async_client(api_key: str, base_url: str) -> AsyncOpenAI:
+    global _async_client, _async_api_key, _async_base_url
+    if _async_client is None or api_key != _async_api_key or base_url != _async_base_url:
         _async_client = AsyncOpenAI(
-            api_key=settings.EMBEDDING_API_KEY,
-            base_url=settings.EMBEDDING_BASE_URL,
+            api_key=api_key,
+            base_url=base_url,
             timeout=httpx.Timeout(60.0, connect=10.0),
         )
+        _async_api_key = api_key
+        _async_base_url = base_url
     return _async_client
 
 
-async def _get_embedding_config() -> tuple[str, int, int]:
-    """从 DB 缓存读取 embedding 配置，返回 (model, dimension, batch_size)"""
+async def _get_embedding_config() -> dict:
+    """从 DB 缓存读取 embedding 配置"""
     try:
         from app.services.config import get_cached_ai_config
         cfg = await get_cached_ai_config()
-        model = cfg.get("embedding_model") or settings.EMBEDDING_MODEL
-        dimension = int(cfg.get("embedding_dimension") or settings.EMBEDDING_DIMENSION)
-        return model, dimension, settings.EMBEDDING_BATCH_SIZE
+        return {
+            "model": cfg.get("embedding_model") or settings.EMBEDDING_MODEL,
+            "dimension": int(cfg.get("embedding_dimension") or settings.EMBEDDING_DIMENSION),
+            "batch_size": settings.EMBEDDING_BATCH_SIZE,
+            "api_key": cfg.get("embedding_api_key") or settings.EMBEDDING_API_KEY,
+            "base_url": cfg.get("embedding_base_url") or settings.EMBEDDING_BASE_URL,
+        }
     except Exception:
-        return settings.EMBEDDING_MODEL, settings.EMBEDDING_DIMENSION, settings.EMBEDDING_BATCH_SIZE
+        return {
+            "model": settings.EMBEDDING_MODEL,
+            "dimension": settings.EMBEDDING_DIMENSION,
+            "batch_size": settings.EMBEDDING_BATCH_SIZE,
+            "api_key": settings.EMBEDDING_API_KEY,
+            "base_url": settings.EMBEDDING_BASE_URL,
+        }
 
 
 class DashScopeEmbeddingFunction:
@@ -50,10 +68,14 @@ class DashScopeEmbeddingFunction:
         model: str | None = None,
         dimension: int | None = None,
         batch_size: int | None = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
     ):
         self.model = model or settings.EMBEDDING_MODEL
         self.dimension = dimension or settings.EMBEDDING_DIMENSION
         self.batch_size = batch_size or settings.EMBEDDING_BATCH_SIZE
+        self.api_key = api_key or settings.EMBEDDING_API_KEY
+        self.base_url = base_url or settings.EMBEDDING_BASE_URL
 
     def name(self) -> str:
         return f"dashscope_{self.model}"
@@ -73,7 +95,7 @@ class DashScopeEmbeddingFunction:
         return all_embeddings
 
     def _embed_batch(self, texts: list[str]) -> list[list[float]]:
-        client = _get_sync_client()
+        client = _get_sync_client(self.api_key, self.base_url)
         try:
             response = client.embeddings.create(
                 model=self.model,
@@ -92,16 +114,14 @@ async def async_get_embeddings(
     dimension: int | None = None,
 ) -> list[list[float]]:
     """异步获取向量，复用全局 AsyncOpenAI 客户端"""
-    if model is None or dimension is None:
-        db_model, db_dimension, batch_size = await _get_embedding_config()
-        _model = model or db_model
-        _dimension = dimension or db_dimension
-    else:
-        _model = model
-        _dimension = dimension
-        batch_size = settings.EMBEDDING_BATCH_SIZE
+    cfg = await _get_embedding_config()
+    _model = model or cfg["model"]
+    _dimension = dimension or cfg["dimension"]
+    batch_size = cfg["batch_size"]
+    api_key = cfg["api_key"]
+    base_url = cfg["base_url"]
 
-    client = _get_async_client()
+    client = _get_async_client(api_key, base_url)
 
     all_embeddings: list[list[float]] = []
     for i in range(0, len(texts), batch_size):

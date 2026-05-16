@@ -7,11 +7,13 @@ const { t } = useI18n()
 const props = defineProps<{
   modelValue: string
   isLoading: boolean
+  useLlmRouter: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: string): void
   (e: 'send'): void
+  (e: 'update:useLlmRouter', val: boolean): void
 }>()
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -34,7 +36,14 @@ const handleKeydown = (e: KeyboardEvent) => {
         @keydown="handleKeydown"
       />
       <div class="hm-input-actions">
-        <div></div>
+        <button
+          class="hm-router-chip"
+          :class="{ active: useLlmRouter }"
+          @click="emit('update:useLlmRouter', !useLlmRouter)"
+        >
+          <TheIcon icon="icon-park-outline:brain" :size="13" />
+          {{ t('views.agent_chat.llm_router') }}
+        </button>
         <button
           class="hm-send-btn"
           :class="{ active: modelValue.trim() && !isLoading }"
@@ -55,7 +64,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 .hm-input-box {
-  max-width: 720px;
+  max-width: 70%;
   margin: 0 auto;
 }
 
@@ -64,5 +73,39 @@ const handleKeydown = (e: KeyboardEvent) => {
   justify-content: space-between;
   align-items: center;
   margin-top: 8px;
+}
+
+.hm-router-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--hm-radius-full);
+  border: 1px solid var(--hm-border);
+  background: transparent;
+  font-size: 12px;
+  color: var(--hm-font-fourth);
+  cursor: pointer;
+  transition: all 0.2s var(--hm-spring);
+}
+
+.hm-router-chip:hover {
+  border-color: var(--hm-brand);
+  color: var(--hm-brand);
+}
+
+.hm-router-chip.active {
+  border-color: var(--hm-brand);
+  background: var(--hm-brand-light);
+  color: var(--hm-brand);
+}
+
+@media (max-width: 768px) {
+  .hm-input-box {
+    max-width: 100%;
+  }
+  .hm-chat-input-area {
+    padding: 8px 12px 12px;
+  }
 }
 </style>
