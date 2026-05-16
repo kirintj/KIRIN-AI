@@ -108,7 +108,7 @@ async def build_personalized_recommendation(user_id: str, current_query: str = "
     if not search_query:
         return ""
 
-    docs = await _get_recommend_pipeline().search(search_query)
+    docs = await _get_recommend_pipeline().search(search_query, user_id=int(user_id))
     if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
         return ""
 

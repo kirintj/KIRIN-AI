@@ -88,10 +88,10 @@ class JobAgent(AgentExecutor):
         )
 
     async def optimize_resume_with_rag(
-        self, resume_text: str, jd_text: str, match_result: str
+        self, resume_text: str, jd_text: str, match_result: str, user_id: int = 0
     ) -> dict:
         search_query = f"{jd_text} 优秀简历 岗位要求"
-        docs = await self._resume_pipeline.search(search_query, collection_name="resume")
+        docs = await self._resume_pipeline.search(search_query, collection_name="resume", user_id=user_id)
 
         rag_context, sources = build_rag_context(docs)
 

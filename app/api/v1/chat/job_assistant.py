@@ -84,7 +84,7 @@ async def optimize_resume_rag(
 ):
     try:
         result = await job_agent.optimize_resume_with_rag(
-            request.resume_text, request.jd_text, request.match_result
+            request.resume_text, request.jd_text, request.match_result, user_id=current_user.id
         )
         return Success(data=result)
     except Exception:
