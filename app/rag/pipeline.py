@@ -62,6 +62,7 @@ class AdvancedRAGPipeline:
         top_k: int | None = None,
         doc_type: str = "",
         source: str = "",
+        user_id: int = 0,
     ) -> list[dict]:
         """主入口：执行完整高级 RAG 管线"""
         if not self._config_explicit:
@@ -73,7 +74,7 @@ class AdvancedRAGPipeline:
         queries = await self._rewrite_queries(query) if self.config.enable_query_rewrite else [query]
 
         # 2. 检索
-        documents = await self._retrieve(queries, collection_name, effective_top_k, doc_type, source)
+        documents = await self._retrieve(queries, collection_name, effective_top_k, doc_type, source, user_id=user_id)
 
         if not documents:
             return []
@@ -98,9 +99,10 @@ class AdvancedRAGPipeline:
         top_k: int | None = None,
         doc_type: str = "",
         source: str = "",
+        user_id: int = 0,
     ) -> dict:
         """检索 + 生成回答"""
-        documents = await self.search(query, collection_name, top_k, doc_type, source)
+        documents = await self.search(query, collection_name, top_k, doc_type, source, user_id=user_id)
 
         if not documents:
             return {"answer": "未检索到相关文档，请先添加知识库文档。", "sources": [], "documents": []}
@@ -145,6 +147,7 @@ class AdvancedRAGPipeline:
         top_k: int,
         doc_type: str,
         source: str,
+        user_id: int = 0,
     ) -> list[dict]:
         """多查询检索 + 合并"""
         all_docs: list[dict] = []
@@ -152,16 +155,16 @@ class AdvancedRAGPipeline:
         for q in queries:
             if collection_name:
                 if doc_type or source:
-                    docs = await search_with_filter(q, top_k=top_k, collection_name=collection_name, doc_type=doc_type, source=source)
+                    docs = await search_with_filter(q, top_k=top_k, collection_name=collection_name, doc_type=doc_type, source=source, user_id=user_id)
                 elif self.config.enable_hybrid_search:
-                    docs = await hybrid_search(q, top_k=top_k, collection_name=collection_name)
+                    docs = await hybrid_search(q, top_k=top_k, collection_name=collection_name, user_id=user_id)
                 else:
-                    docs = await search_chromadb(q, top_k=top_k, collection_name=collection_name)
+                    docs = await search_chromadb(q, top_k=top_k, collection_name=collection_name, user_id=user_id)
             else:
                 if self.config.enable_hybrid_search:
-                    docs = await search_all_collections_hybrid(q, top_k=top_k)
+                    docs = await search_all_collections_hybrid(q, top_k=top_k, user_id=user_id)
                 else:
-                    docs = await search_all_collections(q, top_k=top_k)
+                    docs = await search_all_collections(q, top_k=top_k, user_id=user_id)
 
             all_docs.extend(docs)
 
