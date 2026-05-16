@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CommonPage from '@/components/page/CommonPage.vue'
 import AvatarCropper from '@/components/avatar/AvatarCropper.vue'
@@ -18,6 +18,13 @@ const infoForm = ref({
   username: userStore.name,
   email: userStore.email,
 })
+
+watch(
+  () => [userStore.avatar, userStore.name, userStore.email],
+  ([avatar, username, email]) => {
+    infoForm.value = { avatar, username, email }
+  },
+)
 
 const avatarFile = ref(null)
 const cropperVisible = ref(false)

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import api from '@/api'
 import i18n from '~/i18n'
 
@@ -12,12 +12,15 @@ export const useInterviewStore = defineStore('interview-sim', () => {
   const isLoading = ref(false)
   const isEvaluating = ref(false)
 
-  const INTERVIEW_TYPES = computed(() => ({
-    tech: t('common.interview.type_tech'),
-    hr: t('common.interview.type_hr'),
-    behavior: t('common.interview.type_behavior'),
-    case: t('common.interview.type_case'),
-  }))
+  const INTERVIEW_TYPES = computed(() => {
+    void i18n.global.locale.value
+    return {
+      tech: t('common.interview.type_tech'),
+      hr: t('common.interview.type_hr'),
+      behavior: t('common.interview.type_behavior'),
+      case: t('common.interview.type_case'),
+    }
+  })
 
   const loadSessions = async () => {
     try {

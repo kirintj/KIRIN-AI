@@ -254,11 +254,14 @@ const toggleDocSelect = (docId: string) => {
 const handleBatchDelete = async () => {
   if (selectedDocIds.value.size === 0) return
   try {
-    window.$message?.success(t('views.knowledge.msg_batch_selected', { count: selectedDocIds.value.size }))
+    const ids = Array.from(selectedDocIds.value)
+    await Promise.all(ids.map((id) => api.deleteDocument(id, selectedCollection.value)))
+    window.$message?.success(t('views.knowledge.msg_batch_deleted', { count: ids.length }))
     selectedDocIds.value.clear()
+    await loadDocList()
     await loadStats()
   } catch (error) {
-    console.error('批量操作失败', error)
+    console.error('批量删除失败', error)
   }
 }
 

@@ -25,9 +25,12 @@ class DeptService:
         dept_obj = await self.repo.get(id=obj_in.id)
         if dept_obj.parent_id != obj_in.parent_id:
             await self.repo.delete_dept_closure(dept_obj.id)
+            dept_obj.update_from_dict(obj_in.model_dump(exclude_unset=True))
+            await dept_obj.save()
             await self.repo.update_dept_closure(dept_obj)
-        dept_obj.update_from_dict(obj_in.model_dump(exclude_unset=True))
-        await dept_obj.save()
+        else:
+            dept_obj.update_from_dict(obj_in.model_dump(exclude_unset=True))
+            await dept_obj.save()
 
     @atomic()
     async def delete_dept(self, dept_id: int):

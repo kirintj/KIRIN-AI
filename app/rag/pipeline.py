@@ -2,6 +2,7 @@ import logging
 import math
 from dataclasses import dataclass, field
 
+from app.tools.base import build_rag_context
 from app.rag.chromadb_client import (
     search_chromadb,
     search_all_collections,
@@ -300,6 +301,5 @@ class AdvancedRAGPipeline:
     @staticmethod
     def _build_context(documents: list[dict]) -> str:
         """将文档列表拼接为上下文文本"""
-        return "\n\n".join(
-            f"[资料{i + 1}] {d['content']}" for i, d in enumerate(documents) if d.get("content")
-        )
+        context, _ = build_rag_context(documents)
+        return context

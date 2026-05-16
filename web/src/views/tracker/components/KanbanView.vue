@@ -4,6 +4,7 @@ import TheIcon from '@/components/icon/TheIcon.vue'
 import { NPopconfirm } from 'naive-ui'
 import { useTrackerDrag } from '../composables/useTrackerDrag'
 import { useI18n } from 'vue-i18n'
+import { formatShortDate } from '@/utils/common/time'
 
 const { t } = useI18n()
 const store = useTrackerStore()
@@ -30,11 +31,6 @@ const handleDelete = async (appId: string) => {
 
 const handleMove = async (appId: string, newStatus: string) => {
   await store.moveApplication(appId, newStatus)
-}
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 </script>
 
@@ -84,7 +80,7 @@ const formatDate = (dateStr: string) => {
             <span v-if="app.source">
               <TheIcon icon="icon-park-outline:link" :size="11" /> {{ app.source }}
             </span>
-            <span>{{ formatDate(app.created_at) }}</span>
+            <span>{{ formatShortDate(app.created_at) }}</span>
           </div>
           <div class="hm-app-move">
             <select

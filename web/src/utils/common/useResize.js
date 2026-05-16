@@ -7,14 +7,16 @@ export function useResize(el, cb) {
 }
 
 const install = (app) => {
-  let observer
+  const observerMap = new WeakMap()
 
   app.directive('resize', {
     mounted(el, binding) {
-      observer = useResize(el, binding.value)
+      const observer = useResize(el, binding.value)
+      observerMap.set(el, observer)
     },
-    beforeUnmount() {
-      observer?.disconnect()
+    beforeUnmount(el) {
+      observerMap.get(el)?.disconnect()
+      observerMap.delete(el)
     },
   })
 }

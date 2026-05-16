@@ -3,6 +3,7 @@ import { useTrackerStore } from '@/store/modules/tracker'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { NPopconfirm } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
+import { formatShortDate } from '@/utils/common/time'
 
 const { t } = useI18n()
 const store = useTrackerStore()
@@ -14,11 +15,6 @@ const emit = defineEmits<{
 
 const handleDelete = async (appId: string) => {
   await store.deleteApplication(appId)
-}
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 </script>
 
@@ -58,7 +54,7 @@ const formatDate = (dateStr: string) => {
         <span class="hm-list-col salary">{{ app.salary || '-' }}</span>
         <span class="hm-list-col location">{{ app.location || '-' }}</span>
         <span class="hm-list-col source">{{ app.source || '-' }}</span>
-        <span class="hm-list-col date">{{ formatDate(app.created_at) }}</span>
+        <span class="hm-list-col date">{{ formatShortDate(app.created_at) }}</span>
         <span class="hm-list-col actions">
           <button class="hm-list-action" @click="emit('edit', app)">{{ t('views.tracker.btn_edit') }}</button>
           <NPopconfirm @positive-click="handleDelete(app.id)">

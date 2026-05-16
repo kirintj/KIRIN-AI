@@ -40,7 +40,7 @@ async def export_resume_docx(
     current_user: User = DependAuth,
 ):
     try:
-        filepath = export_docx(current_user.username, request.resume_data, request.template or "classic")
+        filepath = await export_docx(current_user.username, request.resume_data, request.template or "classic")
         return FileResponse(
             filepath,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -68,7 +68,7 @@ async def export_resume_text(
 async def get_export_list(
     current_user: User = DependAuth,
 ):
-    exports = list_exports(current_user.username)
+    exports = await list_exports(current_user.username)
     return Success(data=exports)
 
 

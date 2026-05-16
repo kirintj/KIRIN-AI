@@ -1,8 +1,25 @@
 import json
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
 from app.utils.chat import call_llm
+
+
+def build_rag_context(docs: list[dict], empty_msg: str = "暂无相关文档。") -> tuple[str, list[str]]:
+    """将 RAG 检索结果格式化为上下文文本和来源列表。"""
+    if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
+        return empty_msg, []
+    context_parts = [f"[文档{i+1}] {d['content']}" for i, d in enumerate(docs) if d.get("content")]
+    sources = list(set(d.get("source", "") for d in docs if d.get("source")))
+    return "\n\n".join(context_parts), sources
+
+
+def ensure_user_dir(base_dir: Path, user_id: str) -> Path:
+    """Create and return a user-specific directory under base_dir."""
+    user_dir = base_dir / user_id
+    user_dir.mkdir(parents=True, exist_ok=True)
+    return user_dir
 
 
 class BaseTool(ABC):
@@ -36,12 +53,8 @@ class BaseTool(ABC):
 
     @staticmethod
     def build_rag_context(docs: list[dict], empty_msg: str = "暂无相关文档。") -> tuple[str, list[str]]:
-        """将 RAG 检索结果格式化为上下文文本和来源列表。"""
-        if not docs or (len(docs) == 1 and docs[0].get("source") == ""):
-            return empty_msg, []
-        context_parts = [f"[文档{i+1}] {d['content']}" for i, d in enumerate(docs) if d.get("content")]
-        sources = list(set(d.get("source", "") for d in docs if d.get("source")))
-        return "\n\n".join(context_parts), sources
+        """代理到模块级 build_rag_context。"""
+        return build_rag_context(docs, empty_msg)
 
 
 class RAGToolBase(BaseTool):

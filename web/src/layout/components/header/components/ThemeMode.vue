@@ -1,12 +1,11 @@
 <script setup>
+import { computed } from 'vue'
 import { useAppStore } from '@/store'
-import { useDark, useToggle } from '@vueuse/core'
 
 const appStore = useAppStore()
-const isDark = useDark()
+const isDark = computed(() => appStore.isDark)
 const toggleDark = () => {
   appStore.toggleDark()
-  useToggle(isDark)()
 }
 </script>
 

@@ -41,9 +41,9 @@ async def _safe_conversation_count(user_id: str) -> dict:
         return {"total": 0}
 
 
-def _safe_interview_stats(user_id: str) -> dict:
+async def _safe_interview_stats(user_id: str) -> dict:
     try:
-        sessions = list_sessions(user_id)
+        sessions = await list_sessions(user_id)
         completed = sum(1 for s in sessions if s.get("status") == "completed")
         active = sum(1 for s in sessions if s.get("status") == "active")
         scores = [s.get("score") for s in sessions if s.get("score") is not None]
@@ -59,7 +59,7 @@ async def get_dashboard_overview(current_user: User = DependAuth):
     tracker_stats = await _safe_tracker_stats(current_user.username)
     todo_stats = await _safe_todo_stats(current_user.username)
     conv_stats = await _safe_conversation_count(current_user.username)
-    interview_stats = _safe_interview_stats(current_user.username)
+    interview_stats = await _safe_interview_stats(current_user.username)
 
     return Success(data={
         "tracker": tracker_stats,

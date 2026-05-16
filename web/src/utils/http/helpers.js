@@ -1,14 +1,5 @@
 import { useUserStore } from '@/store'
-
-let _t = null
-function t(key, params) {
-  if (!_t) {
-    // Lazy: i18n is fully initialized by first function call
-    const mod = window.__i18n_module__
-    _t = mod?.default?.global?.t ?? ((k) => k)
-  }
-  return _t(key, params)
-}
+import { t } from '@/utils/common/i18nHelper'
 
 export function addBaseParams(params) {
   if (!params.userId) {

@@ -17,7 +17,7 @@ const isMobile = breakpoints.smaller('sm')
 const mobileDrawerVisible = ref(false)
 
 const store = useInterviewStore()
-const { formatMarkdown } = useMarkdown()
+const { formatMarkdown, formatMessage } = useMarkdown()
 const message = ref('')
 const msgListRef = ref<HTMLElement | null>(null)
 const showSetupModal = ref(false)
@@ -281,7 +281,7 @@ onMounted(() => {
             <div v-if="msg.role === 'assistant'" class="hm-is-msg-avatar interviewer">
               <TheIcon icon="icon-park-outline:people-talk" :size="16" color="#fff" />
             </div>
-            <div class="hm-is-msg-bubble" v-html="msg.role === 'assistant' ? formatMarkdown(msg.content) : msg.content"></div>
+            <div class="hm-is-msg-bubble" v-html="formatMessage(msg.content, msg.role)"></div>
           </div>
           <div v-if="store.isLoading" class="hm-is-msg assistant">
             <div class="hm-is-msg-avatar interviewer">

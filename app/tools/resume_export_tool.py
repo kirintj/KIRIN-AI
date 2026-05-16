@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 from datetime import datetime
@@ -7,7 +8,7 @@ from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from app.utils.chat import call_llm
-from app.tools.base import BaseTool
+from app.tools.base import BaseTool, ensure_user_dir
 
 RESUME_EXPORT_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "resume_exports"
 
@@ -42,12 +43,6 @@ RESUME_GENERATE_PROMPT = """你是一个简历生成助手。请根据以下用�
 }}
 
 只输出 JSON，不要其他内容。"""
-
-
-def _ensure_dir(user_id: str) -> Path:
-    user_dir = RESUME_EXPORT_DIR / user_id
-    user_dir.mkdir(parents=True, exist_ok=True)
-    return user_dir
 
 
 async def generate_resume_data(user_id: str, user_info: str) -> dict:
@@ -156,8 +151,8 @@ def _add_section_title(doc: Document, title: str):
     p.paragraph_format.space_before = Pt(8)
 
 
-def export_docx(user_id: str, data: dict, template: str = "classic") -> str:
-    user_dir = _ensure_dir(user_id)
+def _export_docx_sync(user_id: str, data: dict, template: str = "classic") -> str:
+    user_dir = ensure_user_dir(RESUME_EXPORT_DIR, user_id)
     name = data.get("name", "resume")
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{name}_{timestamp}.docx"
@@ -166,6 +161,10 @@ def export_docx(user_id: str, data: dict, template: str = "classic") -> str:
     doc = _build_classic_doc(data)
     doc.save(str(filepath))
     return str(filepath)
+
+
+async def export_docx(user_id: str, data: dict, template: str = "classic") -> str:
+    return await asyncio.to_thread(_export_docx_sync, user_id, data, template)
 
 
 def export_text(data: dict) -> str:
@@ -223,8 +222,8 @@ def export_text(data: dict) -> str:
     return "\n".join(lines)
 
 
-def list_exports(user_id: str) -> list[dict]:
-    user_dir = _ensure_dir(user_id)
+def _list_exports_sync(user_id: str) -> list[dict]:
+    user_dir = ensure_user_dir(RESUME_EXPORT_DIR, user_id)
     exports = []
     for f in sorted(user_dir.glob("*.docx"), key=lambda x: x.stat().st_mtime, reverse=True):
         exports.append({
@@ -233,3 +232,7 @@ def list_exports(user_id: str) -> list[dict]:
             "created_at": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
         })
     return exports
+
+
+async def list_exports(user_id: str) -> list[dict]:
+    return await asyncio.to_thread(_list_exports_sync, user_id)

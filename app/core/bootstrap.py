@@ -37,6 +37,7 @@ def make_middlewares():
             exclude_paths=[
                 "/api/v1/base/access_token",
                 "/api/v1/base/refresh_token",
+                "/api/v1/user/reset_password",
                 "/docs",
                 "/openapi.json",
                 "/static",

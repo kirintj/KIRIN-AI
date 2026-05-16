@@ -33,11 +33,15 @@ class UserUpdate(BaseModel):
     email: EmailStr
     username: str
     avatar: Optional[str] = None
-    is_active: Optional[bool] = True
     password: Optional[str] = None
-    is_superuser: Optional[bool] = False
     role_ids: Optional[List[int]] = []
     dept_id: Optional[int] = None
+
+
+class AdminUserUpdate(UserUpdate):
+    """Extended update schema — superuser-only fields."""
+    is_active: Optional[bool] = True
+    is_superuser: Optional[bool] = False
 
 
 class UpdatePassword(BaseModel):

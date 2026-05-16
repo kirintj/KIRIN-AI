@@ -140,15 +140,16 @@ const onDrop = async (targetIndex: number) => {
     return
   }
   const item = filteredList.value[dragIndex.value]
-  if (item) {
-    const targetItem = filteredList.value[targetIndex]
-    if (targetItem) {
-      try {
-        await api.updateTodo({ id: item.id, priority: targetItem.priority })
-        await loadTodos()
-      } catch (error) {
-        console.error('排序失败', error)
-      }
+  const targetItem = filteredList.value[targetIndex]
+  if (item && targetItem) {
+    try {
+      await Promise.all([
+        api.updateTodo({ id: item.id, priority: targetItem.priority }),
+        api.updateTodo({ id: targetItem.id, priority: item.priority }),
+      ])
+      await loadTodos()
+    } catch (error) {
+      console.error('排序失败', error)
     }
   }
   dragIndex.value = null

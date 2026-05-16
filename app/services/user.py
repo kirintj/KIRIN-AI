@@ -22,9 +22,9 @@ class UserService:
     async def get_by_username(self, username: str):
         return await self.repo.get_by_username(username)
 
-    async def list(self, page: int, page_size: int, search=None, order=None):
+    async def list(self, page: int, page_size: int, search=None, order=None, prefetch=None):
         from tortoise.expressions import Q
-        return await self.repo.list(page=page, page_size=page_size, search=search or Q(), order=order or [])
+        return await self.repo.list(page=page, page_size=page_size, search=search or Q(), order=order or [], prefetch=prefetch)
 
     async def create_user(self, obj_in: UserCreate):
         user_data = obj_in.create_dict()

@@ -154,7 +154,7 @@ import { lStorage, setToken, setRefreshToken } from '@/utils'
 import api from '@/api'
 import { addDynamicRoutes } from '@/router'
 import { useI18n } from 'vue-i18n'
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, onMounted, onUnmounted } from 'vue'
 import TheIcon from '@/components/icon/TheIcon.vue'
 
 const SlideVerify = defineAsyncComponent(() =>
@@ -187,9 +187,11 @@ const registerInfo = ref({
 const captchaData = ref(null)
 
 const modalWidth = ref(window.innerWidth <= 480 ? 'calc(100vw - 32px)' : '380px')
-window.addEventListener('resize', () => {
+const updateModalWidth = () => {
   modalWidth.value = window.innerWidth <= 480 ? 'calc(100vw - 32px)' : '380px'
-})
+}
+onMounted(() => window.addEventListener('resize', updateModalWidth))
+onUnmounted(() => window.removeEventListener('resize', updateModalWidth))
 
 initLoginInfo()
 

@@ -204,14 +204,14 @@ async def parse_file(
 
     err = validate_file_extension(file.filename)
     if err:
-        return err
+        return Fail(code=err.code, msg=err.msg)
 
     try:
         content = await file.read()
 
         err = validate_file_size(len(content), DEFAULT_MAX_SIZE)
         if err:
-            return err
+            return Fail(code=err.code, msg=err.msg)
 
         documents = extract_text_from_file(file.filename, content)
 

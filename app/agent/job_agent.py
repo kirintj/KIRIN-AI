@@ -2,6 +2,7 @@ import asyncio
 import json
 
 from app.agent.executor import AgentExecutor
+from app.tools.base import build_rag_context
 from app.tools.resume_tool import ResumeTool
 from app.tools.jd_tool import JDTool
 from app.tools.match_tool import MatchTool
@@ -97,12 +98,7 @@ class JobAgent(AgentExecutor):
         search_query = f"{jd_text} 优秀简历 岗位要求"
         docs = await self._resume_pipeline.search(search_query, collection_name="resume")
 
-        rag_context = "暂无相关参考文档。"
-        sources = []
-        if docs and not (len(docs) == 1 and docs[0].get("source") == ""):
-            context_parts = [f"[文档{i+1}] {d['content']}" for i, d in enumerate(docs) if d.get("content")]
-            rag_context = "\n\n".join(context_parts)
-            sources = list(set(d.get("source", "") for d in docs if d.get("source")))
+        rag_context, sources = build_rag_context(docs)
 
         prompt = RAG_RESUME_OPTIMIZE_PROMPT.format(
             resume_text=resume_text,

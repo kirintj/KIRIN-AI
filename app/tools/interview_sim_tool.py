@@ -1,8 +1,10 @@
+import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from app.tools.base import ensure_user_dir
 from app.utils.chat import call_llm
 
 INTERVIEW_SIM_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "interview_sim"
@@ -82,33 +84,27 @@ EVALUATION_PROMPT = """你是一位面试评估专家。请根据以下面试对
 （给出具体的改进建议）"""
 
 
-def _ensure_dir(user_id: str) -> Path:
-    user_dir = INTERVIEW_SIM_DIR / user_id
-    user_dir.mkdir(parents=True, exist_ok=True)
-    return user_dir
-
-
 def _get_session_path(user_id: str, session_id: str) -> Path:
-    return _ensure_dir(user_id) / f"{session_id}.json"
+    return ensure_user_dir(INTERVIEW_SIM_DIR, user_id) / f"{session_id}.json"
 
 
 def _get_sessions_meta_path(user_id: str) -> Path:
-    return _ensure_dir(user_id) / "sessions.json"
+    return ensure_user_dir(INTERVIEW_SIM_DIR, user_id) / "sessions.json"
 
 
-def _load_sessions_meta(user_id: str) -> list[dict]:
+def _load_sessions_meta_sync(user_id: str) -> list[dict]:
     path = _get_sessions_meta_path(user_id)
     if not path.exists():
         return []
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _save_sessions_meta(user_id: str, meta: list[dict]):
+def _save_sessions_meta_sync(user_id: str, meta: list[dict]):
     path = _get_sessions_meta_path(user_id)
     path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def create_session(user_id: str, data: dict) -> dict:
+def _create_session_sync(user_id: str, data: dict) -> dict:
     import uuid
     session_id = uuid.uuid4().hex[:12]
     now = datetime.now().isoformat()
@@ -127,7 +123,7 @@ def create_session(user_id: str, data: dict) -> dict:
     path = _get_session_path(user_id, session_id)
     path.write_text(json.dumps(session, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    meta = _load_sessions_meta(user_id)
+    meta = _load_sessions_meta_sync(user_id)
     meta.insert(0, {
         "id": session_id,
         "company": session["company"],
@@ -138,23 +134,19 @@ def create_session(user_id: str, data: dict) -> dict:
         "created_at": now,
         "updated_at": now,
     })
-    _save_sessions_meta(user_id, meta)
+    _save_sessions_meta_sync(user_id, meta)
     return session
 
 
-def get_session(user_id: str, session_id: str) -> Optional[dict]:
+def _get_session_sync(user_id: str, session_id: str) -> Optional[dict]:
     path = _get_session_path(user_id, session_id)
     if not path.exists():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def list_sessions(user_id: str) -> list[dict]:
-    return _load_sessions_meta(user_id)
-
-
-def add_message_to_session(user_id: str, session_id: str, role: str, content: str) -> bool:
-    session = get_session(user_id, session_id)
+def _add_message_sync(user_id: str, session_id: str, role: str, content: str) -> bool:
+    session = _get_session_sync(user_id, session_id)
     if not session:
         return False
     session["messages"].append({
@@ -168,8 +160,8 @@ def add_message_to_session(user_id: str, session_id: str, role: str, content: st
     return True
 
 
-def finish_session(user_id: str, session_id: str, evaluation: dict) -> bool:
-    session = get_session(user_id, session_id)
+def _finish_session_sync(user_id: str, session_id: str, evaluation: dict) -> bool:
+    session = _get_session_sync(user_id, session_id)
     if not session:
         return False
     session["status"] = "completed"
@@ -179,27 +171,51 @@ def finish_session(user_id: str, session_id: str, evaluation: dict) -> bool:
     path = _get_session_path(user_id, session_id)
     path.write_text(json.dumps(session, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    meta = _load_sessions_meta(user_id)
+    meta = _load_sessions_meta_sync(user_id)
     for item in meta:
         if item["id"] == session_id:
             item["status"] = "completed"
             item["score"] = evaluation.get("score")
             item["updated_at"] = datetime.now().isoformat()
             break
-    _save_sessions_meta(user_id, meta)
+    _save_sessions_meta_sync(user_id, meta)
     return True
 
 
-def delete_session(user_id: str, session_id: str) -> bool:
+def _delete_session_sync(user_id: str, session_id: str) -> bool:
     path = _get_session_path(user_id, session_id)
     if path.exists():
         path.unlink()
-    meta = _load_sessions_meta(user_id)
+    meta = _load_sessions_meta_sync(user_id)
     new_meta = [m for m in meta if m["id"] != session_id]
     if len(new_meta) == len(meta) and not path.exists():
         return False
-    _save_sessions_meta(user_id, new_meta)
+    _save_sessions_meta_sync(user_id, new_meta)
     return True
+
+
+async def create_session(user_id: str, data: dict) -> dict:
+    return await asyncio.to_thread(_create_session_sync, user_id, data)
+
+
+async def get_session(user_id: str, session_id: str) -> Optional[dict]:
+    return await asyncio.to_thread(_get_session_sync, user_id, session_id)
+
+
+async def list_sessions(user_id: str) -> list[dict]:
+    return await asyncio.to_thread(_load_sessions_meta_sync, user_id)
+
+
+async def add_message_to_session(user_id: str, session_id: str, role: str, content: str) -> bool:
+    return await asyncio.to_thread(_add_message_sync, user_id, session_id, role, content)
+
+
+async def finish_session(user_id: str, session_id: str, evaluation: dict) -> bool:
+    return await asyncio.to_thread(_finish_session_sync, user_id, session_id, evaluation)
+
+
+async def delete_session(user_id: str, session_id: str) -> bool:
+    return await asyncio.to_thread(_delete_session_sync, user_id, session_id)
 
 
 async def generate_interview_reply(

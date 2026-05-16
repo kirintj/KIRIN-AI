@@ -1,13 +1,5 @@
 import { isNullOrUndef } from '@/utils/common/is'
-
-let _t = null
-function t(key, params) {
-  if (!_t) {
-    const i18n = window.__kirin_i18n__
-    _t = i18n?.global?.t ?? ((k) => k)
-  }
-  return _t(key, params)
-}
+import { t } from '@/utils/common/i18nHelper'
 
 export function setupMessage(NMessage) {
   let loadingMessage = null

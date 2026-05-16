@@ -31,6 +31,12 @@ export const useTagsStore = defineStore('tag', {
       this.setTags([...this.tags, tag])
     },
     removeTag(path) {
+      if (this.tags.length <= 1) {
+        this.setTags([])
+        this.setActiveTag('')
+        router.push('/')
+        return
+      }
       if (path === this.activeTag) {
         if (this.activeIndex > 0) {
           router.push(this.tags[this.activeIndex - 1].path)

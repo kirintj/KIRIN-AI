@@ -119,10 +119,6 @@ async def init_db():
     except Exception:
         logger.warning("aerich upgrade failed, skipping")
 
-    try:
-        await Tortoise.init(config=settings.TORTOISE_ORM, _enable_global_fallback=True)
-    except TypeError:
-        await Tortoise.init(config=settings.TORTOISE_ORM)
     await Tortoise.generate_schemas()
 
     await _ensure_business_tables()

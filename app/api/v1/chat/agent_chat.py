@@ -35,6 +35,9 @@ async def agent_chat(
         result = await executor.run(request.query, user_id=user_id, use_llm_router=request.use_llm_router)
 
         if request.conversation_id:
+            conv = await conversation_service.repo.get_by_id(request.conversation_id, user_id)
+            if not conv:
+                return Fail(code=403, msg="无权操作该对话")
             await conversation_service.add_message(request.conversation_id, "user", request.query)
             await conversation_service.add_message(request.conversation_id, "assistant", result)
 

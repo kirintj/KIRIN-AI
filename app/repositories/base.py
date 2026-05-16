@@ -23,10 +23,12 @@ class RepositoryBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def exists(self, **kwargs) -> bool:
         return await self.model.filter(**kwargs).exists()
 
-    async def list(self, page: int, page_size: int, search: Q = Q(), order: Optional[list] = None) -> Tuple[Total, List[ModelType]]:
+    async def list(self, page: int, page_size: int, search: Q = Q(), order: Optional[list] = None, prefetch: Optional[list] = None) -> Tuple[Total, List[ModelType]]:
         order = order or []
         query = self.model.filter(search)
-        total: int = await query.count()
+        if prefetch:
+            query = query.prefetch_related(*prefetch)
+        total: int = await self.model.filter(search).count()
         items: List[ModelType] = await query.offset((page - 1) * page_size).limit(page_size).order_by(*order)
         return Total(total), items
 

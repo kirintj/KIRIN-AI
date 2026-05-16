@@ -4,8 +4,10 @@ from fastapi import APIRouter, Body, Query
 from tortoise.expressions import Q
 
 from app.services.user import user_service
+from app.core.dependency import DependAuth
+from app.models.admin import User
 from app.schemas.base import Fail, Success, SuccessExtra
-from app.schemas.users import UserCreate, UserUpdate
+from app.schemas.users import AdminUserUpdate, UserCreate, UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +29,7 @@ async def list_user(
         q &= Q(email__contains=email)
     if dept_id is not None:
         q &= Q(dept_id=dept_id)
-    total, user_objs = await user_service.list(page=page, page_size=page_size, search=q)
-
-    # Batch prefetch roles for all users (avoids N+1)
-    for user in user_objs:
-        await user.fetch_related("roles")
+    total, user_objs = await user_service.list(page=page, page_size=page_size, search=q, prefetch=["roles"])
 
     # Batch fetch departments
     dept_ids = {u.dept_id for u in user_objs if u.dept_id}
@@ -75,8 +73,15 @@ async def create_user(
 
 @router.post("/update", summary="更新用户")
 async def update_user(
-    user_in: UserUpdate,
+    user_in: AdminUserUpdate,
+    current_user: User = DependAuth,
 ):
+    # Only superusers may modify is_superuser or is_active
+    if not current_user.is_superuser:
+        if user_in.is_superuser is not None:
+            return Fail(code=403, msg="权限不足：无法修改超级管理员状态")
+        if user_in.is_active is not None:
+            return Fail(code=403, msg="权限不足：无法修改用户启用状态")
     user = await user_service.update(id=user_in.id, obj_in=user_in)
     await user_service.update_roles(user, user_in.role_ids or [])
     return Success(msg="更新成功")

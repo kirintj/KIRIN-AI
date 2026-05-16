@@ -12,14 +12,17 @@ export const useTrackerStore = defineStore('tracker', () => {
   const searchKeyword = ref('')
 
   const STATUS_LIST = ['wishlist', 'applied', 'screening', 'interview', 'offer', 'rejected']
-  const STATUS_LABELS = computed(() => ({
-    wishlist: t('common.tracker.status_wishlist'),
-    applied: t('common.tracker.status_applied'),
-    screening: t('common.tracker.status_screening'),
-    interview: t('common.tracker.status_interview'),
-    offer: t('common.tracker.status_offer'),
-    rejected: t('common.tracker.status_rejected'),
-  }))
+  const STATUS_LABELS = computed(() => {
+    void i18n.global.locale.value
+    return {
+      wishlist: t('common.tracker.status_wishlist'),
+      applied: t('common.tracker.status_applied'),
+      screening: t('common.tracker.status_screening'),
+      interview: t('common.tracker.status_interview'),
+      offer: t('common.tracker.status_offer'),
+      rejected: t('common.tracker.status_rejected'),
+    }
+  })
   const STATUS_COLORS = {
     wishlist: '#86909C',
     applied: '#0A59F7',

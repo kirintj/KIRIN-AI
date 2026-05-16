@@ -1,22 +1,23 @@
+from typing import List, Optional, Tuple
 
 from tortoise.expressions import Q
 
 from app.models.admin import AuditLog
+from app.repositories.base import RepositoryBase, Total
 
 
-class AuditLogRepository:
+class AuditLogRepository(RepositoryBase):
     def __init__(self):
-        self.model = AuditLog
+        super().__init__(AuditLog)
 
     async def list(
         self,
         page: int,
         page_size: int,
         search: Q = Q(),
-    ):
-        total = await self.model.filter(search).count()
-        records = await self.model.filter(search).order_by("-created_at").offset((page - 1) * page_size).limit(page_size)
-        return total, records
+        order: Optional[list] = None,
+    ) -> Tuple[Total, List]:
+        return await super().list(page, page_size, search, order=order or ["-created_at"])
 
 
 auditlog_repository = AuditLogRepository()

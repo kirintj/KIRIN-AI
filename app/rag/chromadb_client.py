@@ -215,8 +215,8 @@ async def delete_all_documents(collection_name: str = "knowledge_base"):
     def _delete():
         try:
             client.delete_collection(collection_name)
-        except Exception:
-            pass
+        except Exception as e:
+            _logger.warning("删除集合 [%s] 失败: %s", collection_name, e)
 
     await asyncio.to_thread(_delete)
     _collections.pop(collection_name, None)
@@ -376,12 +376,13 @@ async def list_documents(
         if total == 0:
             return {"total": 0, "page": page, "page_size": page_size, "documents": []}
 
-        results = collection.get(include=["documents", "metadatas"])
-        raw_docs = results.get("documents", [])
-        raw_metas = results.get("metadatas", [])
-        raw_ids = results.get("ids", [])
+        # Phase 1: fetch only metadatas (lightweight) to aggregate doc_ids
+        meta_results = collection.get(include=["metadatas"])
+        raw_metas = meta_results.get("metadatas", [])
+        raw_ids = meta_results.get("ids", [])
 
         doc_groups: dict[str, dict] = {}
+        page_doc_ids: set[str] = set()
         for i, chunk_id in enumerate(raw_ids):
             meta = raw_metas[i] if i < len(raw_metas) and raw_metas[i] else {}
             doc_id = meta.get("doc_id", chunk_id)
@@ -398,11 +399,10 @@ async def list_documents(
                     "doc_type": dtype,
                     "chunk_count": 0,
                     "preview": "",
+                    "_chunk_ids": [],
                 }
             doc_groups[doc_id]["chunk_count"] += 1
-            content = raw_docs[i] if i < len(raw_docs) else ""
-            if not doc_groups[doc_id]["preview"] and content:
-                doc_groups[doc_id]["preview"] = content[:200]
+            doc_groups[doc_id]["_chunk_ids"].append(chunk_id)
 
         all_docs = list(doc_groups.values())
         all_docs.sort(key=lambda x: x.get("doc_id", ""))
@@ -410,6 +410,22 @@ async def list_documents(
         start = (page - 1) * page_size
         end = start + page_size
         paged = all_docs[start:end]
+
+        # Phase 2: fetch documents only for chunks in the current page
+        for doc in paged:
+            page_doc_ids.update(doc["_chunk_ids"])
+
+        if page_doc_ids:
+            doc_results = collection.get(ids=list(page_doc_ids), include=["documents"])
+            chunk_docs = dict(zip(doc_results.get("ids", []), doc_results.get("documents", [])))
+            for doc in paged:
+                first_chunk_id = doc["_chunk_ids"][0] if doc["_chunk_ids"] else None
+                content = chunk_docs.get(first_chunk_id, "") if first_chunk_id else ""
+                doc["preview"] = content[:200] if content else ""
+
+        # Clean up internal field before returning
+        for doc in paged:
+            doc.pop("_chunk_ids", None)
 
         return {
             "total": len(all_docs),

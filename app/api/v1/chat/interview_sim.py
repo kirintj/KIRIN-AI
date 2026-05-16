@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 
 @router.get("/sessions")
 async def get_sessions(current_user: User = DependAuth):
-    sessions = list_sessions(current_user.username)
+    sessions = await list_sessions(current_user.username)
     return Success(data=sessions)
 
 
@@ -30,7 +30,7 @@ async def create_new_session(
 ):
     if request.interview_type and request.interview_type not in INTERVIEW_TYPES:
         return Fail(code=400, msg=f"无效面试类型，可选值：{', '.join(INTERVIEW_TYPES.keys())}")
-    session = create_session(current_user.username, request.model_dump())
+    session = await create_session(current_user.username, request.model_dump())
 
     opening = f"你好！我是你的{INTERVIEW_TYPES.get(session['interview_type'], '技术')}面试官。"
     if request.company:
@@ -39,7 +39,7 @@ async def create_new_session(
         opening += f"应聘岗位是{request.position}。"
     opening += "准备好了吗？我们先从第一个问题开始——请简单介绍一下你自己。"
 
-    add_message_to_session(current_user.username, session["id"], "assistant", opening)
+    await add_message_to_session(current_user.username, session["id"], "assistant", opening)
     session["messages"] = [{"role": "assistant", "content": opening}]
     return Success(data=session)
 
@@ -49,7 +49,7 @@ async def get_session_detail(
     session_id: str,
     current_user: User = DependAuth,
 ):
-    session = get_session(current_user.username, session_id)
+    session = await get_session(current_user.username, session_id)
     if not session:
         return Fail(code=404, msg="面试会话不存在")
     return Success(data=session)
@@ -60,17 +60,17 @@ async def chat_in_session(
     request: InterviewChatRequest,
     current_user: User = DependAuth,
 ):
-    session = get_session(current_user.username, request.session_id)
+    session = await get_session(current_user.username, request.session_id)
     if not session:
         return Fail(code=404, msg="面试会话不存在")
     if session.get("status") == "completed":
         return Fail(code=400, msg="面试已结束")
 
-    add_message_to_session(current_user.username, request.session_id, "user", request.message)
+    await add_message_to_session(current_user.username, request.session_id, "user", request.message)
 
     reply = await generate_interview_reply(session, request.message)
 
-    add_message_to_session(current_user.username, request.session_id, "assistant", reply)
+    await add_message_to_session(current_user.username, request.session_id, "assistant", reply)
 
     return Success(data={"reply": reply})
 
@@ -80,12 +80,12 @@ async def evaluate_interview(
     request: SessionIdRequest,
     current_user: User = DependAuth,
 ):
-    session = get_session(current_user.username, request.session_id)
+    session = await get_session(current_user.username, request.session_id)
     if not session:
         return Fail(code=404, msg="面试会话不存在")
 
     evaluation = await evaluate_session(session)
-    finish_session(current_user.username, request.session_id, evaluation)
+    await finish_session(current_user.username, request.session_id, evaluation)
     return Success(data=evaluation)
 
 
@@ -94,7 +94,7 @@ async def delete_interview_session(
     session_id: str,
     current_user: User = DependAuth,
 ):
-    success = delete_session(current_user.username, session_id)
+    success = await delete_session(current_user.username, session_id)
     if success:
         return Success(data={"message": "面试会话已删除"})
     return Fail(code=404, msg="面试会话不存在")

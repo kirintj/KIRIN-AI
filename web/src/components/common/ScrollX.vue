@@ -81,7 +81,7 @@ const observer = ref(null)
 onMounted(() => {
   refreshIsOverflow()
 
-  observer.value = useResize(document.body, refreshIsOverflow)
+  observer.value = useResize(wrapper.value, refreshIsOverflow)
 })
 onBeforeUnmount(() => {
   observer.value?.disconnect()

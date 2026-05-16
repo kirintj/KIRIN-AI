@@ -55,6 +55,8 @@ async def get_userinfo():
 async def get_user_menu():
     user_id = CTX_USER_ID.get()
     user_obj = await User.filter(id=user_id).first()
+    if not user_obj:
+        return Fail(code=404, msg="用户不存在")
     if user_obj.is_superuser:
         menus = await Menu.all()
     else:
@@ -84,6 +86,8 @@ async def get_user_menu():
 async def get_user_api():
     user_id = CTX_USER_ID.get()
     user_obj = await User.filter(id=user_id).first()
+    if not user_obj:
+        return Fail(code=404, msg="用户不存在")
     if user_obj.is_superuser:
         api_objs = await Api.all()
         apis = [api.method.lower() + api.path for api in api_objs]
@@ -98,6 +102,7 @@ async def get_user_api():
 
 @router.post("/register", summary="用户注册")
 async def register(req_in: UserRegister):
+    from tortoise.exceptions import IntegrityError
     try:
         existing = await user_service.get_by_username(req_in.username)
         if existing:
@@ -113,6 +118,8 @@ async def register(req_in: UserRegister):
         )
         await user_service.create_user(obj_in=user_data)
         return Success(msg="注册成功")
+    except IntegrityError:
+        return Fail(code=400, msg="用户名已存在")
     except Exception:
         _logger.exception("注册失败")
         return Fail(code=500, msg="注册失败，请稍后重试")

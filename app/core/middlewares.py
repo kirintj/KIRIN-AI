@@ -41,7 +41,10 @@ class BackGroundTaskMiddleware(SimpleBaseMiddleware):
         await BgTasks.init_bg_tasks_obj()
 
     async def after_request(self, request):
-        await BgTasks.execute_tasks()
+        import asyncio
+        bg_tasks = await BgTasks.get_bg_tasks_obj()
+        if bg_tasks.tasks:
+            asyncio.create_task(BgTasks.execute_tasks())
 
 
 class HttpAuditLogMiddleware:
@@ -145,10 +148,15 @@ class HttpAuditLogMiddleware:
     def _mask_sensitive_fields(cls, data: dict) -> dict:
         if not isinstance(data, dict):
             return data
-        return {
-            k: "******" if k in cls.SENSITIVE_FIELDS else v
-            for k, v in data.items()
-        }
+        masked = {}
+        for k, v in data.items():
+            if k in cls.SENSITIVE_FIELDS:
+                masked[k] = "******"
+            elif isinstance(v, dict):
+                masked[k] = cls._mask_sensitive_fields(v)
+            else:
+                masked[k] = v
+        return masked
 
     def _parse_response_body(self, request: Request, headers: list, body_chunks: list) -> Any:
         for name, value in headers:

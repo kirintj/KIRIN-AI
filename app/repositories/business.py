@@ -127,8 +127,9 @@ class ConversationRepository:
         return conv
 
     async def delete(self, conv_id: int, user_id: str) -> bool:
-        await self.msg_model.filter(conversation_id=conv_id).delete()
         count = await self.model.filter(id=conv_id, user_id=user_id).delete()
+        if count > 0:
+            await self.msg_model.filter(conversation_id=conv_id).delete()
         return count > 0
 
     async def get_messages(self, conv_id: int) -> list[ConversationMessage]:

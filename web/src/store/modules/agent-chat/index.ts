@@ -87,12 +87,15 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     currentConversationId.value = String(convId)
     try {
       const res = await api.getConversationMessages(convId)
+      if (currentConversationId.value !== String(convId)) return
       messages.value = (res.data || []).map((m: any) =>
         newMessage(m.role, m.content, m.timestamp || m.created_at || null),
       )
     } catch (error) {
       console.error('加载会话消息失败', error)
-      messages.value = []
+      if (currentConversationId.value === String(convId)) {
+        messages.value = []
+      }
     }
   }
 
