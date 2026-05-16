@@ -499,7 +499,8 @@
       "msg_docx_failed": "导出 DOCX 失败",
       "msg_markdown_success": "Markdown 导出成功",
       "msg_text_failed": "导出文本失败",
-      "msg_download_failed": "下载失败"
+      "msg_download_failed": "下载失败",
+      "btn_back_edit": "返回修改"
     },
     "system": {
       "user": {
@@ -591,6 +592,7 @@
         "form_redirect_hint": "只有一级菜单可以设置跳转路径",
         "form_icon": "菜单图标",
         "form_sort": "显示排序",
+        "form_keepalive": "保活",
         "form_hidden": "是否隐藏",
         "validate_name": "请输入唯一菜单名称",
         "validate_path": "请输入访问路径"
@@ -617,7 +619,11 @@
         "form_name_placeholder": "请输入角色名称",
         "form_desc": "角色描述",
         "form_desc_placeholder": "请输入角色描述",
-        "validate_name": "请输入角色名称"
+        "validate_name": "请输入角色名称",
+        "role_admin": "管理员",
+        "role_admin_desc": "管理员角色",
+        "role_user": "普通用户",
+        "role_user_desc": "普通用户角色"
       },
       "dept": {
         "page_title": "部门列表",
@@ -644,6 +650,7 @@
         "col_path": "API路径",
         "col_method": "请求方式",
         "col_desc": "API简介",
+        "col_tags": "标签",
         "col_actions": "操作",
         "btn_edit": "编辑",
         "btn_delete": "删除",
@@ -661,7 +668,8 @@
         "form_method_placeholder": "请输入请求方式",
         "form_desc": "API简介",
         "form_desc_placeholder": "请输入API简介",
-        "form_tags_placeholder": "请输入Tags",
+        "form_tags": "标签",
+        "form_tags_placeholder": "请输入标签",
         "validate_path": "请输入API路径",
         "validate_method": "请输入请求方式",
         "validate_desc": "请输入API简介",
@@ -771,10 +779,13 @@
       "delete": "删除",
       "save": "保存",
       "search": "搜索",
+      "reset": "重置",
       "refresh": "刷新",
       "close": "关闭",
       "submit": "提交",
-      "back": "返回"
+      "back": "返回",
+      "upload_avatar": "上传头像",
+      "confirm_upload": "确认上传"
     },
     "messages": {
       "create_success": "新增成功",

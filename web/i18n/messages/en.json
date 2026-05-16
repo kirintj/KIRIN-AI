@@ -499,7 +499,8 @@
       "msg_docx_failed": "DOCX export failed",
       "msg_markdown_success": "Markdown exported successfully",
       "msg_text_failed": "Text export failed",
-      "msg_download_failed": "Download failed"
+      "msg_download_failed": "Download failed",
+      "btn_back_edit": "Back to Edit"
     },
     "system": {
       "user": {
@@ -591,6 +592,7 @@
         "form_redirect_hint": "Only top-level menus can set redirect path",
         "form_icon": "Icon",
         "form_sort": "Sort",
+        "form_keepalive": "KeepAlive",
         "form_hidden": "Hidden",
         "validate_name": "Please enter menu name",
         "validate_path": "Please enter path"
@@ -617,7 +619,11 @@
         "form_name_placeholder": "Enter role name",
         "form_desc": "Description",
         "form_desc_placeholder": "Enter role description",
-        "validate_name": "Please enter role name"
+        "validate_name": "Please enter role name",
+        "role_admin": "Admin",
+        "role_admin_desc": "Administrator role",
+        "role_user": "User",
+        "role_user_desc": "Regular user role"
       },
       "dept": {
         "page_title": "Department List",
@@ -644,6 +650,7 @@
         "col_path": "API Path",
         "col_method": "Method",
         "col_desc": "Description",
+        "col_tags": "Tags",
         "col_actions": "Actions",
         "btn_edit": "Edit",
         "btn_delete": "Delete",
@@ -661,6 +668,7 @@
         "form_method_placeholder": "Enter HTTP method",
         "form_desc": "Description",
         "form_desc_placeholder": "Enter API description",
+        "form_tags": "Tags",
         "form_tags_placeholder": "Enter Tags",
         "validate_path": "Please enter API path",
         "validate_method": "Please enter HTTP method",
@@ -771,10 +779,13 @@
       "delete": "Delete",
       "save": "Save",
       "search": "Search",
+      "reset": "Reset",
       "refresh": "Refresh",
       "close": "Close",
       "submit": "Submit",
-      "back": "Back"
+      "back": "Back",
+      "upload_avatar": "Upload Avatar",
+      "confirm_upload": "Confirm Upload"
     },
     "messages": {
       "create_success": "Created successfully",
