@@ -5,11 +5,11 @@ import { NInput, NSelect } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
 import { useJobQuery } from '../composables/useJobQuery'
-import LoadingDots from '@/components/common/LoadingDots.vue'
-import ResultCard from './ResultCard.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
+import { useMarkdown } from '@/composables/useMarkdown'
+import FormResultWrapper from './FormResultWrapper.vue'
 
 const { t } = useI18n()
+const { formatMarkdown } = useMarkdown()
 
 const emit = defineEmits<{ feedback: [query: string, answer: string] }>()
 
@@ -40,53 +40,60 @@ const runGuide = () => {
 
 <template>
   <div class="hm-guide">
-    <div class="hm-form-card">
-      <div class="hm-form-row">
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.guide_scenario') }}</label>
-          <NSelect
-            v-model:value="guideScenario"
-            :options="scenarioOptions"
-            :placeholder="t('views.job_assistant.guide_scenario_placeholder')"
-            filterable
-            tag
-          />
+    <FormResultWrapper
+      :loading="loading"
+      :has-result="!!result"
+      :result-title="t('views.job_assistant.result_guide')"
+      result-icon="icon-park-outline:map-draw"
+      :skeleton-lines="8"
+      @back="result = ''"
+    >
+      <template #form>
+        <div class="hm-form-card">
+          <div class="hm-form-row">
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.guide_scenario') }}</label>
+              <NSelect
+                v-model:value="guideScenario"
+                :options="scenarioOptions"
+                :placeholder="t('views.job_assistant.guide_scenario_placeholder')"
+                filterable
+                tag
+              />
+            </div>
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.guide_target') }}</label>
+              <NInput v-model:value="guideGoal" :placeholder="t('views.job_assistant.guide_target_placeholder')" />
+            </div>
+          </div>
+          <div class="hm-form-row hm-form-row-submit">
+            <div class="hm-form-item hm-form-action">
+              <button
+                class="hm-submit-btn"
+                :disabled="!guideScenario.trim() || loading"
+                @click="runGuide"
+              >
+                <TheIcon v-if="loading" icon="icon-park-outline:loading" :size="16" color="#fff" class="hm-spin" />
+                <TheIcon v-else icon="icon-park-outline:map-draw" :size="16" color="#fff" />
+                {{ loading ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_guide') }}
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.guide_target') }}</label>
-          <NInput v-model:value="guideGoal" :placeholder="t('views.job_assistant.guide_target_placeholder')" />
-        </div>
-      </div>
-      <div class="hm-form-row hm-form-row-submit">
-        <div class="hm-form-item hm-form-action">
-          <button
-            class="hm-submit-btn"
-            :disabled="!guideScenario.trim() || loading"
-            @click="runGuide"
-          >
-            <TheIcon v-if="loading" icon="icon-park-outline:loading" :size="16" color="#fff" class="hm-spin" />
-            <TheIcon v-else icon="icon-park-outline:map-draw" :size="16" color="#fff" />
-            {{ loading ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_guide') }}
-          </button>
-        </div>
-      </div>
-    </div>
+      </template>
 
-    <LoadingDots v-if="loading" :text="t('views.job_assistant.loading_searching_guide')" />
+      <template #result>
+        <div class="hm-markdown" v-html="formatMarkdown(result || '')"></div>
+      </template>
 
-    <ResultCard
-      v-if="result && !loading"
-      :title="t('views.job_assistant.result_guide')"
-      :content="result"
-      :feedback-label="t('views.job_assistant.feedback_guide')"
-      @feedback="emit('feedback', $event)"
-    />
-
-    <EmptyState
-      v-if="!result && !loading"
-      icon="icon-park-outline:map"
-      :text="t('views.job_assistant.empty_guide')"
-    />
+      <template #result-footer>
+        <span class="hm-ai-feedback-label">{{ t('views.job_assistant.feedback_guide') }}</span>
+        <button class="hm-ai-feedback-btn" @click="emit('feedback', t('views.job_assistant.tab_guide'), result || '')">
+          <TheIcon icon="icon-park-outline:like" :size="14" />
+          {{ t('views.job_assistant.btn_feedback') }}
+        </button>
+      </template>
+    </FormResultWrapper>
   </div>
 </template>
 
@@ -94,8 +101,6 @@ const runGuide = () => {
 @import '../styles/common.scss';
 
 .hm-guide {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  width: 100%;
 }
 </style>
