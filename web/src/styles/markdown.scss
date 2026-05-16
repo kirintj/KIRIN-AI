@@ -120,7 +120,7 @@
 
 .md-bubble pre code {
   padding: 0 !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   background: transparent !important;
   color: #24292f;
@@ -281,65 +281,3 @@ html.dark .md-bubble .hljs-symbol { color: #61afef; }
 html.dark .md-bubble .hljs-meta { color: #56b6c2; }
 html.dark .md-bubble .hljs-deletion { color: #e06c75; }
 html.dark .md-bubble .hljs-addition { color: #98c379; }
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .md-bubble .hm-code-block {
-    margin: 8px 0;
-    border-radius: 8px;
-  }
-
-  .md-bubble .hm-code-header {
-    padding: 4px 8px;
-  }
-
-  .md-bubble .hm-code-lang {
-    font-size: 10px;
-  }
-
-  .md-bubble .hm-code-copy-btn,
-  .md-bubble .hm-code-expand-btn {
-    width: 28px;
-    height: 28px;
-  }
-
-  .md-bubble .hm-code-copy-btn svg,
-  .md-bubble .hm-code-expand-btn svg {
-    width: 13px;
-    height: 13px;
-  }
-
-  .md-bubble pre {
-    padding: 10px;
-  }
-
-  .md-bubble pre code {
-    font-size: 12px !important;
-    line-height: 1.5;
-  }
-
-  .md-bubble .hm-code-block:not(.expanded) pre {
-    max-height: 200px;
-  }
-
-  .md-bubble table {
-    display: block;
-    overflow-x: auto;
-    border-radius: 8px;
-    font-size: 12px;
-  }
-
-  .md-bubble th,
-  .md-bubble td {
-    padding: 6px 8px;
-    white-space: nowrap;
-  }
-
-  .md-bubble :not(pre) > code {
-    font-size: 12px;
-  }
-
-  .md-bubble h1 { font-size: 1.3em; }
-  .md-bubble h2 { font-size: 1.2em; }
-  .md-bubble h3 { font-size: 1.1em; }
-}

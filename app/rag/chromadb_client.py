@@ -72,6 +72,7 @@ async def add_documents(
     collection_name: str = "knowledge_base",
     source: str = "",
     doc_type: str = "",
+    user_id: int = 0,
 ):
     """将文档语义分块后存入指定集合，携带溯源元数据"""
     collection = _get_collection(collection_name)
@@ -91,6 +92,7 @@ async def add_documents(
                 "source": source or doc_id,
                 "doc_type": doc_type,
                 "collection": collection_name,
+                "user_id": user_id,
             })
 
     if all_chunks:
@@ -103,6 +105,7 @@ async def search_chromadb(
     query: str,
     top_k: int = TOP_K,
     collection_name: str = "knowledge_base",
+    user_id: int = 0,
 ) -> list[dict]:
     """从指定集合检索，返回带溯源元数据的结果"""
     collection = _get_collection(collection_name)
@@ -113,6 +116,7 @@ async def search_chromadb(
         return collection.query(
             query_texts=[query],
             n_results=min(top_k, collection.count()),
+            where={"user_id": user_id},
         )
 
     results = await asyncio.to_thread(_query)
@@ -127,6 +131,7 @@ async def search_with_filter(
     collection_name: str = "knowledge_base",
     doc_type: str = "",
     source: str = "",
+    user_id: int = 0,
 ) -> list[dict]:
     """带元数据过滤的检索"""
     collection = _get_collection(collection_name)
@@ -134,7 +139,7 @@ async def search_with_filter(
     def _query():
         if collection.count() == 0:
             return None
-        where_filter: dict = {}
+        where_filter: dict = {"user_id": user_id}
         if doc_type:
             where_filter["doc_type"] = doc_type
         if source:
@@ -142,7 +147,7 @@ async def search_with_filter(
         return collection.query(
             query_texts=[query],
             n_results=min(top_k, collection.count()),
-            where=where_filter if where_filter else None,
+            where=where_filter,
         )
 
     results = await asyncio.to_thread(_query)
@@ -155,9 +160,11 @@ async def hybrid_search(
     query: str,
     top_k: int = TOP_K,
     collection_name: str = "knowledge_base",
+    user_id: int = 0,
 ) -> list[dict]:
     """混合检索：向量检索 + 关键词匹配，RRF 融合排序"""
     collection = _get_collection(collection_name)
+    where = {"user_id": user_id}
 
     def _search():
         if collection.count() == 0:
@@ -169,10 +176,11 @@ async def hybrid_search(
             query_texts=[query],
             n_results=n_retrieve,
             include=["documents", "metadatas", "distances", "embeddings"],
+            where=where,
         )
 
         keywords = _extract_keywords(query)
-        keyword_results = _do_keyword_search(collection, keywords, n_retrieve)
+        keyword_results = _do_keyword_search(collection, keywords, n_retrieve, where=where)
 
         return vector_results, keyword_results
 
@@ -188,12 +196,12 @@ async def hybrid_search(
     return merged
 
 
-async def search_all_collections(query: str, top_k: int = 3) -> list[dict]:
+async def search_all_collections(query: str, top_k: int = 3, user_id: int = 0) -> list[dict]:
     """跨所有集合检索，合并结果按距离排序"""
     all_results: list[dict] = []
     for name in COLLECTION_NAMES:
         try:
-            results = await search_chromadb(query, top_k=top_k, collection_name=name)
+            results = await search_chromadb(query, top_k=top_k, collection_name=name, user_id=user_id)
             all_results.extend(results)
         except Exception:
             continue
@@ -201,12 +209,12 @@ async def search_all_collections(query: str, top_k: int = 3) -> list[dict]:
     return all_results[: top_k * 2]
 
 
-async def search_all_collections_hybrid(query: str, top_k: int = 3) -> list[dict]:
+async def search_all_collections_hybrid(query: str, top_k: int = 3, user_id: int = 0) -> list[dict]:
     """跨所有集合混合检索"""
     all_results: list[dict] = []
     for name in COLLECTION_NAMES:
         try:
-            results = await hybrid_search(query, top_k=top_k, collection_name=name)
+            results = await hybrid_search(query, top_k=top_k, collection_name=name, user_id=user_id)
             all_results.extend(results)
         except Exception:
             continue
@@ -228,12 +236,12 @@ async def delete_all_documents(collection_name: str = "knowledge_base"):
     _collections.pop(collection_name, None)
 
 
-async def delete_document(doc_id: str, collection_name: str = "knowledge_base") -> int:
+async def delete_document(doc_id: str, collection_name: str = "knowledge_base", user_id: int = 0) -> int:
     """删除指定文档的所有分块，返回删除数量"""
     collection = _get_collection(collection_name)
 
     def _delete():
-        results = collection.get(where={"doc_id": doc_id}, include=[])
+        results = collection.get(where={"doc_id": doc_id, "user_id": user_id}, include=[])
         ids = results.get("ids", [])
         if ids:
             collection.delete(ids=ids)
@@ -247,13 +255,14 @@ async def move_document(
     from_collection: str,
     to_collection: str,
     new_doc_type: str = "",
+    user_id: int = 0,
 ) -> dict:
     """移动文档到目标集合，可同时修改 doc_type"""
     src = _get_collection(from_collection)
 
     def _move():
         results = src.get(
-            where={"doc_id": doc_id},
+            where={"doc_id": doc_id, "user_id": user_id},
             include=["documents", "metadatas"],
         )
         ids = results.get("ids", [])
@@ -382,6 +391,7 @@ async def list_documents(
     page: int = 1,
     page_size: int = 20,
     doc_type: str = "",
+    user_id: int = 0,
 ) -> dict:
     """分页浏览指定集合的文档，按 doc_id 聚合"""
     collection = _get_collection(collection_name)
@@ -392,7 +402,7 @@ async def list_documents(
             return {"total": 0, "page": page, "page_size": page_size, "documents": []}
 
         # Phase 1: fetch only metadatas (lightweight) to aggregate doc_ids
-        meta_results = collection.get(include=["metadatas"])
+        meta_results = collection.get(include=["metadatas"], where={"user_id": user_id})
         raw_metas = meta_results.get("metadatas", [])
         raw_ids = meta_results.get("ids", [])
 
@@ -455,13 +465,14 @@ async def list_documents(
 async def get_document_chunks(
     doc_id: str,
     collection_name: str = "knowledge_base",
+    user_id: int = 0,
 ) -> list[dict]:
     """获取指定文档的所有分块内容"""
     collection = _get_collection(collection_name)
 
     def _get_chunks():
         results = collection.get(
-            where={"doc_id": doc_id},
+            where={"doc_id": doc_id, "user_id": user_id},
             include=["documents", "metadatas"],
         )
 
@@ -525,6 +536,7 @@ def _do_keyword_search(
     collection: chromadb.Collection,
     keywords: list[str],
     n_results: int,
+    where: dict | None = None,
 ) -> dict | None:
     """关键词精确匹配检索，合并所有关键词的结果"""
     if not keywords:
@@ -542,6 +554,7 @@ def _do_keyword_search(
                 query_texts=[""],
                 n_results=n_results,
                 where_document={"$contains": kw},
+                where=where,
             )
             if not results or not results.get("documents") or not results["documents"][0]:
                 continue

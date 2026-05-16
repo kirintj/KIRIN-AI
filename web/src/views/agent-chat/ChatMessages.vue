@@ -220,12 +220,4 @@ defineExpose({ scrollToBottom })
   from { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(2px); }
   to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
-
-@media (max-width: 768px) {
-  .hm-msg-list {
-    max-width: 100%;
-    padding: 12px;
-    gap: 12px;
-  }
-}
 </style>

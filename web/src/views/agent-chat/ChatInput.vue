@@ -99,13 +99,4 @@ const handleKeydown = (e: KeyboardEvent) => {
   background: var(--hm-brand-light);
   color: var(--hm-brand);
 }
-
-@media (max-width: 768px) {
-  .hm-input-box {
-    max-width: 100%;
-  }
-  .hm-chat-input-area {
-    padding: 8px 12px 12px;
-  }
-}
 </style>
