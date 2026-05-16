@@ -64,7 +64,7 @@ class AgentExecutor:
         steps = []
 
         if rag_tool:
-            rag_result = await rag_tool.run(query)
+            rag_result = await rag_tool.run(query, user_id=user_id)
             steps.append(f"📋 知识检索结果：\n{rag_result}")
         else:
             rag_result = ""
