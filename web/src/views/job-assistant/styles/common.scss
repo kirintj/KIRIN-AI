@@ -236,3 +236,10 @@
 .hm-slide-up-leave-active {
   animation: hm-slide-in-bottom 0.3s var(--hm-ease-out) reverse both;
 }
+
+// Markdown content container
+.hm-markdown {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--hm-font-primary);
+}
