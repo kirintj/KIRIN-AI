@@ -135,109 +135,148 @@ onMounted(() => {
 
 <template>
   <div class="hm-export-tab">
-    <div class="hm-ex-section">
-      <div class="hm-ex-section-header">
-        <div class="hm-ex-section-icon" style="background: rgba(10,89,247,0.08)">
-          <TheIcon icon="icon-park-outline:edit-name" :size="18" color="#0A59F7" />
-        </div>
-        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_input_info') }}</span>
-      </div>
-      <textarea
-        v-model="resumeInput"
-        class="hm-ex-textarea"
-        :placeholder="t('views.job_assistant.export_info_placeholder')"
-        :disabled="isGenerating"
-      ></textarea>
-    </div>
-
-    <div class="hm-ex-section">
-      <div class="hm-ex-section-header">
-        <div class="hm-ex-section-icon" style="background: rgba(114,46,209,0.08)">
-          <TheIcon icon="icon-park-outline:template" :size="18" color="#722ED1" />
-        </div>
-        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_select_template') }}</span>
-      </div>
-      <div class="hm-ex-templates">
-        <button
-          v-for="(label, key) in templates"
-          :key="key"
-          :class="['hm-ex-template-chip', { active: selectedTemplate === key }]"
-          @click="selectedTemplate = key"
-        >
-          {{ label }}
-        </button>
-      </div>
-    </div>
-
-    <div class="hm-ex-actions">
-      <button
-        class="hm-ex-btn primary"
-        :disabled="!resumeInput.trim() || isGenerating"
-        @click="generateResume"
-      >
-        <TheIcon v-if="isGenerating" icon="icon-park-outline:loading" :size="16" color="#fff" />
-        <TheIcon v-else icon="icon-park-outline:magic" :size="16" color="#fff" />
-        {{ isGenerating ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_resume') }}
-      </button>
-    </div>
-
-    <div v-if="resumeData" class="hm-ex-section">
-      <div class="hm-ex-section-header">
-        <div class="hm-ex-section-icon" style="background: rgba(100,187,92,0.08)">
-          <TheIcon icon="icon-park-outline:preview-open" :size="18" color="#64BB5C" />
-        </div>
-        <span class="hm-ex-section-title">{{ t('views.job_assistant.export_preview') }}</span>
-      </div>
-      <div class="hm-ex-preview">
-        <div class="hm-ex-preview-header">
-          <h3 class="hm-ex-preview-name">{{ resumeData.name || t('views.job_assistant.unnamed') }}</h3>
-          <span v-if="resumeData.title" class="hm-ex-preview-title">{{ resumeData.title }}</span>
-        </div>
-        <div v-if="resumeData.phone || resumeData.email" class="hm-ex-preview-contact">
-          <span v-if="resumeData.phone">{{ resumeData.phone }}</span>
-          <span v-if="resumeData.phone && resumeData.email"> | </span>
-          <span v-if="resumeData.email">{{ resumeData.email }}</span>
-        </div>
-        <div v-if="resumeData.summary" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_summary') }}</div>
-          <p class="hm-ex-preview-text">{{ resumeData.summary }}</p>
-        </div>
-        <div v-if="resumeData.skills?.length" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_skills') }}</div>
-          <div class="hm-ex-preview-tags">
-            <span v-for="skill in resumeData.skills" :key="skill" class="hm-ex-tag">{{ skill }}</span>
-          </div>
-        </div>
-        <div v-if="resumeData.experience?.length" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_experience') }}</div>
-          <div v-for="(exp, i) in resumeData.experience" :key="i" class="hm-ex-preview-item">
-            <div class="hm-ex-preview-item-header">
-              <span class="hm-ex-preview-item-title">{{ exp.company }} - {{ exp.position }}</span>
-              <span v-if="exp.period" class="hm-ex-preview-item-period">{{ exp.period }}</span>
+    <!-- Input state -->
+    <Transition name="hm-form-result">
+      <div v-if="!isGenerating && !resumeData" key="input" class="hm-export-input-area">
+        <div class="hm-ex-section">
+          <div class="hm-ex-section-header">
+            <div class="hm-ex-section-icon" style="background: rgba(10,89,247,0.08)">
+              <TheIcon icon="icon-park-outline:edit-name" :size="18" color="#0A59F7" />
             </div>
-            <p v-if="exp.description" class="hm-ex-preview-text">{{ exp.description }}</p>
+            <span class="hm-ex-section-title">{{ t('views.job_assistant.export_input_info') }}</span>
+          </div>
+          <textarea
+            v-model="resumeInput"
+            class="hm-ex-textarea"
+            :placeholder="t('views.job_assistant.export_info_placeholder')"
+          ></textarea>
+        </div>
+
+        <div class="hm-ex-section">
+          <div class="hm-ex-section-header">
+            <div class="hm-ex-section-icon" style="background: rgba(114,46,209,0.08)">
+              <TheIcon icon="icon-park-outline:template" :size="18" color="#722ED1" />
+            </div>
+            <span class="hm-ex-section-title">{{ t('views.job_assistant.export_select_template') }}</span>
+          </div>
+          <div class="hm-ex-templates">
+            <button
+              v-for="(label, key) in templates"
+              :key="key"
+              :class="['hm-ex-template-chip', { active: selectedTemplate === key }]"
+              @click="selectedTemplate = key"
+            >
+              {{ label }}
+            </button>
           </div>
         </div>
-        <div v-if="resumeData.education?.length" class="hm-ex-preview-block">
-          <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_education') }}</div>
-          <div v-for="(edu, i) in resumeData.education" :key="i" class="hm-ex-preview-item">
-            <span>{{ edu.school }} | {{ edu.major }} | {{ edu.degree }} <span v-if="edu.period">({{ edu.period }})</span></span>
+
+        <div class="hm-ex-actions">
+          <button
+            class="hm-ex-btn primary"
+            :disabled="!resumeInput.trim()"
+            @click="generateResume"
+          >
+            <TheIcon icon="icon-park-outline:magic" :size="16" color="#fff" />
+            {{ t('views.job_assistant.btn_generate_resume') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Loading state: skeleton -->
+    <Transition name="hm-form-result">
+      <div v-if="isGenerating" key="skeleton" class="hm-ai-result-card">
+        <div class="hm-ai-result-header">
+          <div class="hm-ai-result-icon" style="background: rgba(100,187,92,0.08)">
+            <TheIcon icon="icon-park-outline:preview-open" :size="18" color="#64BB5C" />
+          </div>
+          <span class="hm-ai-result-title">{{ t('views.job_assistant.export_preview') }}</span>
+        </div>
+        <div class="hm-ai-result-body">
+          <div class="hm-ai-skeleton">
+            <div class="hm-skeleton-line short" />
+            <div class="hm-skeleton-line full" />
+            <div class="hm-skeleton-line medium" />
+            <div class="hm-skeleton-line full" />
+            <div class="hm-skeleton-tags">
+              <div class="hm-skeleton-tag" />
+              <div class="hm-skeleton-tag" />
+              <div class="hm-skeleton-tag" />
+            </div>
+            <div class="hm-skeleton-line full" />
+            <div class="hm-skeleton-line medium" />
           </div>
         </div>
       </div>
+    </Transition>
 
-      <div class="hm-ex-export-actions">
-        <button class="hm-ex-btn" :disabled="isExporting" @click="exportDocx">
-          <TheIcon icon="icon-park-outline:doc-detail" :size="16" />
-          {{ isExporting ? t('views.job_assistant.btn_exporting') : t('views.job_assistant.btn_export_docx') }}
-        </button>
-        <button class="hm-ex-btn" @click="exportText">
-          <TheIcon icon="icon-park-outline:file-text" :size="16" />
-          {{ t('views.job_assistant.btn_export_markdown') }}
-        </button>
+    <!-- Result state: preview -->
+    <Transition name="hm-form-result">
+      <div v-if="!isGenerating && resumeData" key="result" class="hm-ai-result-card">
+        <div class="hm-ai-result-header">
+          <div class="hm-ai-result-icon" style="background: rgba(100,187,92,0.08)">
+            <TheIcon icon="icon-park-outline:preview-open" :size="18" color="#64BB5C" />
+          </div>
+          <span class="hm-ai-result-title">{{ t('views.job_assistant.export_preview') }}</span>
+          <button class="hm-ai-back-btn" @click="resumeData = null">
+            <TheIcon icon="icon-park-outline:left" :size="14" />
+            {{ t('views.job_assistant.btn_back_edit') }}
+          </button>
+        </div>
+        <div class="hm-ai-result-body">
+          <div class="hm-ex-preview">
+            <div class="hm-ex-preview-header">
+              <h3 class="hm-ex-preview-name">{{ resumeData.name || t('views.job_assistant.unnamed') }}</h3>
+              <span v-if="resumeData.title" class="hm-ex-preview-title">{{ resumeData.title }}</span>
+            </div>
+            <div v-if="resumeData.phone || resumeData.email" class="hm-ex-preview-contact">
+              <span v-if="resumeData.phone">{{ resumeData.phone }}</span>
+              <span v-if="resumeData.phone && resumeData.email"> | </span>
+              <span v-if="resumeData.email">{{ resumeData.email }}</span>
+            </div>
+            <div v-if="resumeData.summary" class="hm-ex-preview-block">
+              <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_summary') }}</div>
+              <p class="hm-ex-preview-text">{{ resumeData.summary }}</p>
+            </div>
+            <div v-if="resumeData.skills?.length" class="hm-ex-preview-block">
+              <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_skills') }}</div>
+              <div class="hm-ex-preview-tags">
+                <span v-for="skill in resumeData.skills" :key="skill" class="hm-ex-tag">{{ skill }}</span>
+              </div>
+            </div>
+            <div v-if="resumeData.experience?.length" class="hm-ex-preview-block">
+              <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_experience') }}</div>
+              <div v-for="(exp, i) in resumeData.experience" :key="i" class="hm-ex-preview-item">
+                <div class="hm-ex-preview-item-header">
+                  <span class="hm-ex-preview-item-title">{{ exp.company }} - {{ exp.position }}</span>
+                  <span v-if="exp.period" class="hm-ex-preview-item-period">{{ exp.period }}</span>
+                </div>
+                <p v-if="exp.description" class="hm-ex-preview-text">{{ exp.description }}</p>
+              </div>
+            </div>
+            <div v-if="resumeData.education?.length" class="hm-ex-preview-block">
+              <div class="hm-ex-preview-label">{{ t('views.job_assistant.section_education') }}</div>
+              <div v-for="(edu, i) in resumeData.education" :key="i" class="hm-ex-preview-item">
+                <span>{{ edu.school }} | {{ edu.major }} | {{ edu.degree }} <span v-if="edu.period">({{ edu.period }})</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hm-ai-result-footer">
+          <button class="hm-ex-btn" :disabled="isExporting" @click="exportDocx">
+            <TheIcon icon="icon-park-outline:doc-detail" :size="16" />
+            {{ isExporting ? t('views.job_assistant.btn_exporting') : t('views.job_assistant.btn_export_docx') }}
+          </button>
+          <button class="hm-ex-btn" @click="exportText">
+            <TheIcon icon="icon-park-outline:file-text" :size="16" />
+            {{ t('views.job_assistant.btn_export_markdown') }}
+          </button>
+        </div>
       </div>
-    </div>
+    </Transition>
 
+    <!-- Export history (always visible if has items) -->
     <div v-if="exportList.length > 0" class="hm-ex-section">
       <div class="hm-ex-section-header">
         <div class="hm-ex-section-icon" style="background: rgba(237,111,33,0.08)">
@@ -264,7 +303,9 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@import '../styles/common.scss';
+
 .hm-export-tab {
   display: flex;
   flex-direction: column;
@@ -476,10 +517,10 @@ onMounted(() => {
   color: var(--hm-font-fourth);
 }
 
-.hm-ex-export-actions {
+.hm-export-input-area {
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .hm-ex-file-list {
