@@ -5,11 +5,11 @@ import { NInput } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
 import { useJobQuery } from '../composables/useJobQuery'
-import LoadingDots from '@/components/common/LoadingDots.vue'
-import ResultCard from './ResultCard.vue'
-import EmptyState from '@/components/common/EmptyState.vue'
+import { useMarkdown } from '@/composables/useMarkdown'
+import FormResultWrapper from './FormResultWrapper.vue'
 
 const { t } = useI18n()
+const { formatMarkdown } = useMarkdown()
 
 const emit = defineEmits<{ feedback: [query: string, answer: string] }>()
 
@@ -41,61 +41,68 @@ const runSalary = () => {
 
 <template>
   <div class="hm-salary">
-    <div class="hm-form-card">
-      <div class="hm-form-row">
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.salary_city') }}</label>
-          <NInput v-model:value="salaryCity" :placeholder="t('views.job_assistant.salary_city_placeholder')" />
+    <FormResultWrapper
+      :loading="loading"
+      :has-result="!!result"
+      :result-title="t('views.job_assistant.result_salary')"
+      result-icon="icon-park-outline:finance"
+      :skeleton-lines="8"
+      @back="result = ''"
+    >
+      <template #form>
+        <div class="hm-form-card">
+          <div class="hm-form-row">
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.salary_city') }}</label>
+              <NInput v-model:value="salaryCity" :placeholder="t('views.job_assistant.salary_city_placeholder')" />
+            </div>
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.salary_industry') }}</label>
+              <NInput v-model:value="salaryIndustry" :placeholder="t('views.job_assistant.salary_industry_placeholder')" />
+            </div>
+          </div>
+          <div class="hm-form-row">
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.salary_position') }}</label>
+              <NInput v-model:value="salaryPosition" :placeholder="t('views.job_assistant.salary_position_placeholder')" />
+            </div>
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.salary_experience') }}</label>
+              <NInput v-model:value="salaryExperience" :placeholder="t('views.job_assistant.salary_experience_placeholder')" />
+            </div>
+          </div>
+          <div class="hm-form-row">
+            <div class="hm-form-item">
+              <label class="hm-form-label">{{ t('views.job_assistant.salary_expected') }}</label>
+              <NInput v-model:value="salaryExpected" :placeholder="t('views.job_assistant.salary_expected_placeholder')" />
+            </div>
+            <div class="hm-form-item hm-form-action">
+              <button
+                class="hm-submit-btn"
+                :disabled="!salaryCity.trim() || !salaryPosition.trim() || loading"
+                @click="runSalary"
+              >
+                <TheIcon v-if="loading" icon="icon-park-outline:loading" :size="16" color="#fff" class="hm-spin" />
+                <TheIcon v-else icon="icon-park-outline:finance" :size="16" color="#fff" />
+                {{ loading ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_salary') }}
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.salary_industry') }}</label>
-          <NInput v-model:value="salaryIndustry" :placeholder="t('views.job_assistant.salary_industry_placeholder')" />
-        </div>
-      </div>
-      <div class="hm-form-row">
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.salary_position') }}</label>
-          <NInput v-model:value="salaryPosition" :placeholder="t('views.job_assistant.salary_position_placeholder')" />
-        </div>
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.salary_experience') }}</label>
-          <NInput v-model:value="salaryExperience" :placeholder="t('views.job_assistant.salary_experience_placeholder')" />
-        </div>
-      </div>
-      <div class="hm-form-row">
-        <div class="hm-form-item">
-          <label class="hm-form-label">{{ t('views.job_assistant.salary_expected') }}</label>
-          <NInput v-model:value="salaryExpected" :placeholder="t('views.job_assistant.salary_expected_placeholder')" />
-        </div>
-        <div class="hm-form-item hm-form-action">
-          <button
-            class="hm-submit-btn"
-            :disabled="!salaryCity.trim() || !salaryPosition.trim() || loading"
-            @click="runSalary"
-          >
-            <TheIcon v-if="loading" icon="icon-park-outline:loading" :size="16" color="#fff" class="hm-spin" />
-            <TheIcon v-else icon="icon-park-outline:finance" :size="16" color="#fff" />
-            {{ loading ? t('views.job_assistant.btn_generating') : t('views.job_assistant.btn_generate_salary') }}
-          </button>
-        </div>
-      </div>
-    </div>
+      </template>
 
-    <LoadingDots v-if="loading" :text="t('views.job_assistant.loading_searching_salary')" />
+      <template #result>
+        <div class="hm-markdown" v-html="formatMarkdown(result || '')"></div>
+      </template>
 
-    <ResultCard
-      v-if="result && !loading"
-      :title="t('views.job_assistant.result_salary')"
-      :content="result"
-      :feedback-label="t('views.job_assistant.feedback_salary')"
-      @feedback="emit('feedback', $event)"
-    />
-
-    <EmptyState
-      v-if="!result && !loading"
-      icon="icon-park-outline:finance"
-      :text="t('views.job_assistant.empty_salary')"
-    />
+      <template #result-footer>
+        <span class="hm-ai-feedback-label">{{ t('views.job_assistant.feedback_salary') }}</span>
+        <button class="hm-ai-feedback-btn" @click="emit('feedback', t('views.job_assistant.tab_salary'), result || '')">
+          <TheIcon icon="icon-park-outline:like" :size="14" />
+          {{ t('views.job_assistant.btn_feedback') }}
+        </button>
+      </template>
+    </FormResultWrapper>
   </div>
 </template>
 
@@ -103,8 +110,6 @@ const runSalary = () => {
 @import '../styles/common.scss';
 
 .hm-salary {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  width: 100%;
 }
 </style>
