@@ -327,6 +327,7 @@ async def rebuild_all_collections() -> dict:
                             "chunks": [],
                             "source": meta.get("source", ""),
                             "doc_type": meta.get("doc_type", ""),
+                            "user_id": meta.get("user_id", 0),
                         }
                     doc_groups[doc_id]["chunks"].append(content)
 
@@ -352,6 +353,7 @@ async def rebuild_all_collections() -> dict:
                             "source": group["source"],
                             "doc_type": group["doc_type"],
                             "collection": name,
+                            "user_id": group["user_id"],
                         }
                         for j in range(len(chunks))
                     ]
