@@ -165,7 +165,7 @@ async def init_menus():
     )
     job_submenus = [
         ("简历优化", "pipeline", 1, "icon-park-outline:clipboard", "/job-assistant"),
-        ("面试问答", "interview", 2, "icon-park-outline:chat", "/job-assistant"),
+        ("面试问答", "interview", 2, "icon-park-outline:comment", "/job-assistant"),
         ("薪资谈判", "salary", 3, "icon-park-outline:finance", "/job-assistant"),
         ("求职攻略", "guide", 4, "icon-park-outline:map-draw", "/job-assistant"),
     ]

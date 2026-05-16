@@ -1,9 +1,14 @@
+import logging
+import time
+
 from app.agent.router import route_intent
 from app.agent.common import build_personalized_recommendation
 from app.tools.base import BaseTool
 from app.tools.registry import create_default_tools
 from app.utils.chat import call_llm
 from app.services.business import memory_service
+
+_logger = logging.getLogger(__name__)
 
 
 class AgentExecutor:
@@ -20,8 +25,15 @@ class AgentExecutor:
 
     async def run(self, query: str, user_id: str, use_llm_router: bool | None = None) -> str:
         use_llm = use_llm_router if use_llm_router is not None else self.use_llm_router
-        tool_name = await route_intent(query, use_llm=use_llm)
 
+        # 意图路由
+        t0 = time.monotonic()
+        tool_name = await route_intent(query, use_llm=use_llm)
+        route_ms = round((time.monotonic() - t0) * 1000)
+        _logger.info("intent routed: tool=%s, route_ms=%d, query=%s", tool_name, route_ms, query[:80])
+
+        # 工具执行
+        t1 = time.monotonic()
         if tool_name == "workflow":
             result = await self._run_workflow(query, user_id)
         elif tool_name == "chat":
@@ -31,9 +43,13 @@ class AgentExecutor:
         else:
             tool = self.tools.get(tool_name)
             if not tool:
+                _logger.warning("tool not found: %s", tool_name)
                 return f"未找到工具：{tool_name}"
             result = await tool.run(query, user_id=user_id)
+        exec_ms = round((time.monotonic() - t1) * 1000)
+        _logger.info("tool executed: tool=%s, exec_ms=%d", tool_name, exec_ms)
 
+        # 个性化推荐
         recommendation = await build_personalized_recommendation(user_id, query)
         if recommendation:
             result = f"{result}\n\n---\n\n{recommendation}"

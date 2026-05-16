@@ -17,7 +17,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:searchKeyword', val: string): void
   (e: 'switch', id: string): void
-  (e: 'new'): void
   (e: 'delete', id: string): void
   (e: 'rename', id: string, title: string): void
 }>()
@@ -46,13 +45,6 @@ const cancelRename = () => {
 
 <template>
   <div class="hm-sidebar-inner">
-    <div class="hm-sidebar-header">
-      <span class="hm-sidebar-title">{{ t('views.agent_chat.conversations') }}</span>
-      <button class="hm-sidebar-new-btn" @click="emit('new')">
-        <TheIcon icon="icon-park-outline:plus" :size="16" />
-      </button>
-    </div>
-
     <div class="hm-sidebar-search">
       <div class="hm-search-box">
         <TheIcon icon="icon-park-outline:search" :size="14" color="var(--hm-font-fourth)" />
@@ -129,41 +121,6 @@ const cancelRename = () => {
   height: 100%;
 }
 
-.hm-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  flex-shrink: 0;
-}
-
-.hm-sidebar-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--hm-font-primary);
-}
-
-.hm-sidebar-new-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--hm-radius-sm);
-  border: 1px solid var(--hm-border);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--hm-font-secondary);
-  transition: all 0.25s var(--hm-spring);
-}
-
-.hm-sidebar-new-btn:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  background: var(--hm-brand-light);
-  transform: scale(1.05);
-}
-
 .hm-sidebar-search {
   padding: 8px 12px;
   flex-shrink: 0;
@@ -183,6 +140,7 @@ const cancelRename = () => {
 
 .hm-search-box:focus-within {
   border-color: var(--hm-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-search-input {
@@ -255,6 +213,7 @@ const cancelRename = () => {
 
 .hm-sidebar-item.active {
   background: var(--hm-brand-light);
+  box-shadow: inset 3px 0 0 var(--hm-brand);
 }
 
 .hm-conv-icon {

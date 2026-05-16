@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 class AgentChatRequest(BaseModel):
     query: str = Field(..., min_length=1, description="用户输入")
     use_llm_router: Optional[bool] = False
-    use_langgraph: Optional[bool] = False
     conversation_id: Optional[int] = None
 
 

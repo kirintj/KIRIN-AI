@@ -38,6 +38,12 @@ defineProps<{
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
+  animation: hm-empty-icon-in 0.5s var(--hm-spring) both;
+}
+
+@keyframes hm-empty-icon-in {
+  from { opacity: 0; transform: scale(0.8) translateY(10px); filter: blur(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
 }
 
 .hm-empty-title {
@@ -45,6 +51,7 @@ defineProps<{
   font-weight: 600;
   color: var(--hm-font-primary);
   margin-bottom: 6px;
+  animation: hm-empty-text-in 0.45s var(--hm-spring) 0.1s both;
 }
 
 .hm-empty-desc {
@@ -52,5 +59,11 @@ defineProps<{
   color: var(--hm-font-tertiary);
   max-width: 280px;
   line-height: 1.5;
+  animation: hm-empty-text-in 0.45s var(--hm-spring) 0.18s both;
+}
+
+@keyframes hm-empty-text-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

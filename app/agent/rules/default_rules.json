@@ -1,0 +1,126 @@
+{
+  "rules": [
+    {
+      "name": "feedback",
+      "intent": "feedback_tool",
+      "priority": 100,
+      "description": "反馈评分相关",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["反馈", "评分", "评价", "意见", "打分"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "tracker",
+      "intent": "tracker_tool",
+      "priority": 90,
+      "description": "求职进度追踪",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["投递", "申请", "进度", "追踪", "已投", "面试结果", "录用", "offer", "拒了", "简历投", "投了", "求职记录", "申请记录"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "interview",
+      "intent": "interview_tool",
+      "priority": 80,
+      "description": "面试相关",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["面试", "面试题", "面试准备", "面试应答", "面试技巧", "hr面", "技术面"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "salary",
+      "intent": "salary_tool",
+      "priority": 70,
+      "description": "薪资薪酬相关",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["薪资", "薪水", "薪酬", "工资", "谈判", "薪资报告", "薪资范围"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "guide",
+      "intent": "guide_tool",
+      "priority": 60,
+      "description": "求职攻略指南",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["攻略", "指南", "跨行业", "跳槽", "求职策略", "求职建议", "转行"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "workflow_rag_todo",
+      "intent": "workflow",
+      "priority": 50,
+      "description": "多步骤任务：RAG + 待办",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["待办", "提醒", "任务", "日程", "计划", "todo", "记住", "别忘了", "别忘", "记得", "安排", "预约", "要去做", "需要做", "准备去", "要去", "得去", "得做", "要完成"],
+          "logic": "or"
+        },
+        {
+          "type": "contains",
+          "values": ["总结", "并", "然后", "之后", "同时", "查询", "搜索", "文档", "知识", "检索", "资料"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "todo",
+      "intent": "todo_tool",
+      "priority": 40,
+      "description": "待办任务",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["待办", "提醒", "任务", "日程", "计划", "todo", "记住", "别忘了", "别忘", "记得", "安排", "预约"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "todo_action",
+      "intent": "todo_tool",
+      "priority": 35,
+      "description": "待办动作意图",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["要去做", "需要做", "准备去", "要去", "得去", "得做", "要完成"],
+          "logic": "or"
+        }
+      ]
+    },
+    {
+      "name": "rag",
+      "intent": "rag_tool",
+      "priority": 30,
+      "description": "知识检索",
+      "conditions": [
+        {
+          "type": "contains",
+          "values": ["查询", "搜索", "文档", "知识", "检索", "资料"],
+          "logic": "or"
+        }
+      ]
+    }
+  ]
+}

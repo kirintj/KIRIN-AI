@@ -164,7 +164,7 @@ const columns = [
                 handleAdd()
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'add'), t('views.system.menu.btn_new_child')]
+            t('views.system.menu.btn_new_child')
           ),
           [[vPermission, 'post/api/v1/menu/create']]
         ),
@@ -178,7 +178,7 @@ const columns = [
                 handleEdit(row)
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.menu.btn_edit')]
+            t('views.system.menu.btn_edit')
           ),
           [[vPermission, 'post/api/v1/menu/update']]
         ),
@@ -196,7 +196,7 @@ const columns = [
                     class: 'hm-row-btn danger',
                     style: `display: ${row.children && row.children.length > 0 ? 'none' : ''};`,
                   },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.menu.btn_delete')]
+                  t('views.system.menu.btn_delete')
                 ),
                 [[vPermission, 'delete/api/v1/menu/delete']]
               ),
@@ -343,7 +343,7 @@ async function getTreeSelect() {
         <NFormItem :label="t('views.system.menu.form_hidden')" path="is_hidden">
           <NSwitch v-model:value="modalForm.is_hidden" />
         </NFormItem>
-        <NFormItem label="KeepAlive" path="keepalive">
+        <NFormItem :label="t('views.system.menu.form_keepalive')" path="keepalive">
           <NSwitch v-model:value="modalForm.keepalive" />
         </NFormItem>
       </NForm>

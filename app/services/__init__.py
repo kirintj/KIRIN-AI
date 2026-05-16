@@ -13,6 +13,10 @@ from .dept import dept_service
 from .auditlog import auditlog_service
 from .chat import chat_service
 from .config import sysconfig_service
+from .registry import ServiceRegistry, get_registry
+from .health import HealthChecker, HealthStatus, get_health_checker
+from .task_queue import TaskQueue, get_task_queue, TaskStatus
+from .metrics import MetricsCollector, get_metrics
 
 __all__ = [
     "extract_text_from_file",
@@ -28,4 +32,14 @@ __all__ = [
     "auditlog_service",
     "chat_service",
     "sysconfig_service",
+    "ServiceRegistry",
+    "get_registry",
+    "HealthChecker",
+    "HealthStatus",
+    "get_health_checker",
+    "TaskQueue",
+    "get_task_queue",
+    "TaskStatus",
+    "MetricsCollector",
+    "get_metrics",
 ]

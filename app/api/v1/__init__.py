@@ -12,6 +12,7 @@ from .menus import menus_router
 from .roles import roles_router
 from .users import users_router
 from .users.upload import router as user_upload_router
+from .system import router as system_router
 
 v1_router = APIRouter()
 
@@ -25,3 +26,4 @@ v1_router.include_router(depts_router, prefix="/dept", dependencies=[DependPermi
 v1_router.include_router(auditlog_router, prefix="/auditlog", dependencies=[DependPermission])
 v1_router.include_router(config_router, prefix="/config", dependencies=[DependPermission], tags=["系统配置模块"])
 v1_router.include_router(chat_router, prefix="/chat")
+v1_router.include_router(system_router, prefix="/system", tags=["系统监控"])

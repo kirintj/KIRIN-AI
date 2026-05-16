@@ -101,7 +101,7 @@ const columns = [
                 handleEdit(row)
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.dept.btn_edit')]
+            t('views.system.dept.btn_edit')
           ),
           [[vPermission, 'post/api/v1/dept/update']]
         ),
@@ -117,7 +117,7 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.dept.btn_delete')]
+                  t('views.system.dept.btn_delete')
                 ),
                 [[vPermission, 'delete/api/v1/dept/delete']]
               ),

@@ -10,7 +10,6 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   const messages = ref<AgentMessage[]>([])
   const isLoading = ref(false)
   const useLlmRouter = ref(false)
-  const useLangGraph = ref(true)
 
   const conversations = ref<Conversation[]>([])
   const currentConversationId = ref<string | null>(null)
@@ -139,7 +138,6 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   const _buildRequestParams = (query: string) => ({
     query,
     use_llm_router: useLlmRouter.value,
-    use_langgraph: useLangGraph.value,
     conversation_id: currentConversationId.value,
   })
 
@@ -166,7 +164,6 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
   const regenerateMessage = async (messageIndex: number) => {
     if (isLoading.value) return
 
-    // Find the nearest user message before this index
     let userMsg: AgentMessage | undefined
     for (let i = messageIndex - 1; i >= 0; i--) {
       if (messages.value[i].role === 'user') {
@@ -203,7 +200,6 @@ export const useAgentChatStore = defineStore('agent-chat', () => {
     messages,
     isLoading,
     useLlmRouter,
-    useLangGraph,
     conversations,
     currentConversationId,
     searchKeyword,

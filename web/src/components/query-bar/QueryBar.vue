@@ -3,14 +3,17 @@
     <n-space wrap :size="[20, 12]">
       <slot />
       <div class="hm-query-actions">
-        <button class="hm-query-btn reset" @click="emit('reset')">重置</button>
-        <button class="hm-query-btn search" @click="emit('search')">搜索</button>
+        <button class="hm-query-btn reset" @click="emit('reset')">{{ t('common.actions.reset') }}</button>
+        <button class="hm-query-btn search" @click="emit('search')">{{ t('common.actions.search') }}</button>
       </div>
     </n-space>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const emit = defineEmits(['search', 'reset'])
 </script>
 
@@ -53,17 +56,18 @@ const emit = defineEmits(['search', 'reset'])
   border-color: var(--hm-brand);
   color: var(--hm-brand);
   transform: translateY(-1px);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-query-btn.search {
   background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
   border-color: transparent;
   color: #fff;
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-query-btn.search:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  box-shadow: var(--hm-glow-brand-strong);
   transform: translateY(-1px);
 }
 </style>

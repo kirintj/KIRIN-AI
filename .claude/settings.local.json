@@ -22,7 +22,10 @@
       "Bash(pytest tests/ -v)",
       "Bash(pnpm install *)",
       "Bash(pnpm build *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(pnpm lint *)",
+      "Skill(writing-plans)",
+      "Skill(subagent-driven-development)"
     ]
   }
 }

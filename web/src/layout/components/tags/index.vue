@@ -95,7 +95,12 @@ async function handleContextMenu(e, tagItem) {
   font-size: 12px;
   padding: 2px;
   transform: scale(0.9);
-  transform: translateX(5px);
-  transition: all 0.3s;
+  transition: all 0.3s var(--hm-spring);
+}
+
+.n-tag__close:hover {
+  transform: scale(1.2);
+  background: rgba(232, 64, 38, 0.1);
+  color: var(--hm-error);
 }
 </style>

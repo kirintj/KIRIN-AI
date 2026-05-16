@@ -426,8 +426,8 @@ onMounted(async () => {
 }
 
 @keyframes hm-glow-breathe {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
 }
 
 .hm-wb-title {
@@ -436,23 +436,23 @@ onMounted(async () => {
   color: var(--hm-font-primary);
   margin-bottom: 6px;
   letter-spacing: -0.3px;
-  animation: hm-title-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: hm-title-in 0.6s var(--hm-spring) both;
 }
 
 @keyframes hm-title-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(10px) scale(0.96); filter: blur(3px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
 .hm-wb-subtitle {
   font-size: 14px;
   color: var(--hm-font-tertiary);
-  animation: hm-subtitle-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+  animation: hm-subtitle-in 0.55s var(--hm-spring) 0.08s both;
 }
 
 @keyframes hm-subtitle-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 .hm-wb-header-right {
@@ -504,8 +504,8 @@ onMounted(async () => {
 }
 
 .hm-wb-quick-btn:active {
-  transform: translateY(0) scale(0.97);
-  transition-duration: 0.1s;
+  transform: translateY(0) scale(0.94);
+  transition-duration: 0.08s;
 }
 
 .hm-wb-quick-icon {
@@ -531,7 +531,8 @@ onMounted(async () => {
 }
 
 .hm-wb-avatar:hover {
-  transform: scale(1.08);
+  transform: scale(1.12);
+  box-shadow: var(--hm-glow-brand-strong);
 }
 
 /* ── 通用区块 ── */
@@ -634,9 +635,7 @@ onMounted(async () => {
 
 .hm-wb-stat-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.04),
-    0 12px 28px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-wb-stat-card:hover::before {
@@ -644,8 +643,8 @@ onMounted(async () => {
 }
 
 .hm-wb-stat-card:active {
-  transform: translateY(-1px) scale(0.99);
-  transition-duration: 0.1s;
+  transform: translateY(-1px) scale(0.97);
+  transition-duration: 0.08s;
 }
 
 .hm-wb-stat-icon {
@@ -878,7 +877,7 @@ onMounted(async () => {
 
 @keyframes hm-dot-pulse {
   0%, 100% { opacity: 0; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.6); }
+  50% { opacity: 0.4; transform: scale(1.8); box-shadow: 0 0 12px currentColor; }
 }
 
 .hm-wb-timeline-line {
@@ -986,15 +985,13 @@ onMounted(async () => {
 
 .hm-wb-feature-card:hover {
   transform: translateY(-6px) scale(1.03);
-  box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.05),
-    0 16px 36px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--hm-glow-brand);
   border-color: rgba(10, 89, 247, 0.12);
 }
 
 .hm-wb-feature-card:active {
-  transform: translateY(-2px) scale(0.98);
-  transition-duration: 0.1s;
+  transform: translateY(-2px) scale(0.96);
+  transition-duration: 0.08s;
 }
 
 .hm-wb-feature-icon {
@@ -1157,19 +1154,21 @@ onMounted(async () => {
   100% { background-position: -200% 0; }
 }
 
-/* ── 入场动画 ── */
+/* ── 入场动画（鸿蒙 dissolve） ── */
 .hm-wb-fade-in {
-  animation: hm-wb-fade-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: hm-wb-fade-in 0.55s var(--hm-spring) both;
 }
 
 @keyframes hm-wb-fade-in {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(20px) scale(0.96);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 

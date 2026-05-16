@@ -12,15 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', val: string): void
   (e: 'send'): void
-  (e: 'quick-send', text: string): void
 }>()
-
-const quickChips = [
-  { label: t('views.agent_chat.cmd_interview'), text: t('views.agent_chat.cmd_interview_text') },
-  { label: t('views.agent_chat.cmd_salary'), text: t('views.agent_chat.cmd_salary_text') },
-  { label: t('views.agent_chat.cmd_guide'), text: t('views.agent_chat.cmd_guide_text') },
-  { label: t('views.agent_chat.cmd_todo'), text: t('views.agent_chat.cmd_todo_text') },
-]
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && !e.shiftKey) {
@@ -42,16 +34,7 @@ const handleKeydown = (e: KeyboardEvent) => {
         @keydown="handleKeydown"
       />
       <div class="hm-input-actions">
-        <div class="hm-input-chips">
-          <button
-            v-for="chip in quickChips"
-            :key="chip.label"
-            class="hm-mini-chip"
-            @click="emit('quick-send', chip.text)"
-          >
-            {{ chip.label }}
-          </button>
-        </div>
+        <div></div>
         <button
           class="hm-send-btn"
           :class="{ active: modelValue.trim() && !isLoading }"
@@ -81,29 +64,5 @@ const handleKeydown = (e: KeyboardEvent) => {
   justify-content: space-between;
   align-items: center;
   margin-top: 8px;
-}
-
-.hm-input-chips {
-  display: flex;
-  gap: 6px;
-}
-
-.hm-mini-chip {
-  padding: 3px 10px;
-  border: 1px solid var(--hm-border);
-  border-radius: var(--hm-radius-full);
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  font-size: 12px;
-  color: var(--hm-font-tertiary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-mini-chip:hover {
-  border-color: var(--hm-brand);
-  color: var(--hm-brand);
-  background: var(--hm-brand-light);
-  transform: translateY(-1px);
 }
 </style>

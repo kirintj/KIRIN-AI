@@ -8,8 +8,8 @@ from app.rag.chromadb_client import (
     search_all_collections_hybrid,
     hybrid_search,
     search_with_filter,
+    _get_embedding_function,
 )
-from app.rag.embedding import DashScopeEmbeddingFunction
 from app.utils.chat import call_llm
 from app.settings import settings
 
@@ -277,7 +277,7 @@ class AdvancedRAGPipeline:
         if not documents:
             return documents
 
-        embed_fn = DashScopeEmbeddingFunction()
+        embed_fn = _get_embedding_function()
         contents = [d.get("content", "") for d in documents]
         embeddings = embed_fn(contents)
 

@@ -112,7 +112,7 @@ const columns = [
     ellipsis: { tooltip: true },
   },
   {
-    title: 'Tags',
+    title: t('views.system.api.col_tags'),
     key: 'tags',
     width: 'auto',
     align: 'center',
@@ -136,7 +136,7 @@ const columns = [
                 modalForm.value.roles = row.roles.map((e) => (e = e.id))
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.api.btn_edit')]
+            t('views.system.api.btn_edit')
           ),
           [[vPermission, 'post/api/v1/api/update']]
         ),
@@ -152,7 +152,7 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.api.btn_delete')]
+                  t('views.system.api.btn_delete')
                 ),
                 [[vPermission, 'delete/api/v1/api/delete']]
               ),
@@ -206,7 +206,7 @@ const columns = [
             @keypress.enter="$table?.handleSearch()"
           />
         </QueryBarItem>
-        <QueryBarItem label="Tags" :label-width="40">
+        <QueryBarItem :label="t('views.system.api.col_tags')" :label-width="40">
           <NInput
             v-model:value="queryItems.tags"
             clearable
@@ -242,7 +242,7 @@ const columns = [
         <NFormItem :label="t('views.system.api.form_desc')" path="summary">
           <NInput v-model:value="modalForm.summary" clearable :placeholder="t('views.system.api.form_desc_placeholder')" />
         </NFormItem>
-        <NFormItem label="Tags" path="tags">
+        <NFormItem :label="t('views.system.api.form_tags')" path="tags">
           <NInput v-model:value="modalForm.tags" clearable :placeholder="t('views.system.api.form_tags_placeholder')" />
         </NFormItem>
       </NForm>

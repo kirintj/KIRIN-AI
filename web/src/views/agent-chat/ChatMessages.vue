@@ -15,20 +15,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'regenerate', index: number): void
-  (e: 'quick-send', text: string): void
 }>()
 
 const { t } = useI18n()
 const { formatMessage, scrollToBottom } = useMarkdown()
 const copiedId = ref<string | null>(null)
 const feedbackMap = ref<Record<string, 'like' | 'dislike'>>({})
-
-const quickCommands = [
-  { label: t('views.agent_chat.quick_interview'), icon: 'icon-park-outline:book-open', text: t('views.agent_chat.quick_interview_text'), color: '#0A59F7' },
-  { label: t('views.agent_chat.quick_salary'), icon: 'icon-park-outline:balance-two', text: t('views.agent_chat.quick_salary_text'), color: '#ED6F21' },
-  { label: t('views.agent_chat.quick_guide'), icon: 'icon-park-outline:map-draw', text: t('views.agent_chat.quick_guide_text'), color: '#722ED1' },
-  { label: t('views.agent_chat.quick_todo'), icon: 'icon-park-outline:doc-add', text: t('views.agent_chat.quick_todo_text'), color: '#64BB5C' },
-]
 
 const copyMessage = async (content: string, id: string) => {
   try {
@@ -53,21 +45,7 @@ defineExpose({ scrollToBottom })
       v-if="messages.length === 0"
       icon="icon-park-outline:robot"
       :title="t('views.agent_chat.empty_title')"
-    >
-      <div class="hm-quick-cmds">
-        <button
-          v-for="cmd in quickCommands"
-          :key="cmd.label"
-          class="hm-quick-btn"
-          @click="emit('quick-send', cmd.text)"
-        >
-          <div class="hm-quick-icon" :style="{ background: cmd.color + '14' }">
-            <TheIcon :icon="cmd.icon" :size="16" :color="cmd.color" />
-          </div>
-          <span>{{ cmd.label }}</span>
-        </button>
-      </div>
-    </EmptyState>
+    />
 
     <template v-for="(item, index) in messages" :key="item.id">
       <div v-if="shouldShowTimeDivider(messages, index)" class="hm-msg-time-divider">
@@ -117,9 +95,7 @@ defineExpose({ scrollToBottom })
     </template>
 
     <div v-if="isLoading" class="hm-msg-item assistant">
-      <div class="hm-msg-bubble hm-msg-loading">
-        <LoadingDots :text="t('views.agent_chat.thinking')" />
-      </div>
+      <LoadingDots :text="t('views.agent_chat.thinking')" />
     </div>
   </div>
 </template>
@@ -139,44 +115,6 @@ defineExpose({ scrollToBottom })
   scrollbar-width: none;
 }
 .hm-msg-list::-webkit-scrollbar { display: none; }
-
-.hm-quick-cmds {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.hm-quick-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--hm-bg-glass);
-  backdrop-filter: var(--hm-blur-glass);
-  border: 1px solid var(--hm-border-glass);
-  border-radius: var(--hm-radius-xl);
-  font-size: 13px;
-  color: var(--hm-font-primary);
-  cursor: pointer;
-  transition: all 0.3s var(--hm-spring);
-}
-
-.hm-quick-btn:hover {
-  border-color: var(--hm-brand);
-  box-shadow: var(--hm-shadow-layered-hover);
-  transform: translateY(-3px);
-}
-
-.hm-quick-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--hm-radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 .hm-msg-time-divider {
   text-align: center;
@@ -236,11 +174,13 @@ defineExpose({ scrollToBottom })
   gap: 4px;
   padding-left: 4px;
   opacity: 0;
-  transition: opacity 0.25s var(--hm-spring);
+  transform: translateY(4px);
+  transition: all 0.3s var(--hm-spring);
 }
 
 .hm-msg-item:hover .hm-msg-actions {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .hm-msg-action {
@@ -272,14 +212,8 @@ defineExpose({ scrollToBottom })
   cursor: not-allowed;
 }
 
-.hm-msg-loading {
-  display: flex;
-  align-items: center;
-  padding: 0;
-}
-
 @keyframes hm-msg-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 </style>

@@ -50,6 +50,16 @@
   --hm-focus-ring: 0 0 0 3px rgba(10, 89, 247, 0.08);
   --hm-danger-hover-bg: rgba(232, 64, 38, 0.06);
 
+  /* ── 光效变量 ── */
+  --hm-glow-brand: 0 0 15px rgba(10, 89, 247, 0.3);
+  --hm-glow-brand-strong: 0 0 25px rgba(10, 89, 247, 0.5);
+  --hm-glow-brand-intense: 0 0 40px rgba(10, 89, 247, 0.6), 0 0 80px rgba(10, 89, 247, 0.3);
+  --hm-glow-danger: 0 0 15px rgba(232, 64, 38, 0.3);
+  --hm-flow-gradient: linear-gradient(90deg, #0A59F7, #337BF7, #6B9FFF, #337BF7, #0A59F7);
+  --hm-flow-gradient-warm: linear-gradient(90deg, #0A59F7, #8B5CF6, #EC4899, #8B5CF6, #0A59F7);
+  --hm-breathe-duration: 3s;
+  --hm-shimmer: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.15) 50%, transparent 75%);
+
   --hm-sidebar-width: 220px;
   --hm-sidebar-collapsed: 64px;
   --hm-header-height: 56px;
@@ -94,6 +104,14 @@ html.dark {
   --hm-brand-bg-light: rgba(10, 89, 247, 0.15);
   --hm-focus-ring: 0 0 0 3px rgba(10, 89, 247, 0.15);
   --hm-danger-hover-bg: rgba(232, 64, 38, 0.12);
+
+  /* ── 光效变量（深色增强） ── */
+  --hm-glow-brand: 0 0 20px rgba(10, 89, 247, 0.5);
+  --hm-glow-brand-strong: 0 0 35px rgba(10, 89, 247, 0.7);
+  --hm-glow-brand-intense: 0 0 60px rgba(10, 89, 247, 0.8), 0 0 120px rgba(10, 89, 247, 0.4);
+  --hm-glow-danger: 0 0 20px rgba(232, 64, 38, 0.5);
+  --hm-breathe-duration: 2.5s;
+  --hm-shimmer: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.08) 50%, transparent 75%);
 }
 
 html, body {
@@ -122,19 +140,22 @@ body {
   height: 100%;
 }
 
+/* ── 页面过渡（鸿蒙 dissolve 风格） ── */
 .fade-slide-leave-active,
 .fade-slide-enter-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s var(--hm-spring);
 }
 
 .fade-slide-enter-from {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(16px) scale(0.98);
+  filter: blur(4px);
 }
 
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-10px) scale(0.98);
+  filter: blur(2px);
 }
 
 .hm-skeleton {
@@ -162,6 +183,150 @@ html.dark .hm-skeleton::after {
 @keyframes hm-skeleton-wave {
   0% { left: -100%; }
   100% { left: 100%; }
+}
+
+/* ── 光效动画 ── */
+@keyframes hm-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes hm-breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes hm-shimmer-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes hm-glow-pulse {
+  0%, 100% { box-shadow: var(--hm-glow-brand); }
+  50% { box-shadow: var(--hm-glow-brand-strong); }
+}
+
+/* ── 鸿蒙动效 ── */
+@keyframes hm-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes hm-fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes hm-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes hm-slide-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hm-expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0.8);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+@keyframes hm-collapse {
+  from {
+    opacity: 1;
+    max-height: 1000px;
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0.8);
+    transform-origin: top;
+  }
+}
+
+@keyframes hm-ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes hm-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes hm-stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hm-morph {
+  0% { border-radius: var(--hm-radius-md); }
+  50% { border-radius: var(--hm-radius-full); }
+  100% { border-radius: var(--hm-radius-md); }
+}
+
+@keyframes hm-slide-up-spring {
+  0% { transform: translateY(100%); opacity: 0; }
+  60% { transform: translateY(-8%); opacity: 1; }
+  80% { transform: translateY(3%); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes hm-scale-spring {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  80% { transform: scale(0.97); }
+  100% { transform: scale(1); }
 }
 
 .hm-skeleton-text {
@@ -274,6 +439,11 @@ html.dark .cus-scroll-y {
   }
 }
 
+/* ── 深色模式侧边栏增强发光 ── */
+html.dark .hm-sidebar {
+  box-shadow: 2px 0 30px rgba(10, 89, 247, 0.15);
+}
+
 .hm-action-group {
   display: flex;
   gap: 8px;
@@ -297,23 +467,34 @@ html.dark .cus-scroll-y {
   border-color: var(--hm-brand);
   color: var(--hm-brand);
   transform: translateY(-1px);
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-action-btn:active {
-  transform: translateY(0) scale(0.97);
-  transition-duration: 0.1s;
+  transform: translateY(0) scale(0.94);
+  transition-duration: 0.08s;
 }
 
 .hm-action-btn.primary {
   background: var(--hm-brand-gradient);
   border-color: transparent;
   color: #fff;
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
+  position: relative;
+  overflow: hidden;
+}
+
+.hm-action-btn.primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--hm-shimmer);
+  animation: hm-shimmer-slide 3s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .hm-action-btn.primary:hover {
-  box-shadow: var(--hm-brand-shadow-hover);
+  box-shadow: var(--hm-glow-brand-strong);
   transform: translateY(-2px);
 }
 
@@ -334,6 +515,7 @@ html.dark .cus-scroll-y {
   background: var(--hm-danger-hover-bg);
   border-color: var(--hm-error);
   color: var(--hm-error);
+  box-shadow: var(--hm-glow-danger);
 }
 
 .hm-action-btn.small {
@@ -361,6 +543,12 @@ html.dark .cus-scroll-y {
   -webkit-backdrop-filter: var(--hm-blur-glass-strong);
   border: 1px solid var(--hm-border-glass);
   box-shadow: var(--hm-shadow-layered), 0 8px 24px rgba(10, 89, 247, 0.06);
+  transition: all 0.35s var(--hm-spring);
+}
+
+.hm-page-header:hover {
+  box-shadow: var(--hm-shadow-layered), var(--hm-glow-brand);
+  border-color: rgba(10, 89, 247, 0.2);
 }
 
 .hm-page-title {
@@ -423,7 +611,8 @@ html.dark .cus-scroll-y {
 
 .hm-stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--hm-shadow-layered-hover);
+  box-shadow: var(--hm-glow-brand);
+  border-color: var(--hm-brand);
 }
 
 .hm-stat-icon {
@@ -496,7 +685,7 @@ html.dark .cus-scroll-y {
   background: var(--hm-bg-secondary);
   color: var(--hm-brand);
   font-weight: 500;
-  box-shadow: var(--hm-shadow-layered);
+  box-shadow: var(--hm-shadow-layered), var(--hm-glow-brand);
 }
 
 /* ── 侧边栏布局 ── */
@@ -513,6 +702,7 @@ html.dark .cus-scroll-y {
   backdrop-filter: var(--hm-blur-glass);
   -webkit-backdrop-filter: var(--hm-blur-glass);
   border-right: 1px solid var(--hm-border-glass);
+  box-shadow: 2px 0 20px rgba(10, 89, 247, 0.08);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -557,7 +747,7 @@ html.dark .cus-scroll-y {
 .hm-sidebar-new-btn:hover {
   background: var(--hm-brand-light);
   transform: translateY(-1px);
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 /* ── 表格行内操作按钮 ── */
@@ -580,7 +770,7 @@ html.dark .cus-scroll-y {
 .hm-row-btn:hover {
   background: var(--hm-brand-light);
   transform: translateY(-1px);
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-row-btn.danger {
@@ -590,7 +780,7 @@ html.dark .cus-scroll-y {
 
 .hm-row-btn.danger:hover {
   background: var(--hm-danger-hover-bg);
-  box-shadow: 0 4px 12px rgba(232, 64, 38, 0.12);
+  box-shadow: var(--hm-glow-danger);
 }
 
 /* ── 工具栏 ── */
@@ -633,7 +823,7 @@ html.dark .cus-scroll-y {
 
 .hm-search-box:focus-within {
   border-color: var(--hm-brand);
-  box-shadow: var(--hm-focus-ring);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-search-input {
@@ -679,7 +869,7 @@ html.dark .cus-scroll-y {
   background: var(--hm-bg-secondary);
   color: var(--hm-brand);
   font-weight: 500;
-  box-shadow: var(--hm-shadow-layered);
+  box-shadow: var(--hm-shadow-layered), var(--hm-glow-brand);
 }
 
 /* ── 输入区域 ── */
@@ -705,7 +895,7 @@ html.dark .cus-scroll-y {
 
 .hm-input-box:focus-within {
   border-color: var(--hm-brand);
-  box-shadow: var(--hm-focus-ring);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-textarea {
@@ -740,12 +930,14 @@ html.dark .cus-scroll-y {
 
 .hm-send-btn.active {
   background: var(--hm-brand-gradient);
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
+  animation: hm-glow-pulse var(--hm-breathe-duration) ease-in-out infinite;
 }
 
 .hm-send-btn.active:hover {
-  box-shadow: var(--hm-brand-shadow-hover);
+  box-shadow: var(--hm-glow-brand-strong);
   transform: translateY(-2px);
+  animation: none;
 }
 
 /* ── 弹窗按钮 ── */
@@ -764,11 +956,11 @@ html.dark .cus-scroll-y {
   background: var(--hm-brand-gradient);
   border-color: transparent;
   color: #fff;
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-modal-btn.primary:hover {
-  box-shadow: var(--hm-brand-shadow-hover);
+  box-shadow: var(--hm-glow-brand-strong);
   transform: translateY(-1px);
 }
 
@@ -823,11 +1015,13 @@ html.dark .hm-icon-btn.danger:hover {
   border-color: var(--hm-brand);
   color: var(--hm-brand);
   transform: translateY(-1px);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-filter-chip.danger:hover {
   border-color: var(--hm-error);
   color: var(--hm-error);
+  box-shadow: var(--hm-glow-danger);
 }
 
 /* ── 工具栏芯片 ── */
@@ -848,17 +1042,20 @@ html.dark .hm-icon-btn.danger:hover {
 .hm-toolbar-chip:hover {
   border-color: var(--hm-brand);
   color: var(--hm-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-toolbar-chip.active {
   background: var(--hm-brand-light);
   border-color: var(--hm-brand);
   color: var(--hm-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-toolbar-chip.danger:hover {
   border-color: var(--hm-error);
   color: var(--hm-error);
+  box-shadow: var(--hm-glow-danger);
 }
 
 /* ── 查看全部链接 ── */
@@ -876,6 +1073,129 @@ html.dark .hm-icon-btn.danger:hover {
 .hm-view-all:hover {
   background: var(--hm-brand-bg-light);
   transform: translateX(2px);
+  box-shadow: var(--hm-glow-brand);
+}
+
+/* ── 鸿蒙入场动画工具类 ── */
+.hm-animate-in {
+  animation: hm-fade-in-up 0.5s var(--hm-spring) both;
+}
+
+.hm-animate-in-scale {
+  animation: hm-fade-in-scale 0.45s var(--hm-spring) both;
+}
+
+.hm-animate-slide-right {
+  animation: hm-slide-in-right 0.4s var(--hm-spring) both;
+}
+
+.hm-animate-slide-up {
+  animation: hm-slide-in-bottom 0.45s var(--hm-spring) both;
+}
+
+.hm-animate-expand {
+  animation: hm-expand 0.4s var(--hm-spring) both;
+  overflow: hidden;
+}
+
+.hm-animate-collapse {
+  animation: hm-collapse 0.3s var(--hm-spring) both;
+  overflow: hidden;
+}
+
+/* ── 逐项入场（通过 --stagger-index 设置索引） ── */
+.hm-stagger-item {
+  opacity: 0;
+  animation: hm-stagger-fade-in 0.4s var(--hm-spring) both;
+  animation-delay: calc(var(--stagger-index, 0) * 0.06s);
+}
+
+/* ── 涟漪效果容器 ── */
+.hm-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.hm-ripple::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  padding-top: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(10, 89, 247, 0.2) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+  left: 50%;
+  top: 50%;
+  margin-left: -50%;
+  margin-top: -50%;
+}
+
+.hm-ripple:active::after {
+  animation: hm-ripple 0.6s ease-out;
+}
+
+/* ── 按压反馈（增强版） ── */
+.hm-press:active {
+  animation: hm-press 0.2s var(--hm-spring);
+}
+
+.hm-press-scale:active {
+  transform: scale(0.95);
+  transition: transform 0.1s var(--hm-spring);
+}
+
+/* ── 弹窗弹出动画 ── */
+.hm-modal-enter-active {
+  animation: hm-scale-spring 0.4s var(--hm-spring) both;
+}
+
+.hm-modal-leave-active {
+  animation: hm-scale-spring 0.25s var(--hm-spring) reverse both;
+}
+
+.hm-drawer-enter-active {
+  animation: hm-slide-up-spring 0.45s var(--hm-spring) both;
+}
+
+.hm-drawer-leave-active {
+  animation: hm-slide-up-spring 0.3s var(--hm-spring) reverse both;
+}
+
+/* ── 标签切换动画 ── */
+.hm-tab-slide-enter-active {
+  transition: all 0.35s var(--hm-spring);
+}
+
+.hm-tab-slide-leave-active {
+  transition: all 0.25s var(--hm-spring);
+  position: absolute;
+  width: 100%;
+}
+
+.hm-tab-slide-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.hm-tab-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* ── 列表逐项删除动画 ── */
+.hm-list-leave-active {
+  transition: all 0.3s var(--hm-spring);
+}
+
+.hm-list-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.hm-list-move {
+  transition: transform 0.4s var(--hm-spring);
 }
 
 @media (max-width: 768px) {

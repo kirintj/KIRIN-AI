@@ -1,15 +1,12 @@
 import asyncio
 import json
+
+from app.agent.executor import AgentExecutor
 from app.tools.resume_tool import ResumeTool
 from app.tools.jd_tool import JDTool
 from app.tools.match_tool import MatchTool
 from app.tools.optimize_tool import OptimizeTool
 from app.tools.plan_tool import PlanTool
-from app.tools.todo_tool import TodoTool
-from app.tools.interview_tool import InterviewTool
-from app.tools.salary_tool import SalaryTool
-from app.tools.guide_tool import GuideTool
-from app.tools.rag_tool import RAGTool
 from app.rag.pipeline import AdvancedRAGPipeline, PipelineConfig
 from app.utils.chat import call_llm
 
@@ -51,18 +48,16 @@ RAG_RESUME_OPTIMIZE_PROMPT = """你是一个专业的简历优化助手。请结
 4. 调整关键词以匹配 JD"""
 
 
-class JobAgent:
+class JobAgent(AgentExecutor):
+    """求职助手，扩展 AgentExecutor，增加简历/JD/匹配等专用工具。"""
+
     def __init__(self):
+        super().__init__()
         self.resume_tool = ResumeTool()
         self.jd_tool = JDTool()
         self.match_tool = MatchTool()
         self.optimize_tool = OptimizeTool()
         self.plan_tool = PlanTool()
-        self.todo_tool = TodoTool()
-        self.interview_tool = InterviewTool()
-        self.salary_tool = SalaryTool()
-        self.guide_tool = GuideTool()
-        self.rag_tool = RAGTool()
         self._resume_pipeline = AdvancedRAGPipeline(PipelineConfig(
             enable_query_rewrite=True,
             enable_rerank=True,
@@ -128,6 +123,10 @@ class JobAgent:
         )
 
     async def create_todos_from_plan(self, plan_text: str) -> str:
+        todo_tool = self.tools.get("todo_tool")
+        if not todo_tool:
+            return "未找到待办工具"
+
         extract_prompt = f"""请从以下投递计划中，提取出所有可执行的任务项，每行一个任务，格式为：
 - [ ] 任务描述
 
@@ -145,7 +144,7 @@ class JobAgent:
         created = []
         for task in tasks:
             if task:
-                result = await self.todo_tool.run(task)
+                result = await todo_tool.run(task)
                 created.append(result)
 
         if created:
@@ -161,7 +160,10 @@ class JobAgent:
     async def generate_interview(
         self, company: str, position: str, interview_type: str = "综合面试"
     ) -> str:
-        return await self.interview_tool.run(
+        tool = self.tools.get("interview_tool")
+        if not tool:
+            return "未找到面试工具"
+        return await tool.run(
             company=company, position=position, interview_type=interview_type
         )
 
@@ -173,13 +175,19 @@ class JobAgent:
         experience: str = "",
         expected_salary: str = "面议",
     ) -> str:
-        return await self.salary_tool.run(
+        tool = self.tools.get("salary_tool")
+        if not tool:
+            return "未找到薪资工具"
+        return await tool.run(
             city=city, industry=industry, position=position,
             experience=experience, expected_salary=expected_salary,
         )
 
     async def generate_guide(self, scenario: str, goal: str = "成功求职") -> str:
-        return await self.guide_tool.run(scenario=scenario, goal=goal)
+        tool = self.tools.get("guide_tool")
+        if not tool:
+            return "未找到攻略工具"
+        return await tool.run(scenario=scenario, goal=goal)
 
     async def full_pipeline(self, resume_text: str, jd_text: str) -> dict:
         steps = {}

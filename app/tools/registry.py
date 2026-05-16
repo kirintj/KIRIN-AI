@@ -1,4 +1,4 @@
-"""共享工具注册表，避免 executor 和 langgraph_nodes 重复实例化工具。"""
+"""共享工具注册表，避免 executor 和 job_agent 重复实例化工具。"""
 
 from app.tools.base import BaseTool
 from app.tools.rag_tool import RAGTool
@@ -19,5 +19,5 @@ def create_default_tools() -> dict[str, BaseTool]:
     return {tool.name: tool for tool in tools}
 
 
-# 模块级单例，供 langgraph_nodes 直接使用
+# 模块级单例，供 agent 节点直接使用
 TOOL_MAP: dict[str, BaseTool] = create_default_tools()

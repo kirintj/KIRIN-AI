@@ -34,11 +34,6 @@ const sendMessage = () => {
   message.value = ''
 }
 
-const quickSend = (text: string) => {
-  message.value = text
-  sendMessage()
-}
-
 const handleSwitchConversation = (convId: string) => {
   agentStore.switchConversation(convId)
   mobileDrawerVisible.value = false
@@ -73,6 +68,11 @@ watch(() => agentStore.messages.length, () => {
     <template v-if="isMobile">
       <n-drawer v-model:show="mobileDrawerVisible" :width="280" placement="left" :auto-focus="false">
         <n-drawer-content :native-scrollbar="false" body-content-style="padding: 0;" :title="t('views.agent_chat.conversations')">
+          <template #header-extra>
+            <button class="hm-sidebar-new-btn" @click="agentStore.createConversation()">
+              <TheIcon icon="icon-park-outline:plus" :size="16" />
+            </button>
+          </template>
           <ChatSidebar
             :conversations="agentStore.conversations"
             :filtered-conversations="agentStore.filteredConversations"
@@ -81,7 +81,6 @@ watch(() => agentStore.messages.length, () => {
             :search-keyword="agentStore.searchKeyword"
             @update:search-keyword="agentStore.searchKeyword = $event"
             @switch="handleSwitchConversation"
-            @new="agentStore.createConversation"
             @delete="agentStore.deleteConversation"
             @rename="agentStore.renameConversation"
           />
@@ -92,7 +91,7 @@ watch(() => agentStore.messages.length, () => {
       <div :class="['hm-sidebar', { collapsed: sidebarCollapsed }]">
         <div :class="['hm-sidebar-header', { collapsed: sidebarCollapsed }]">
           <span v-if="!sidebarCollapsed" class="hm-sidebar-title">{{ t('views.agent_chat.conversations') }}</span>
-          <button v-if="!sidebarCollapsed" class="hm-sidebar-new-btn" @click="agentStore.createConversation">
+          <button v-if="!sidebarCollapsed" class="hm-sidebar-new-btn" @click="agentStore.createConversation()">
             <TheIcon icon="icon-park-outline:plus" :size="16" />
           </button>
           <button class="hm-sidebar-toggle" @click="sidebarCollapsed = !sidebarCollapsed">
@@ -108,7 +107,6 @@ watch(() => agentStore.messages.length, () => {
             :search-keyword="agentStore.searchKeyword"
             @update:search-keyword="agentStore.searchKeyword = $event"
             @switch="handleSwitchConversation"
-            @new="agentStore.createConversation"
             @delete="agentStore.deleteConversation"
             @rename="agentStore.renameConversation"
           />
@@ -126,15 +124,6 @@ watch(() => agentStore.messages.length, () => {
           <span v-if="!isMobile" class="hm-chat-badge">{{ t('views.agent_chat.smart_dialog') }}</span>
         </div>
         <div class="hm-toolbar-right">
-          <button
-            v-if="!isMobile"
-            class="hm-toolbar-chip"
-            :class="{ active: agentStore.useLangGraph }"
-            @click="agentStore.useLangGraph = !agentStore.useLangGraph"
-          >
-            <TheIcon icon="icon-park-outline:mindmap-map" :size="14" />
-            {{ agentStore.useLangGraph ? 'LangGraph' : t('views.agent_chat.mode_classic') }}
-          </button>
           <button
             v-if="!isMobile"
             class="hm-toolbar-chip"
@@ -156,7 +145,6 @@ watch(() => agentStore.messages.length, () => {
           :messages="agentStore.messages"
           :is-loading="agentStore.isLoading"
           @regenerate="agentStore.regenerateMessage"
-          @quick-send="quickSend"
         />
       </div>
 
@@ -164,7 +152,6 @@ watch(() => agentStore.messages.length, () => {
         v-model="message"
         :is-loading="agentStore.isLoading"
         @send="sendMessage"
-        @quick-send="quickSend"
       />
     </div>
   </div>

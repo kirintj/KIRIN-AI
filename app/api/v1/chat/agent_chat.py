@@ -1,4 +1,5 @@
 import logging
+import time
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -7,7 +8,7 @@ from app.models.admin import User
 from app.schemas.base import Success, Fail
 from app.schemas.business import AgentChatRequest, AddDocumentRequest
 from app.agent.executor import AgentExecutor
-from app.agent.langgraph_graph import get_graph
+from app.agent.rules import get_engine, reload_rules
 from app.rag.chromadb_client import (
     add_documents, delete_all_documents, delete_document, move_document,
     get_collection_stats, list_documents, get_document_chunks,
@@ -27,22 +28,40 @@ async def agent_chat(
     request: AgentChatRequest,
     current_user: User = DependAuth,
 ):
-    try:
-        user_id = current_user.username
+    start_time = time.monotonic()
+    user_id = current_user.username
 
-        if request.use_langgraph:
-            result = await _run_langgraph(request.query, user_id, request.use_llm_router)
-        else:
-            result = await executor.run(request.query, user_id=user_id, use_llm_router=request.use_llm_router)
+    try:
+        result = await executor.run(request.query, user_id=user_id, use_llm_router=request.use_llm_router)
 
         if request.conversation_id:
             await conversation_service.add_message(request.conversation_id, "user", request.query)
             await conversation_service.add_message(request.conversation_id, "assistant", result)
 
+        elapsed = time.monotonic() - start_time
+        _logger.info(
+            "agent_chat success",
+            extra={
+                "user_id": user_id,
+                "query_length": len(request.query),
+                "response_length": len(result),
+                "elapsed_ms": round(elapsed * 1000),
+                "use_llm_router": request.use_llm_router,
+            },
+        )
         return Success(data={"answer": result, "user": current_user.username})
     except Exception as e:
-        _logger.exception("Agent 处理失败")
+        elapsed = time.monotonic() - start_time
         error_msg = str(e)
+        _logger.exception(
+            "agent_chat failed",
+            extra={
+                "user_id": user_id,
+                "error_type": type(e).__name__,
+                "error_msg": error_msg[:200],
+                "elapsed_ms": round(elapsed * 1000),
+            },
+        )
         if "Arrearage" in error_msg or "Access denied" in error_msg or "overdue" in error_msg.lower():
             return Fail(code=503, msg="AI 服务暂时不可用（账户欠费），请联系管理员")
         if "rate_limit" in error_msg.lower() or "429" in error_msg:
@@ -50,26 +69,6 @@ async def agent_chat(
         if "timeout" in error_msg.lower():
             return Fail(code=504, msg="AI 服务响应超时，请稍后重试")
         return Fail(code=500, msg="Agent 处理失败，请稍后重试")
-
-
-async def _run_langgraph(query: str, user_id: str, use_llm_router: bool) -> str:
-    graph = get_graph()
-    init_state = {
-        "query": query,
-        "user_id": user_id,
-        "use_llm_router": use_llm_router or False,
-        "messages": [],
-        "intent": "",
-        "tool_name": "",
-        "tool_args": {},
-        "tool_output": "",
-        "iteration": 0,
-        "max_iterations": 3,
-        "need_more": False,
-        "final_answer": "",
-    }
-    final_state = await graph.ainvoke(init_state)
-    return final_state.get("final_answer", "抱歉，未能生成回复。")
 
 
 @router.post("/documents")
@@ -287,3 +286,66 @@ async def rebuild_collections(current_user: User = DependAuth):
     except Exception:
         _logger.exception("迁移重建失败")
         return Fail(code=500, msg="迁移重建失败")
+
+
+# ── 规则管理 ─────────────────────────────────────────────────────────────────
+
+
+@router.get("/rules", summary="获取所有路由规则")
+async def list_rules(current_user: User = DependAuth):
+    engine = get_engine()
+    rules = engine.get_rules()
+    return Success(data={
+        "rules": [
+            {
+                "name": r.name,
+                "intent": r.intent,
+                "priority": r.priority,
+                "enabled": r.enabled,
+                "description": r.description,
+                "conditions": [
+                    {
+                        "type": c.type.value,
+                        "values": c.values,
+                        "logic": c.logic.value,
+                    }
+                    for c in r.conditions
+                ],
+            }
+            for r in rules
+        ],
+        "total": len(rules),
+    })
+
+
+@router.post("/rules/reload", summary="热更新路由规则")
+async def reload_rules_api(current_user: User = DependAuth):
+    try:
+        engine = reload_rules()
+        return Success(data={
+            "message": "规则已重新加载",
+            "rule_count": engine.rule_count,
+        })
+    except Exception:
+        _logger.exception("规则重载失败")
+        return Fail(code=500, msg="规则重载失败")
+
+
+class RuleTestInput(BaseModel):
+    query: str
+
+
+@router.post("/rules/test", summary="测试规则匹配")
+async def test_rule(
+    data: RuleTestInput,
+    current_user: User = DependAuth,
+):
+    engine = get_engine()
+    result = engine.match(data.query)
+    if result:
+        return Success(data={
+            "matched": True,
+            "intent": result.intent,
+            "rule_name": result.rule_name,
+        })
+    return Success(data={"matched": False})

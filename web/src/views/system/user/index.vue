@@ -33,6 +33,15 @@ const { t } = useI18n()
 
 defineOptions({ name: '用户管理' })
 
+const roleNameMap = {
+  '管理员': () => t('views.system.role.role_admin'),
+  '普通用户': () => t('views.system.role.role_user'),
+}
+
+function getRoleName(name) {
+  return roleNameMap[name] ? roleNameMap[name]() : name
+}
+
 const $table = ref(null)
 const queryItems = ref({})
 const vPermission = resolveDirective('permission')
@@ -115,7 +124,7 @@ const columns = [
       const group = []
       for (let i = 0; i < roles.length; i++)
         group.push(
-          h(NTag, { type: 'info', style: { margin: '2px 3px' } }, { default: () => roles[i].name })
+          h(NTag, { type: 'info', style: { margin: '2px 3px' } }, { default: () => getRoleName(roles[i].name) })
         )
       return h('span', group)
     },
@@ -194,7 +203,7 @@ const columns = [
                 delete modalForm.value.dept
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.user.btn_edit')]
+            t('views.system.user.btn_edit')
           ),
           [[vPermission, 'post/api/v1/user/update']]
         ),
@@ -210,7 +219,7 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.user.btn_delete')]
+                  t('views.system.user.btn_delete')
                 ),
                 [[vPermission, 'delete/api/v1/user/delete']]
               ),
@@ -237,7 +246,7 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), t('views.system.user.btn_reset_password')]
+                  t('views.system.user.btn_reset_password')
                 ),
                 [[vPermission, 'post/api/v1/user/reset_password']]
               ),
@@ -473,7 +482,7 @@ const validateAddUser = {
                     v-for="item in roleOption"
                     :key="item.id"
                     :value="item.id"
-                    :label="item.name"
+                    :label="getRoleName(item.name)"
                   />
                 </NSpace>
               </NCheckboxGroup>

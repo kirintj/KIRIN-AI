@@ -113,7 +113,7 @@ const columns = [
             class: 'hm-row-btn',
             onClick: () => editHandle(row),
           },
-          [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.chathistory.btn_edit')]
+          t('views.system.chathistory.btn_edit')
         ),
         h(
           NPopconfirm,
@@ -125,7 +125,7 @@ const columns = [
               h(
                 'button',
                 { class: 'hm-row-btn danger' },
-                [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.chathistory.btn_delete')]
+                t('views.system.chathistory.btn_delete')
               ),
             default: () => t('views.system.chathistory.confirm_delete'),
           }

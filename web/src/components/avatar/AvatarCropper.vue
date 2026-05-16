@@ -1,5 +1,5 @@
 <template>
-  <NModal v-model:show="visible" :mask-closable="false" preset="card" title="上传头像" style="width: 400px" :bordered="false">
+  <NModal v-model:show="visible" :mask-closable="false" preset="card" :title="t('common.actions.upload_avatar')" style="width: 400px" :bordered="false">
     <div class="avatar-upload">
       <div class="preview-box">
         <img v-if="previewUrl" :src="previewUrl" class="preview-img" />
@@ -8,8 +8,8 @@
     </div>
     <template #footer>
       <div flex justify-end>
-        <NButton @click="visible = false">取消</NButton>
-        <NButton type="primary" ml-20 :loading="uploading" @click="handleConfirm">确认上传</NButton>
+        <NButton @click="visible = false">{{ t('common.actions.cancel') }}</NButton>
+        <NButton type="primary" ml-20 :loading="uploading" @click="handleConfirm">{{ t('common.actions.confirm_upload') }}</NButton>
       </div>
     </template>
   </NModal>
@@ -18,8 +18,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { NModal, NButton } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import { useFileUpload } from '@/composables/useFileUpload'
+
+const { t } = useI18n()
 
 const props = defineProps({
   show: { type: Boolean, default: false },

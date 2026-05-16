@@ -31,6 +31,24 @@ const { t } = useI18n()
 
 defineOptions({ name: '角色管理' })
 
+const roleNameMap = {
+  '管理员': () => t('views.system.role.role_admin'),
+  '普通用户': () => t('views.system.role.role_user'),
+}
+
+const roleDescMap = {
+  '管理员角色': () => t('views.system.role.role_admin_desc'),
+  '普通用户角色': () => t('views.system.role.role_user_desc'),
+}
+
+function getRoleName(name) {
+  return roleNameMap[name] ? roleNameMap[name]() : name
+}
+
+function getRoleDesc(desc) {
+  return roleDescMap[desc] ? roleDescMap[desc]() : desc
+}
+
 const $table = ref(null)
 const queryItems = ref({})
 const vPermission = resolveDirective('permission')
@@ -102,7 +120,7 @@ const columns = [
     align: 'center',
     ellipsis: { tooltip: true },
     render(row) {
-      return h(NTag, { type: 'info' }, { default: () => row.name })
+      return h(NTag, { type: 'info' }, { default: () => getRoleName(row.name) })
     },
   },
   {
@@ -110,6 +128,9 @@ const columns = [
     key: 'desc',
     width: 80,
     align: 'center',
+    render(row) {
+      return h('span', getRoleDesc(row.desc))
+    },
   },
   {
     title: t('views.system.role.col_created'),
@@ -135,7 +156,7 @@ const columns = [
               class: 'hm-row-btn',
               onClick: () => handleEdit(row),
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'edit'), t('views.system.role.btn_edit')]
+            t('views.system.role.btn_edit')
           ),
           [[vPermission, 'post/api/v1/role/update']]
         ),
@@ -151,7 +172,7 @@ const columns = [
                 h(
                   'button',
                   { class: 'hm-row-btn danger' },
-                  [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'delete'), t('views.system.role.btn_delete')]
+                  t('views.system.role.btn_delete')
                 ),
                 [[vPermission, 'delete/api/v1/role/delete']]
               ),
@@ -183,7 +204,7 @@ const columns = [
                 }
               },
             },
-            [h('i', { class: 'material-symbols', style: 'font-size:14px' }, 'lock'), t('views.system.role.btn_set_permission')]
+            t('views.system.role.btn_set_permission')
           ),
           [[vPermission, 'get/api/v1/role/authorized']]
         ),

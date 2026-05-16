@@ -12,10 +12,10 @@
     <template v-if="showFooter" #footer>
       <footer class="hm-modal-footer">
         <slot name="footer">
-          <button class="hm-modal-btn" @click="show = false">取消</button>
+          <button class="hm-modal-btn" @click="show = false">{{ t('common.actions.cancel') }}</button>
           <button class="hm-modal-btn primary" :disabled="loading" @click="emit('save')">
             <span v-if="loading" class="hm-modal-loading"></span>
-            保存
+            {{ t('common.actions.save') }}
           </button>
         </slot>
       </footer>
@@ -24,6 +24,10 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const props = defineProps({
   width: {
     type: String,
@@ -80,17 +84,18 @@ const show = computed({
   border-color: var(--hm-brand);
   color: var(--hm-brand);
   transform: translateY(-1px);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-modal-btn.primary {
   background: linear-gradient(135deg, #0A59F7 0%, #337BF7 100%);
   border-color: transparent;
   color: #fff;
-  box-shadow: var(--hm-shadow-brand);
+  box-shadow: var(--hm-glow-brand);
 }
 
 .hm-modal-btn.primary:hover {
-  box-shadow: 0 6px 20px rgba(10, 89, 247, 0.35);
+  box-shadow: var(--hm-glow-brand-strong);
   transform: translateY(-1px);
 }
 

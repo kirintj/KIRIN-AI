@@ -495,22 +495,48 @@ def _do_keyword_search(
     keywords: list[str],
     n_results: int,
 ) -> dict | None:
-    """关键词精确匹配检索"""
+    """关键词精确匹配检索，合并所有关键词的结果"""
     if not keywords:
         return None
 
-    for kw in keywords[:3]:
+    all_ids: list[str] = []
+    all_docs: list[str] = []
+    all_metas: list[dict] = []
+    all_dists: list[float] = []
+    seen_ids: set[str] = set()
+
+    for kw in keywords[:5]:
         try:
             results = collection.query(
                 query_texts=[""],
                 n_results=n_results,
                 where_document={"$contains": kw},
             )
-            if results and results.get("documents") and results["documents"][0]:
-                return results
+            if not results or not results.get("documents") or not results["documents"][0]:
+                continue
+            ids = results["ids"][0]
+            docs = results["documents"][0]
+            metas = results["metadatas"][0] if results.get("metadatas") and results["metadatas"][0] else [{}] * len(ids)
+            dists = results["distances"][0] if results.get("distances") and results["distances"][0] else [0.0] * len(ids)
+            for i, doc_id in enumerate(ids):
+                if doc_id not in seen_ids:
+                    seen_ids.add(doc_id)
+                    all_ids.append(doc_id)
+                    all_docs.append(docs[i])
+                    all_metas.append(metas[i] if i < len(metas) else {})
+                    all_dists.append(dists[i] if i < len(dists) else 0.0)
         except Exception:
             continue
-    return None
+
+    if not all_docs:
+        return None
+
+    return {
+        "ids": [all_ids],
+        "documents": [all_docs],
+        "metadatas": [all_metas],
+        "distances": [all_dists],
+    }
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
