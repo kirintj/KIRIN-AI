@@ -161,7 +161,7 @@ defineExpose({ scrollToBottom })
 
 .assistant .hm-msg-bubble {
   backdrop-filter: var(--hm-blur-glass);
-  border: 1px solid var(--hm-border-glass);
+  /* border: 1px solid var(--hm-border-glass); */
   color: var(--hm-font-primary);
   max-width: 100%;
 }
