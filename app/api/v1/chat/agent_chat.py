@@ -10,7 +10,7 @@ from app.schemas.business import AgentChatRequest, AddDocumentRequest
 from app.agent.executor import AgentExecutor
 from app.agent.rules import get_engine, reload_rules
 from app.rag.chromadb_client import (
-    add_documents, delete_all_documents, delete_document, move_document,
+    add_documents, delete_document, move_document,
     get_collection_stats, list_documents, get_document_chunks,
     search_chromadb, search_with_filter, hybrid_search, rebuild_all_collections, COLLECTION_NAMES,
 )
@@ -29,7 +29,7 @@ async def agent_chat(
     current_user: User = DependAuth,
 ):
     start_time = time.monotonic()
-    user_id = current_user.username
+    user_id = str(current_user.id)
 
     try:
         result = await executor.run(request.query, user_id=user_id, use_llm_router=request.use_llm_router)
@@ -86,6 +86,7 @@ async def add_knowledge_docs(
             collection_name=request.collection_name,
             source=request.source,
             doc_type=request.doc_type,
+            user_id=current_user.id,
         )
         return Success(data={
             "message": "文档已添加到知识库",
@@ -114,8 +115,17 @@ async def clear_knowledge_base(
     collection_name: str = "knowledge_base",
     current_user: User = DependAuth,
 ):
-    await delete_all_documents(collection_name)
-    return Success(data={"message": f"集合 {collection_name} 已清空"})
+    try:
+        from app.rag.chromadb_client import _get_collection
+        collection = _get_collection(collection_name)
+        result = collection.get(where={"user_id": current_user.id}, include=[])
+        ids = result.get("ids", [])
+        if ids:
+            collection.delete(ids=ids)
+        return Success(data={"message": f"已清除当前用户在 {collection_name} 中的 {len(ids)} 条文档"})
+    except Exception:
+        _logger.exception("清空知识库失败")
+        return Fail(code=500, msg="清空知识库失败")
 
 
 @router.get("/documents/list")
@@ -132,6 +142,7 @@ async def list_knowledge_docs(
             page=page,
             page_size=page_size,
             doc_type=doc_type,
+            user_id=current_user.id,
         )
         return Success(data=result)
     except Exception:
@@ -149,6 +160,7 @@ async def get_document_detail(
         chunks = await get_document_chunks(
             doc_id=doc_id,
             collection_name=collection_name,
+            user_id=current_user.id,
         )
         return Success(data={"doc_id": doc_id, "chunks": chunks, "total_chunks": len(chunks)})
     except Exception:
@@ -163,7 +175,7 @@ async def delete_single_document(
     current_user: User = DependAuth,
 ):
     try:
-        count = await delete_document(doc_id, collection_name)
+        count = await delete_document(doc_id, collection_name, user_id=current_user.id)
         if count == 0:
             return Fail(code=404, msg="文档不存在")
         return Success(data={"message": f"已删除文档 {doc_id}", "deleted_chunks": count})
@@ -190,6 +202,7 @@ async def move_document_endpoint(
             from_collection=data.from_collection,
             to_collection=data.to_collection,
             new_doc_type=data.doc_type,
+            user_id=current_user.id,
         )
         if result.get("error"):
             return Fail(code=404, msg=result["error"])
@@ -218,9 +231,10 @@ async def search_documents(
                 data.query, top_k=data.top_k,
                 collection_name=data.collection_name,
                 doc_type=data.doc_type, source=data.source,
+                user_id=current_user.id,
             )
         else:
-            docs = await search_chromadb(data.query, top_k=data.top_k, collection_name=data.collection_name)
+            docs = await search_chromadb(data.query, top_k=data.top_k, collection_name=data.collection_name, user_id=current_user.id)
         return Success(data={"results": docs, "count": len(docs)})
     except Exception:
         _logger.exception("检索失败")
@@ -235,6 +249,7 @@ async def hybrid_search_documents(
     try:
         docs = await hybrid_search(
             data.query, top_k=data.top_k, collection_name=data.collection_name,
+            user_id=current_user.id,
         )
         return Success(data={"results": docs, "count": len(docs)})
     except Exception:
@@ -274,6 +289,7 @@ async def advanced_search_documents(
             collection_name=collection_name,
             doc_type=data.doc_type,
             source=data.source,
+            user_id=current_user.id,
         )
         return Success(data={"results": docs, "count": len(docs)})
     except Exception:

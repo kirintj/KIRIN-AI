@@ -88,6 +88,7 @@ async def upload_documents(
             collection_name=collection_name,
             source=source,
             doc_type=doc_type,
+            user_id=current_user.id,
         )
         return Success(data={
             "message": f"成功上传 {valid_count} 个文件到知识库集合 [{collection_name}]",
