@@ -8,7 +8,6 @@ import TheIcon from '@/components/icon/TheIcon.vue'
 import { job } from '@/api'
 import { useFileUpload } from '@/composables/useFileUpload'
 import { useMarkdown } from '@/composables/useMarkdown'
-import LoadingDots from '@/components/common/LoadingDots.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 
 const { t } = useI18n()
@@ -66,7 +65,7 @@ const handleJdUpload = async ({ file, onFinish, onError }: any) => {
   } else { onError() }
 }
 
-const resetAll = () => {
+const resetToForm = () => {
   currentStep.value = 0
   resumeData.value = null
   jdData.value = null
@@ -83,7 +82,7 @@ const runPipeline = async () => {
   }
 
   pipelineRunning.value = true
-  resetAll()
+  resetToForm()
 
   try {
     currentStep.value = 1
@@ -139,172 +138,228 @@ const runPipeline = async () => {
   }
 }
 
-defineExpose({ resumeText, jdText, pipelineRunning, runPipeline })
+defineExpose({ resumeText, jdText, pipelineRunning, runPipeline, resetToForm })
 </script>
 
 <template>
   <div class="hm-pipeline">
-    <div class="hm-input-grid">
-      <div class="hm-input-block">
-        <div class="hm-input-block-header">
-          <div class="hm-input-block-icon" style="background: rgba(10,89,247,0.08)">
-            <TheIcon icon="icon-park-outline:clipboard" :size="18" color="#0A59F7" />
+    <!-- Form state -->
+    <Transition name="hm-form-result">
+      <div v-if="!pipelineRunning && currentStep === 0" key="form" class="hm-pipeline-form">
+        <div class="hm-input-grid">
+          <div class="hm-input-block">
+            <div class="hm-input-block-header">
+              <div class="hm-input-block-icon" style="background: rgba(10,89,247,0.08)">
+                <TheIcon icon="icon-park-outline:clipboard" :size="18" color="#0A59F7" />
+              </div>
+              <span class="hm-input-block-title">{{ t('views.job_assistant.pipeline_upload_resume') }}</span>
+              <NUpload
+                v-model:file-list="resumeFileList"
+                :custom-request="handleResumeUpload"
+                :max="1"
+                :show-file-list="false"
+                :disabled="pipelineRunning || resumeUploading"
+              >
+                <button class="hm-upload-chip" :disabled="pipelineRunning || resumeUploading">
+                  <TheIcon icon="material-symbols:upload" :size="14" />
+                  {{ resumeUploading ? t('views.job_assistant.btn_parsing') : t('views.job_assistant.btn_upload_file') }}
+                </button>
+              </NUpload>
+            </div>
+            <NInput
+              v-model:value="resumeText"
+              type="textarea"
+              :placeholder="t('views.job_assistant.resume_placeholder')"
+              :rows="8"
+              :disabled="pipelineRunning"
+              class="hm-textarea"
+            />
+            <p class="hm-input-hint">{{ t('views.job_assistant.file_hint') }}</p>
           </div>
-          <span class="hm-input-block-title">{{ t('views.job_assistant.pipeline_upload_resume') }}</span>
-          <NUpload
-            v-model:file-list="resumeFileList"
-            :custom-request="handleResumeUpload"
-            :max="1"
-            :show-file-list="false"
-            :disabled="pipelineRunning || resumeUploading"
-          >
-            <button class="hm-upload-chip" :disabled="pipelineRunning || resumeUploading">
-              <TheIcon icon="material-symbols:upload" :size="14" />
-              {{ resumeUploading ? t('views.job_assistant.btn_parsing') : t('views.job_assistant.btn_upload_file') }}
-            </button>
-          </NUpload>
-        </div>
-        <NInput
-          v-model:value="resumeText"
-          type="textarea"
-          :placeholder="t('views.job_assistant.resume_placeholder')"
-          :rows="8"
-          :disabled="pipelineRunning"
-          class="hm-textarea"
-        />
-        <p class="hm-input-hint">{{ t('views.job_assistant.file_hint') }}</p>
-      </div>
 
-      <div class="hm-input-block">
-        <div class="hm-input-block-header">
-          <div class="hm-input-block-icon" style="background: rgba(114,46,209,0.08)">
-            <TheIcon icon="icon-park-outline:doc-search" :size="18" color="#722ED1" />
+          <div class="hm-input-block">
+            <div class="hm-input-block-header">
+              <div class="hm-input-block-icon" style="background: rgba(114,46,209,0.08)">
+                <TheIcon icon="icon-park-outline:doc-search" :size="18" color="#722ED1" />
+              </div>
+              <span class="hm-input-block-title">{{ t('views.job_assistant.pipeline_jd') }}</span>
+              <NUpload
+                v-model:file-list="jdFileList"
+                :custom-request="handleJdUpload"
+                :max="1"
+                :show-file-list="false"
+                :disabled="pipelineRunning || jdUploading"
+              >
+                <button class="hm-upload-chip" :disabled="pipelineRunning || jdUploading">
+                  <TheIcon icon="material-symbols:upload" :size="14" />
+                  {{ jdUploading ? t('views.job_assistant.btn_parsing') : t('views.job_assistant.btn_upload_file') }}
+                </button>
+              </NUpload>
+            </div>
+            <NInput
+              v-model:value="jdText"
+              type="textarea"
+              :placeholder="t('views.job_assistant.jd_placeholder')"
+              :rows="8"
+              :disabled="pipelineRunning"
+              class="hm-textarea"
+            />
+            <p class="hm-input-hint">{{ t('views.job_assistant.file_hint') }}</p>
           </div>
-          <span class="hm-input-block-title">{{ t('views.job_assistant.pipeline_jd') }}</span>
-          <NUpload
-            v-model:file-list="jdFileList"
-            :custom-request="handleJdUpload"
-            :max="1"
-            :show-file-list="false"
-            :disabled="pipelineRunning || jdUploading"
-          >
-            <button class="hm-upload-chip" :disabled="pipelineRunning || jdUploading">
-              <TheIcon icon="material-symbols:upload" :size="14" />
-              {{ jdUploading ? t('views.job_assistant.btn_parsing') : t('views.job_assistant.btn_upload_file') }}
-            </button>
-          </NUpload>
         </div>
-        <NInput
-          v-model:value="jdText"
-          type="textarea"
-          :placeholder="t('views.job_assistant.jd_placeholder')"
-          :rows="8"
-          :disabled="pipelineRunning"
-          class="hm-textarea"
-        />
-        <p class="hm-input-hint">{{ t('views.job_assistant.file_hint') }}</p>
+
+        <div class="hm-rag-toggle">
+          <button
+            :class="['hm-toggle-chip', { active: useRagOptimize }]"
+            @click="useRagOptimize = !useRagOptimize"
+          >
+            <TheIcon :icon="useRagOptimize ? 'icon-park-outline:link-two' : 'icon-park-outline:balance'" :size="14" />
+            {{ useRagOptimize ? t('views.job_assistant.rag_enhanced') : t('views.job_assistant.normal_optimize') }}
+          </button>
+        </div>
       </div>
-    </div>
+    </Transition>
 
-    <div class="hm-rag-toggle">
-      <button
-        :class="['hm-toggle-chip', { active: useRagOptimize }]"
-        @click="useRagOptimize = !useRagOptimize"
-      >
-        <TheIcon :icon="useRagOptimize ? 'icon-park-outline:link-two' : 'icon-park-outline:balance'" :size="14" />
-        {{ useRagOptimize ? t('views.job_assistant.rag_enhanced') : t('views.job_assistant.normal_optimize') }}
-      </button>
-    </div>
+    <!-- Running state: skeleton + steps -->
+    <Transition name="hm-form-result">
+      <div v-if="pipelineRunning || (currentStep > 0 && currentStep <= 5)" key="running" class="hm-pipeline-running">
+        <div class="hm-ai-result-card">
+          <div class="hm-ai-result-header">
+            <div class="hm-ai-result-icon">
+              <TheIcon icon="icon-park-outline:clipboard" :size="18" color="var(--hm-brand)" />
+            </div>
+            <span class="hm-ai-result-title">{{ t('views.job_assistant.result_match') }}</span>
+          </div>
 
-    <div v-if="pipelineRunning || currentStep > 0" class="hm-progress-section">
-      <NSteps :current="currentStep" :status="pipelineRunning ? 'process' : 'finish'" size="small">
-        <NStep :title="t('views.job_assistant.step_parse')" />
-        <NStep :title="t('views.job_assistant.step_jd_analysis')" />
-        <NStep :title="t('views.job_assistant.step_match')" />
-        <NStep :title="useRagOptimize ? t('views.job_assistant.step_rag_optimize') : t('views.job_assistant.step_optimize')" />
-        <NStep :title="t('views.job_assistant.step_plan')" />
-        <NStep :title="t('views.job_assistant.step_done')" />
-      </NSteps>
-    </div>
+          <div class="hm-progress-section">
+            <NSteps :current="currentStep" :status="pipelineRunning ? 'process' : 'finish'" size="small">
+              <NStep :title="t('views.job_assistant.step_parse')" />
+              <NStep :title="t('views.job_assistant.step_jd_analysis')" />
+              <NStep :title="t('views.job_assistant.step_match')" />
+              <NStep :title="useRagOptimize ? t('views.job_assistant.step_rag_optimize') : t('views.job_assistant.step_optimize')" />
+              <NStep :title="t('views.job_assistant.step_plan')" />
+            </NSteps>
+          </div>
 
-    <LoadingDots v-if="loading" :text="t('views.job_assistant.loading_analyzing')" />
-
-    <div v-if="currentStep >= 3 && !loading" class="hm-results">
-      <div class="hm-result-card">
-        <div class="hm-result-header">
-          <h3 class="hm-result-title">{{ t('views.job_assistant.result_match') }}</h3>
-        </div>
-        <div class="hm-match-area">
-          <NProgress
-            type="circle"
-            :percentage="matchScore"
-            :color="matchScoreColor"
-            :rail-color="'var(--hm-border)'"
-            :stroke-width="8"
-            style="margin-right: 24px"
-          >
-            {{ matchScore }}%
-          </NProgress>
-          <div class="hm-match-details">
-            <div v-if="matchData?.matched_skills?.length" class="hm-match-group">
-              <div class="hm-match-label" style="color: #64BB5C">{{ t('views.job_assistant.match_skills_met') }}</div>
-              <div class="hm-tag-list">
-                <NTag v-for="s in matchData.matched_skills" :key="s" size="small" round style="margin: 2px">{{ s }}</NTag>
+          <!-- Skeleton placeholders for pending results -->
+          <div v-if="currentStep < 6" class="hm-ai-result-body" style="margin-top: 16px">
+            <div class="hm-ai-skeleton">
+              <div class="hm-skeleton-line full" />
+              <div class="hm-skeleton-line medium" />
+              <div class="hm-skeleton-line short" />
+              <div class="hm-skeleton-tags">
+                <div class="hm-skeleton-tag" />
+                <div class="hm-skeleton-tag" />
               </div>
             </div>
-            <div v-if="matchData?.missing_skills?.length" class="hm-match-group">
-              <div class="hm-match-label" style="color: #E84026">{{ t('views.job_assistant.match_skills_missing') }}</div>
-              <div class="hm-tag-list">
-                <NTag v-for="s in matchData.missing_skills" :key="s" type="error" size="small" round style="margin: 2px">{{ s }}</NTag>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Results: progressive reveal -->
+    <TransitionGroup v-if="currentStep >= 3" name="hm-slide-up" tag="div" class="hm-pipeline-results">
+      <!-- Match result -->
+      <div v-if="matchData" key="match" class="hm-ai-result-card">
+        <div class="hm-ai-result-header">
+          <div class="hm-ai-result-icon" style="background: rgba(100,187,92,0.08)">
+            <TheIcon icon="icon-park-outline:target" :size="18" color="#64BB5C" />
+          </div>
+          <span class="hm-ai-result-title">{{ t('views.job_assistant.result_match') }}</span>
+          <button v-if="!pipelineRunning" class="hm-ai-back-btn" @click="resetToForm">
+            <TheIcon icon="icon-park-outline:left" :size="14" />
+            {{ t('views.job_assistant.btn_back_edit') }}
+          </button>
+        </div>
+        <div class="hm-ai-result-body">
+          <div class="hm-match-area">
+            <NProgress
+              type="circle"
+              :percentage="matchScore"
+              :color="matchScoreColor"
+              :rail-color="'var(--hm-border)'"
+              :stroke-width="8"
+              style="margin-right: 24px"
+            >
+              {{ matchScore }}%
+            </NProgress>
+            <div class="hm-match-details">
+              <div v-if="matchData?.matched_skills?.length" class="hm-match-group">
+                <div class="hm-match-label" style="color: #64BB5C">{{ t('views.job_assistant.match_skills_met') }}</div>
+                <div class="hm-tag-list">
+                  <NTag v-for="s in matchData.matched_skills" :key="s" size="small" round style="margin: 2px">{{ s }}</NTag>
+                </div>
               </div>
-            </div>
-            <div v-if="matchData?.strengths?.length" class="hm-match-group">
-              <div class="hm-match-label" style="color: #0A59F7">{{ t('views.job_assistant.match_strengths') }}</div>
-              <ul class="hm-detail-list"><li v-for="s in matchData.strengths" :key="s">{{ s }}</li></ul>
-            </div>
-            <div v-if="matchData?.weaknesses?.length" class="hm-match-group">
-              <div class="hm-match-label" style="color: #ED6F21">{{ t('views.job_assistant.match_weaknesses') }}</div>
-              <ul class="hm-detail-list"><li v-for="s in matchData.weaknesses" :key="s">{{ s }}</li></ul>
-            </div>
-            <div v-if="matchData?.detail" class="hm-match-group">
-              <div class="hm-match-label">{{ t('views.job_assistant.match_analysis') }}</div>
-              <p class="hm-detail-text">{{ matchData.detail }}</p>
+              <div v-if="matchData?.missing_skills?.length" class="hm-match-group">
+                <div class="hm-match-label" style="color: #E84026">{{ t('views.job_assistant.match_skills_missing') }}</div>
+                <div class="hm-tag-list">
+                  <NTag v-for="s in matchData.missing_skills" :key="s" type="error" size="small" round style="margin: 2px">{{ s }}</NTag>
+                </div>
+              </div>
+              <div v-if="matchData?.strengths?.length" class="hm-match-group">
+                <div class="hm-match-label" style="color: #0A59F7">{{ t('views.job_assistant.match_strengths') }}</div>
+                <ul class="hm-detail-list"><li v-for="s in matchData.strengths" :key="s">{{ s }}</li></ul>
+              </div>
+              <div v-if="matchData?.weaknesses?.length" class="hm-match-group">
+                <div class="hm-match-label" style="color: #ED6F21">{{ t('views.job_assistant.match_weaknesses') }}</div>
+                <ul class="hm-detail-list"><li v-for="s in matchData.weaknesses" :key="s">{{ s }}</li></ul>
+              </div>
+              <div v-if="matchData?.detail" class="hm-match-group">
+                <div class="hm-match-label">{{ t('views.job_assistant.match_analysis') }}</div>
+                <p class="hm-detail-text">{{ matchData.detail }}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="hm-result-card">
-        <div class="hm-result-header">
-          <h3 class="hm-result-title">{{ t('views.job_assistant.result_optimized') }}</h3>
+      <!-- Optimized resume -->
+      <div v-if="optimizedResume && currentStep >= 4" key="optimize" class="hm-ai-result-card">
+        <div class="hm-ai-result-header">
+          <div class="hm-ai-result-icon" style="background: rgba(114,46,209,0.08)">
+            <TheIcon icon="icon-park-outline:file-edit" :size="18" color="#722ED1" />
+          </div>
+          <span class="hm-ai-result-title">{{ t('views.job_assistant.result_optimized') }}</span>
           <div v-if="ragSources.length" class="hm-rag-sources">
             <TheIcon icon="icon-park-outline:link-two" :size="14" color="var(--hm-brand)" />
             <span>{{ t('views.job_assistant.rag_sources') }}{{ ragSources.join(', ') }}</span>
           </div>
         </div>
-        <div class="hm-markdown" v-html="formatMarkdown(optimizedResume)"></div>
-        <div v-if="optimizedResume" class="hm-feedback-bar">
-          <span class="hm-feedback-label">{{ t('views.job_assistant.feedback_optimize') }}</span>
-          <button class="hm-feedback-btn" @click="emit('feedback', t('views.job_assistant.tab_resume'), optimizedResume)">
+        <div class="hm-ai-result-body">
+          <div class="hm-markdown" v-html="formatMarkdown(optimizedResume)"></div>
+        </div>
+        <div class="hm-ai-result-footer">
+          <span class="hm-ai-feedback-label">{{ t('views.job_assistant.feedback_optimize') }}</span>
+          <button class="hm-ai-feedback-btn" @click="emit('feedback', t('views.job_assistant.tab_resume'), optimizedResume)">
             <TheIcon icon="icon-park-outline:like" :size="14" />
             {{ t('views.job_assistant.btn_feedback') }}
           </button>
         </div>
       </div>
 
-      <div v-if="planData" class="hm-result-card">
-        <div class="hm-result-header">
-          <h3 class="hm-result-title">{{ t('views.job_assistant.result_plan') }}</h3>
+      <!-- Career plan -->
+      <div v-if="planData && currentStep >= 5" key="plan" class="hm-ai-result-card">
+        <div class="hm-ai-result-header">
+          <div class="hm-ai-result-icon" style="background: rgba(237,111,33,0.08)">
+            <TheIcon icon="icon-park-outline:map" :size="18" color="#ED6F21" />
+          </div>
+          <span class="hm-ai-result-title">{{ t('views.job_assistant.result_plan') }}</span>
         </div>
-        <div class="hm-markdown" v-html="formatMarkdown(planData)"></div>
+        <div class="hm-ai-result-body">
+          <div class="hm-markdown" v-html="formatMarkdown(planData)"></div>
+        </div>
       </div>
-    </div>
+    </TransitionGroup>
 
-    <EmptyState
-      v-if="currentStep === 0 && !loading"
-      icon="icon-park-outline:resume"
-      :text="t('views.job_assistant.empty_pipeline')"
-    />
+    <!-- Empty state -->
+    <Transition name="hm-form-result">
+      <div v-if="currentStep === 0 && !pipelineRunning" key="empty">
+        <EmptyState
+          icon="icon-park-outline:resume"
+          :text="t('views.job_assistant.empty_pipeline')"
+        />
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -316,6 +371,24 @@ defineExpose({ resumeText, jdText, pipelineRunning, runPipeline })
   flex-direction: column;
   gap: 20px;
   width: 100%;
+}
+
+.hm-pipeline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hm-pipeline-running {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hm-pipeline-results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .hm-input-grid {
@@ -422,18 +495,6 @@ defineExpose({ resumeText, jdText, pipelineRunning, runPipeline })
   border-radius: var(--hm-radius-lg);
   padding: 20px;
   box-shadow: var(--hm-shadow-sm);
-}
-
-.hm-results {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.hm-result-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .hm-rag-sources {
